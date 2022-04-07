@@ -32,7 +32,13 @@ namespace myUplink
             {
                 foreach(var deviceId in system.devices)
                 {
-                    await login.GetUserSystems(deviceId.id);
+                    //var info11 = await login.GetDeviceInfo(deviceId.id);
+                    var info = await login.GetDeviceInfoPoints(deviceId.id);
+
+                    foreach(var tmpInfo in info)
+                    {
+                        Console.WriteLine(tmpInfo.parameterName + " - " + tmpInfo.strVal); 
+                    }
                 }
             }
             return 0;
