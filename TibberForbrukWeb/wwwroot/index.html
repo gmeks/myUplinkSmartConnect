@@ -1,0 +1,116 @@
+<script src="https://cdn.amcharts.com/lib/4/core.js"></script>
+<script src="https://cdn.amcharts.com/lib/4/charts.js"></script>
+<script src="https://cdn.amcharts.com/lib/4/plugins/rangeSelector.js"></script>
+<script src="https://cdn.amcharts.com/lib/4/themes/animated.js"></script>
+
+
+<!-- HTML -->
+<div id="controls"></div>
+<div id="chartdiv"></div>
+
+
+<script>
+    am4core.ready(function () {
+
+        // Themes begin
+        am4core.useTheme(am4themes_animated);
+        // Themes end
+
+        // Create chart
+        var chart = am4core.create("chartdiv", am4charts.XYChart);
+        chart.dateFormatter.inputDateFormat = "yyyy-MM-dd HH:mm:ss";
+        chart.padding(0, 15, 0, 15);
+
+        // Load external data
+        chart.dataSource.url = "WeatherForecast";
+        chart.dataSource.parser.options.useColumnNames = true;
+        chart.dataSource.parser.options.reverse = true;
+
+        // the following line makes value axes to be arranged vertically.
+        chart.leftAxesContainer.layout = "vertical";
+
+        // uncomment this line if you want to change order of axes
+        //chart.bottomAxesContainer.reverseOrder = true;
+
+        var dateAxis = chart.xAxes.push(new am4charts.DateAxis());
+        dateAxis.renderer.grid.template.location = 0;
+        dateAxis.renderer.ticks.template.length = 8;
+        dateAxis.renderer.ticks.template.strokeOpacity = 0.1;
+        dateAxis.renderer.grid.template.disabled = true;
+        dateAxis.renderer.ticks.template.disabled = false;
+        dateAxis.renderer.ticks.template.strokeOpacity = 0.2;
+        dateAxis.renderer.minLabelPosition = 0.01;
+        dateAxis.renderer.maxLabelPosition = 0.99;
+        dateAxis.keepSelection = true;
+        dateAxis.minHeight = 30;
+
+        dateAxis.groupData = false;
+        //dateAxis.minZoomCount = 10;
+
+        // these two lines makes the axis to be initially zoomed-in
+        // dateAxis.start = 0.7;
+        // dateAxis.keepSelection = true;
+
+        var valueAxis = chart.yAxes.push(new am4charts.ValueAxis());
+        valueAxis.tooltip.disabled = true;
+        valueAxis.zIndex = 1;
+        valueAxis.renderer.baseGrid.disabled = true;
+        // height of axis
+        valueAxis.height = am4core.percent(65);
+
+        valueAxis.renderer.gridContainer.background.fill = am4core.color("#000000");
+        valueAxis.renderer.gridContainer.background.fillOpacity = 0.05;
+        valueAxis.renderer.inside = true;
+        valueAxis.renderer.labels.template.verticalCenter = "bottom";
+        valueAxis.renderer.labels.template.padding(2, 2, 2, 2);
+
+        //valueAxis.renderer.maxLabelPosition = 0.95;
+        valueAxis.renderer.fontSize = "0.8em"
+
+        var series = chart.series.push(new am4charts.LineSeries());
+        series.dataFields.dateX = "strTimestamp";
+        series.dataFields.valueY = "volt";
+        series.tooltipText = "{valueY.value}";
+        series.name = "volt";
+        series.defaultState.transitionDuration = 0;
+
+
+        var seriesWatt = chart.series.push(new am4charts.LineSeries());
+        seriesWatt.dataFields.dateX = "strTimestamp";
+        seriesWatt.dataFields.valueY = "watt";
+        seriesWatt.tooltipText = "{valueY.value}";
+        seriesWatt.name = "watt";
+        seriesWatt.defaultState.transitionDuration = 0;
+
+        var seriesAmp = chart.series.push(new am4charts.LineSeries());
+        seriesAmp.dataFields.dateX = "strTimestamp";
+        seriesAmp.dataFields.valueY = "amp";
+        seriesAmp.tooltipText = "{valueY.value}";
+        seriesAmp.name = "amp";
+        seriesAmp.defaultState.transitionDuration = 0;
+      
+
+        chart.cursor = new am4charts.XYCursor();
+
+        var scrollbarX = new am4charts.XYChartScrollbar();
+        scrollbarX.series.push(series);
+        scrollbarX.marginBottom = 20;
+        scrollbarX.scrollbarChart.xAxes.getIndex(0).minHeight = undefined;
+        chart.scrollbarX = scrollbarX;
+
+
+        // Add range selector
+        var selector = new am4plugins_rangeSelector.DateAxisRangeSelector();
+        selector.container = document.getElementById("controls");
+        selector.axis = dateAxis;
+
+        chart.legend = new am4charts.Legend();
+        chart.legend.useDefaultMarker = true;
+        let marker = chart.legend.markers.template.children.getIndex(0);
+        marker.cornerRadius(12, 12, 12, 12);
+        marker.strokeWidth = 2;
+        marker.strokeOpacity = 1;
+        marker.stroke = am4core.color("#ccc");
+
+    }); // end am4core.ready()
+</script>
