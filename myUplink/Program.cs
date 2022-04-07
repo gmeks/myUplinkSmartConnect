@@ -1,13 +1,29 @@
 
+using System.Text.Json;
+
 namespace myUplink
 {
     public class Program
     {
         public static  async Task<int> Main(string[] args)
         {
+            string settingsFile;
+#if DEBUG
+            settingsFile = "appsettings.Development.json";
+#else
+            settingsFile = "appsettings.json";
+#endif
+
+            if(!File.Exists(settingsFile))
+            {
+                Console.WriteLine($"No settings file found {settingsFile}");
+                return 200;
+            }
+
+            var settings = JsonSerializer.Deserialize< Settings >(File.ReadAllText(settingsFile));
             var login = new Login();
 
-            await login.LoginToApi("42c78ce2-51b9-4af9-8e14-d26a5f3af2e5", "67439170B6E90314F8C21FDB6403F06D");
+            await login.LoginToApi(settings.clientIdentifier, settings.clientSecret);
             await login.Ping();
 
             var systems = await login.GetUserSystems();
@@ -22,4 +38,12 @@ namespace myUplink
             return 0;
         }
    }
+
+
+    class Settings
+    {
+        public string clientIdentifier { get; set; }
+
+        public string clientSecret { get; set; }
+    }
 }
