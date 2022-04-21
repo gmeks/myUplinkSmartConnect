@@ -31,7 +31,7 @@ namespace myUplink
             if (File.Exists(_tokenFile))
             {
                 _token = JsonSerializer.Deserialize<AuthToken>(File.ReadAllText(_tokenFile));
-                if(_token != null && !_token.IsExpired)
+                if(_token != null || _token?.IsExpired == false)
                 {
                     _httpClient.AddDefaultHeader("authorization", "Bearer " + _token.access_token);
 
@@ -75,7 +75,7 @@ namespace myUplink
             var request = new RestRequest("/v2/protected-ping") { Method = Method.Get };
             var tResponse = await _httpClient.ExecuteAsync(request);
 
-            if (tResponse.StatusCode ==  System.Net.HttpStatusCode.OK || tResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
+            if (tResponse.StatusCode == System.Net.HttpStatusCode.OK || tResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
                 return true;
 
             return false;
