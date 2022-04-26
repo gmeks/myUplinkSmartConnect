@@ -13,6 +13,7 @@ namespace myUplink
 #else
             settingsFile = "appsettings.json";
 #endif
+            
 
             if(!File.Exists(settingsFile))
             {
@@ -21,7 +22,9 @@ namespace myUplink
             }
 
             var settings = JsonSerializer.Deserialize< Settings >(File.ReadAllText(settingsFile));
-            var login = new Login();
+
+            /*
+            var login = new PublicAPI();
 
             await login.LoginToApi(settings.clientIdentifier, settings.clientSecret);
             await login.Ping();
@@ -39,15 +42,29 @@ namespace myUplink
                     }
                 }
             }
+            */
+
+            var powerPrice = new EntsoeAPI();
+            await powerPrice.GetPrices();
+
+            powerPrice.CreateSortedList(5, 6);
+
+            var interalAPI = new InternalAPI();
+            await interalAPI.LoginToApi(settings.UserName, settings.Password);
+
+            var test = await interalAPI.GetDevices();
+            foreach(var device in test)
+            {
+                foreach (var tmpdevice in device.devices)
+                {
+                    var currentSchedule = await interalAPI.GetWheeklySchedules(tmpdevice);
+                    var currentModes = await interalAPI.GetCurrentModes(tmpdevice);
+                }
+            }
+
+            //var test = await interalAPI.GetCurrentSchedule();
+
             return 0;
         }
    }
-
-
-    class Settings
-    {
-        public string clientIdentifier { get; set; }
-
-        public string clientSecret { get; set; }
-    }
 }
