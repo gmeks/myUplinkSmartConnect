@@ -31,11 +31,12 @@ namespace myUplink
             {
                 if(maxPowerHours.Contains(_priceList[i]))
                 {
-                    _priceList[i].DesiredPower = DesiredPower.Watt2000;
+                    
+                    _priceList[i].DesiredPower = WaterHeaterDesiredPower.Watt2000;
                 }
                 else if (mediumPowerHours.Contains(_priceList[i]))
                 {
-                    _priceList[i].DesiredPower = DesiredPower.Watt700;
+                    _priceList[i].DesiredPower = WaterHeaterDesiredPower.Watt700;
                 }
             }
 
@@ -115,7 +116,7 @@ namespace myUplink
             Price = 0;
             Start = DateTime.MinValue;
             End = DateTime.MinValue;
-            DesiredPower = DesiredPower.None;
+            DesiredPower = WaterHeaterDesiredPower.None;
         }
 
         public Guid Id { get; set; }
@@ -126,14 +127,12 @@ namespace myUplink
 
         public DateTime End { get; set; }
 
-
-
         public bool Equals(stPriceInformation other)
         {
             return Id.Equals(other.Id);
         }
 
-        public DesiredPower DesiredPower { get; set; }
+        public WaterHeaterDesiredPower DesiredPower { get; set; }
     }
 
     class SortByLowestPrice : IComparer<stPriceInformation>

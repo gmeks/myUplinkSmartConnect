@@ -1,4 +1,5 @@
 
+using myUplink.ModelsPublic.Internal;
 using System.Text.Json;
 
 namespace myUplink
@@ -57,8 +58,14 @@ namespace myUplink
             {
                 foreach (var tmpdevice in device.devices)
                 {
-                    var currentSchedule = await interalAPI.GetWheeklySchedules(tmpdevice);
-                    var currentModes = await interalAPI.GetCurrentModes(tmpdevice);
+                    var costSaving = new ApplyCostSavingRules();
+                    costSaving.WaterHeaterSchedule = await interalAPI.GetWheeklySchedules(tmpdevice);
+                    costSaving.WaterHeaterModes = await interalAPI.GetCurrentModes(tmpdevice);
+
+                    if(!costSaving.VerifyWaterHeaterModes())
+                    {
+                        await interalAPI.SetCurrentModes(tmpdevice, costSaving.WaterHeaterModes);
+                    }
                 }
             }
 
@@ -66,5 +73,7 @@ namespace myUplink
 
             return 0;
         }
+
+
    }
 }

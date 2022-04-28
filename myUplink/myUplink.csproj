@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <PackageReference Include="RestSharp" Version="107.3.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
   </ItemGroup>
 
   <ItemGroup>

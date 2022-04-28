@@ -12,7 +12,7 @@ namespace myUplink.ModelsPublic.Internal
         TargetHeaterWatt=2,
     }
 
-    public enum DesiredPower
+    public enum WaterHeaterDesiredPower
     {
         None=0,
         Watt700=1,

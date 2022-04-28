@@ -101,7 +101,7 @@ namespace myUplink
             if (tResponse.StatusCode == System.Net.HttpStatusCode.OK && !string.IsNullOrEmpty(tResponse.Content))
             {
                 //fixme. this is likely not optimal, but for some reason this is also a array?
-                var devices = JsonSerializer.Deserialize<HeaterWeeklyRoot[]>(tResponse.Content).FirstOrDefault();
+                var devices = JsonSerializer.Deserialize<HeaterWeeklyRoot[]>(tResponse.Content)?.FirstOrDefault() ?? null;
                 return devices.events;
             }
 
@@ -152,6 +152,21 @@ namespace myUplink
             }
 
             return Array.Empty<WaterHeaterMode>();
+        }
+
+        public async Task<bool> SetCurrentModes(Device device, IEnumerable<WaterHeaterMode> modes)
+        {
+            //            //Put
+            //https://internalapi.myuplink.com/v2/devices/HOIAX_3083989de217_35f19927-203c-4a6b-a84b-9d1c1a9b8d6c/schedule-modes
+            var request = new RestRequest($"/v2/devices/{device.id}/schedule-modes") { Method = Method.Put };
+            request.AddJsonBody<IEnumerable<WaterHeaterMode>>(modes);
+            var tResponse = await _httpClient.ExecuteAsync(request);
+            if (tResponse.StatusCode == System.Net.HttpStatusCode.OK  && tResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }
