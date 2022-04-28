@@ -1,10 +1,12 @@
 ﻿using myUplink.ModelsPublic.Internal;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace myUplink
 {
@@ -18,56 +20,136 @@ namespace myUplink
         {
             _client = new HttpClient();
             _priceList = new List<stPriceInformation>();
-        }        
+        }
 
-        public void CreateSortedList(int desiredMaxpower,int mediumPower)
+        public List<stPriceInformation> PriceList { get { return _priceList; } }
+
+        public async Task FetchPriceInformation(string apiToken)
         {
-            _priceList.Sort(new SortByLowestPrice());
+            // i hate xml, and this function is a pure pain
 
-            var maxPowerHours = _priceList.Take(desiredMaxpower);
-            var mediumPowerHours = _priceList.Take(mediumPower + desiredMaxpower);
+            string startDateFormat = DateTime.Now.ToString("yyyyMMdd") + "0000";
+            string endDateFormat = DateTime.Now.AddDays(1).ToString("yyyyMMdd") + "0000";
 
-            for(int i=0;i<_priceList.Count;i++)
+            string url = $"https://transparency.entsoe.eu/api?documentType=A44&in_Domain=10YNO-2--------T&out_Domain=10YNO-2--------T&periodStart={startDateFormat}&periodEnd={endDateFormat}&securityToken=5cd1c4f6-2172-4453-a8bb-c9467fa0fabc";
+
+            var response = await _client.GetAsync(url);
+            if(response.IsSuccessStatusCode)
             {
-                if(maxPowerHours.Contains(_priceList[i]))
+                var xmlText = await response.Content.ReadAsStringAsync();
+
+                XmlDocument doc = new XmlDocument();
+                doc.LoadXml(xmlText);
+
+                XmlNode xmlNode = doc.LastChild;
+
+                foreach (XmlNode child in xmlNode)
                 {
-                    
-                    _priceList[i].DesiredPower = WaterHeaterDesiredPower.Watt2000;
+                    if (child.Name != "TimeSeries")
+                        continue;
+
+                    DateTime startTime = DateTime.MinValue;
+                    foreach(XmlNode xmlPeriod in child.ChildNodes)
+                    {
+                        if (xmlPeriod.Name != "Period")
+                            continue;
+                        
+
+                        foreach(XmlNode actualData in xmlPeriod.ChildNodes)
+                        {
+                            if (actualData.Name == "timeInterval")
+                            {
+                                foreach(XmlNode timeIntervalNode in actualData.ChildNodes)
+                                {
+                                    if(timeIntervalNode.Name == "end")
+                                    {
+                                        string strDate = timeIntervalNode.InnerText.Substring(0, timeIntervalNode.InnerText.IndexOf('T'));
+                                        startTime = DateTime.Parse(strDate,new ApiDateTimeFormat());
+                                    }
+                                }
+                            }
+                            else if(actualData.Name == "Point")
+                            {
+                                var price = new stPriceInformation();
+
+                                foreach (XmlNode timeIntervalNode in actualData.ChildNodes)
+                                {
+                                    if (timeIntervalNode.Name == "position")
+                                    {
+                                        int iPosition = int.Parse(timeIntervalNode.InnerText);
+
+                                        if (iPosition > 1)
+                                            price.Start = startTime.AddHours(iPosition - 1);
+                                        else
+                                            price.Start = startTime;
+
+                                        price.End = startTime.AddHours(iPosition);
+                                    }
+                                    else if (timeIntervalNode.Name == "price.amount")
+                                    {
+                                        price.Price = Parse(timeIntervalNode.InnerText);
+                                    }
+                                }
+
+                                _priceList.Add(price);
+                            }
+                        }                       
+                    }                                      
                 }
-                else if (mediumPowerHours.Contains(_priceList[i]))
+
+                Console.WriteLine("");
+
+            }
+        }
+
+        public void CreateSortedList(DateTime filterDate,int desiredMaxpower,int mediumPower)
+        {
+            var sortedList = new List<stPriceInformation>(24);
+            foreach (stPriceInformation price in _priceList)
+            {
+                if (price.Start.Date != filterDate.Date)
+                    continue;
+
+                sortedList.Add(price);
+            }
+
+            sortedList.Sort(new SortByLowestPrice());
+            var maxPowerHours = sortedList.Take(desiredMaxpower);
+            var mediumPowerHours = sortedList.Take(mediumPower + desiredMaxpower);
+
+            for(int i=0;i< sortedList.Count;i++)
+            {
+                if(maxPowerHours.Contains(sortedList[i]))
                 {
-                    _priceList[i].DesiredPower = WaterHeaterDesiredPower.Watt700;
+                    sortedList[i].DesiredPower = WaterHeaterDesiredPower.Watt2000;
+                }
+                else if (mediumPowerHours.Contains(sortedList[i]))
+                {
+                    sortedList[i].DesiredPower = WaterHeaterDesiredPower.Watt700;
                 }
             }
 
             _priceList.Sort(new SortByStartDate());
-
-            foreach(var price in _priceList)
+            foreach (var price in _priceList)
             {
-                Console.WriteLine($"Start: {price.Start.ToShortTimeString()} | {price.End.ToShortTimeString()} - {price.DesiredPower} - {price.Price}");
+                var updatedPrice = sortedList.FirstOrDefault(x => x.Id == price.Id);
+                if(updatedPrice != null)
+                {
+                    price.DesiredPower = updatedPrice.DesiredPower;
+                }
+               // Console.WriteLine($"{price.Start.Day}) Start: {price.Start.ToShortTimeString()} | {price.End.ToShortTimeString()} - {price.DesiredPower} - {price.Price}");
             }
         }
 
-        public async Task GetPrices()
+        internal void PrintScheudule()
         {
-            var rawLines = System.IO.File.ReadAllLines("Day-ahead Prices_202203260000-202203270000.csv");
-            for(int i = 1; i < rawLines.Length; i++)
+            foreach (var price in _priceList)
             {
-                var splitLine = rawLines[i].Split(',');
-                var dates = GetStartAndEnd(splitLine[0]);
-
-
-                var price = new stPriceInformation()
-                {
-                    Start = dates.start,
-                    End = dates.end,
-                    Price = Parse(splitLine[1])
-                };
-                _priceList.Add(price);
-            }            
+                 Console.WriteLine($"{price.Start.Day}) Start: {price.Start.ToShortTimeString()} | {price.End.ToShortTimeString()} - {price.DesiredPower} - {price.Price}");
+            }
         }
 
-        double Parse(string input)
+        static double Parse(string input)
         {
             if (input == null || input.Length == 0)
                 return 0;

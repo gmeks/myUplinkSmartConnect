@@ -14,15 +14,56 @@ namespace myUplink
 
         public ApplyCostSavingRules()
         {
-            Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Debug()
-    .WriteTo.Console(restrictedToMinimumLevel: LogEventLevel.Debug) // restricted... is Optional
-    .CreateLogger();
+            Log.Logger = new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console(restrictedToMinimumLevel: LogEventLevel.Debug).CreateLogger();
         }
 
-        internal IEnumerable<WaterHeaterMode> WaterHeaterModes { get; set; } = new List<WaterHeaterMode>();
+        internal List<WaterHeaterMode> WaterHeaterModes { get; set; } = new List<WaterHeaterMode>();
 
-        internal IEnumerable<HeaterWeeklyEvent> WaterHeaterSchedule { get; set; } = new List<HeaterWeeklyEvent>();
+        internal List<HeaterWeeklyEvent> WaterHeaterSchedule { get; set; } = new List<HeaterWeeklyEvent>();
+
+        public bool VerifyHeaterSchedule(List<stPriceInformation> priceList, params DateTime[] datesToSchuedule)
+        {
+            List<HeaterWeeklyEvent> whScheadule;
+
+            foreach (var targetSchedule in datesToSchuedule)
+            {
+                whScheadule = new List<HeaterWeeklyEvent>();
+                //clean old values.
+
+                var itemsToRemove = WaterHeaterSchedule.Where(x => x.Day == targetSchedule.DayOfWeek).ToArray();
+                foreach(var item in itemsToRemove)
+                {
+                    WaterHeaterSchedule.Remove(item);   
+                }
+
+                HeaterWeeklyEvent sch = null;
+                var currentPowerLevel = WaterHeaterDesiredPower.Watt2000;
+
+                foreach (var price in priceList)
+                {
+                    if (price.Start.Date != targetSchedule.Date)
+                        continue;
+
+                    if (price.DesiredPower != currentPowerLevel || sch == null)
+                    {
+                        if(sch != null)
+                            whScheadule.Add(sch);
+
+                        sch = new HeaterWeeklyEvent();
+                        sch.startDay = targetSchedule.DayOfWeek.ToString();
+                        sch.startTime = price.Start.ToShortTimeString();
+                        sch.modeId = GetModeFromWaterHeaterDesiredPower(price.DesiredPower);
+                        currentPowerLevel = price.DesiredPower;
+                    }
+
+                }
+
+                whScheadule.Add(sch);
+                WaterHeaterSchedule.AddRange(whScheadule);
+            }
+
+            return false;
+        }
 
         public bool VerifyWaterHeaterModes()
         {
@@ -53,7 +94,25 @@ namespace myUplink
             return allModesGood;
         }
 
-        bool VerifyWaterHeaterMode(WaterHeaterMode mode, WaterHeaterDesiredPower desiredPower,int targetTemprature)
+        int GetModeFromWaterHeaterDesiredPower(WaterHeaterDesiredPower power)
+        {
+            foreach(var item in WaterHeaterModes)
+            {
+                foreach(var settings in item.settings)
+                {
+                    if(settings.settingId == WaterheaterSettingsMode.TargetHeaterWatt)
+                    {
+                        var tmp = (WaterHeaterDesiredPower)settings.value;
+                        if (tmp == power)
+                            return item.modeId;
+                    }
+                }
+            }
+
+            throw new Exception("Failed to find ");
+        }
+
+        static bool VerifyWaterHeaterMode(WaterHeaterMode mode, WaterHeaterDesiredPower desiredPower,int targetTemprature)
         {
             bool isGood = true;
             foreach (var setting in mode.settings)

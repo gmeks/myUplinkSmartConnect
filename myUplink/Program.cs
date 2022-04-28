@@ -1,5 +1,6 @@
 
 using myUplink.ModelsPublic.Internal;
+using System.Net.Http.Headers;
 using System.Text.Json;
 
 namespace myUplink
@@ -14,8 +15,6 @@ namespace myUplink
 #else
             settingsFile = "appsettings.json";
 #endif
-            
-
             if(!File.Exists(settingsFile))
             {
                 Console.WriteLine($"No settings file found {settingsFile}");
@@ -24,31 +23,13 @@ namespace myUplink
 
             var settings = JsonSerializer.Deserialize< Settings >(File.ReadAllText(settingsFile));
 
-            /*
-            var login = new PublicAPI();
-
-            await login.LoginToApi(settings.clientIdentifier, settings.clientSecret);
-            await login.Ping();
-
-            var systems = await login.GetUserSystems();
-
-            foreach(var system in systems)
-            {
-                foreach(var deviceId in system.devices)
-                {
-                    var info = await login.GetDeviceInfoPoints(deviceId.id);
-                    foreach(var tmpInfo in info)
-                    {
-                        Console.WriteLine(tmpInfo.parameterName + " - " + tmpInfo.strVal); 
-                    }
-                }
-            }
-            */
-
             var powerPrice = new EntsoeAPI();
-            await powerPrice.GetPrices();
+            await powerPrice.FetchPriceInformation("5cd1c4f6-2172-4453-a8bb-c9467fa0fabc");
 
-            powerPrice.CreateSortedList(5, 6);
+            powerPrice.CreateSortedList(DateTime.Now,5, 6);
+            powerPrice.CreateSortedList(DateTime.Now.AddDays(1), 5, 6);
+
+            powerPrice.PrintScheudule();
 
             var interalAPI = new InternalAPI();
             await interalAPI.LoginToApi(settings.UserName, settings.Password);
@@ -65,6 +46,11 @@ namespace myUplink
                     if(!costSaving.VerifyWaterHeaterModes())
                     {
                         await interalAPI.SetCurrentModes(tmpdevice, costSaving.WaterHeaterModes);
+                    }
+
+                    if (!costSaving.VerifyHeaterSchedule(powerPrice.PriceList, DateTime.Now, DateTime.Now.AddDays(1)))
+                    {
+                        await interalAPI.SetWheeklySchedules(tmpdevice, costSaving.WaterHeaterSchedule);
                     }
                 }
             }
