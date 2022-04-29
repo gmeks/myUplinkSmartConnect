@@ -2,6 +2,8 @@
 
 This program connect to the myuplink.com and adjust the schedule of [Høiax CONNECTED](https://www.hoiax.no/om-hoiax/articles/hoiax-connected-smart-varmtvannsbereder-med-skylosning) hot water heaters, and adjust the schedule so that it uses electricity when the price is low.
 
+![Screenshot](schedule_screenshot.png)]
+
 **How does program work:**
 ---
 It contacts a EU API [transparency.entsoe.eu](https://transparency.entsoe.eu) and gets the electricity price pr hour for your region. It wil then set the schedule for when to increase the water temprature.
