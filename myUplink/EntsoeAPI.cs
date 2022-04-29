@@ -62,9 +62,9 @@ namespace myUplink
                                 foreach(XmlNode timeIntervalNode in actualData.ChildNodes)
                                 {
                                     if(timeIntervalNode.Name == "end")
-                                    {
+                                    {                                        
                                         string strDate = timeIntervalNode.InnerText.Substring(0, timeIntervalNode.InnerText.IndexOf('T'));
-                                        startTime = DateTime.Parse(strDate,new ApiDateTimeFormat());
+                                        startTime = ParseDateTime(strDate);
                                     }
                                 }
                             }
@@ -96,9 +96,6 @@ namespace myUplink
                         }                       
                     }                                      
                 }
-
-                Console.WriteLine("");
-
             }
         }
 
@@ -137,7 +134,6 @@ namespace myUplink
                 {
                     price.DesiredPower = updatedPrice.DesiredPower;
                 }
-               // Console.WriteLine($"{price.Start.Day}) Start: {price.Start.ToShortTimeString()} | {price.End.ToShortTimeString()} - {price.DesiredPower} - {price.Price}");
             }
         }
 
@@ -179,6 +175,15 @@ namespace myUplink
             var end = DateTime.Parse(split[1], new ApiDateTimeFormat());
 
             return (start, end);
+        }
+
+        static DateTime ParseDateTime(string strDateTime)
+        {
+            //foreach (TimeZoneInfo z in TimeZoneInfo.GetSystemTimeZones())
+            //    Console.WriteLine(z.Id);
+            var dateTime = DateTime.Parse(strDateTime, new ApiDateTimeFormat());
+            TimeZoneInfo timeInfo = TimeZoneInfo.FindSystemTimeZoneById("Central European Standard Time");
+            return TimeZoneInfo.ConvertTime(dateTime, timeInfo,TimeZoneInfo.Local);
         }
     }
 

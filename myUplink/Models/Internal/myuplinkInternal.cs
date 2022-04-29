@@ -26,6 +26,15 @@ namespace myUplink.ModelsPublic.Internal
         public WaterheaterSettingsMode settingId { get; set; }
         public int value { get; set; }
 
+        [JsonIgnore]
+        public WaterHeaterDesiredPower HelperDesiredHeatingPower
+        {
+            get
+            {
+                return (WaterHeaterDesiredPower)value;
+            }
+        }
+
         /*
          0 = 0Watt
          1 = 700 Watt

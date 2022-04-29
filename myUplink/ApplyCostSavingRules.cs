@@ -96,13 +96,15 @@ namespace myUplink
 
         int GetModeFromWaterHeaterDesiredPower(WaterHeaterDesiredPower power)
         {
-            foreach(var item in WaterHeaterModes)
+            for(int i= (WaterHeaterModes.Count-1); i > 0;i--) // Some might call this a micro optimization, those people would be correct. But also since we place our modes in the end, why not start checking there.
             {
-                foreach(var settings in item.settings)
+                var item = WaterHeaterModes[i];
+
+                foreach (var settings in item.settings)
                 {
                     if(settings.settingId == WaterheaterSettingsMode.TargetHeaterWatt)
                     {
-                        var tmp = (WaterHeaterDesiredPower)settings.value;
+                        var tmp = settings.HelperDesiredHeatingPower;
                         if (tmp == power)
                             return item.modeId;
                     }
@@ -120,12 +122,11 @@ namespace myUplink
                 switch (setting.settingId)
                 {
                     case WaterheaterSettingsMode.TargetHeaterWatt:
-                        var tmp = (WaterHeaterDesiredPower)setting.value;
-                        if (tmp != desiredPower)
+                        if (setting.HelperDesiredHeatingPower != desiredPower)
                         {
                             isGood = false;
                             setting.value = (int)desiredPower;
-                            Log.Logger.Warning($"Water heater desired power level is incorrect for {mode.name} , changing from {tmp} to {desiredPower}");
+                            Log.Logger.Warning($"Water heater desired power level is incorrect for {mode.name} , changing from {setting.HelperDesiredHeatingPower} to {desiredPower}");
                         }
                         break;
 
