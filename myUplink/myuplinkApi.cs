@@ -1,5 +1,4 @@
 ﻿using myUplink.Models;
-using myUplink.ModelsPublic.Internal;
 using RestSharp;
 using RestSharp.Authenticators;
 using System;
@@ -11,14 +10,14 @@ using System.Threading.Tasks;
 
 namespace myUplink
 {
-    internal class InternalAPI
+    internal class myuplinkApi
     {
         RestClient _httpClient;
         AuthToken? _token;
         const string _tokenFile = "tokenfile_internal.json";
         readonly Uri _apiUrl;
 
-        public InternalAPI()
+        public myuplinkApi()
         {
             _apiUrl = new Uri("https://internalapi.myuplink.com");
             _httpClient = new RestClient(_apiUrl);
@@ -134,7 +133,7 @@ namespace myUplink
             var tResponse = await _httpClient.ExecuteAsync(request);
             if (tResponse.StatusCode == System.Net.HttpStatusCode.OK && !string.IsNullOrEmpty(tResponse.Content))
             {
-                var devices = JsonSerializer.Deserialize<List<WaterHeaterMode>>(tResponse.Content);
+                var devices = JsonSerializer.Deserialize<List<WaterHeaterMode>>(tResponse.Content) ?? Array.Empty<WaterHeaterMode>().ToList();
                 return devices;
             }
 

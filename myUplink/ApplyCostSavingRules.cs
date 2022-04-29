@@ -1,4 +1,4 @@
-﻿using myUplink.ModelsPublic.Internal;
+﻿using myUplink.Models;
 using Serilog;
 using Serilog.Events;
 using System;
@@ -11,6 +11,9 @@ namespace myUplink
 {
     public class ApplyCostSavingRules
     {
+        const int TempratureTargetLow = 50;
+        const int TempratureTargetHigh = 70;
+
 
         public ApplyCostSavingRules()
         {
@@ -74,17 +77,17 @@ namespace myUplink
                 bool isGood = true;
                 if (mode.name.StartsWith("M6"))
                 {
-                    isGood = VerifyWaterHeaterMode(mode, WaterHeaterDesiredPower.Watt2000, 70);
+                    isGood = VerifyWaterHeaterMode(mode, WaterHeaterDesiredPower.Watt2000, TempratureTargetHigh);
                 }
 
                 if (mode.name.StartsWith("M5"))
                 {
-                    isGood = VerifyWaterHeaterMode(mode, WaterHeaterDesiredPower.Watt700, 50);
+                    isGood = VerifyWaterHeaterMode(mode, WaterHeaterDesiredPower.Watt700, TempratureTargetLow);
                 }
 
                 if (mode.name.StartsWith("M4"))
                 {
-                    isGood = VerifyWaterHeaterMode(mode, WaterHeaterDesiredPower.None, 50);
+                    isGood = VerifyWaterHeaterMode(mode, WaterHeaterDesiredPower.None, TempratureTargetLow);
                 }
 
                 if(!isGood)

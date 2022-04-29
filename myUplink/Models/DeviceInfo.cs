@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace myUplink.Models.Public
+namespace myUplink.Models
 {
     public class DeviceInfoEnumValue
     {

@@ -1,5 +1,5 @@
 
-using myUplink.ModelsPublic.Internal;
+using myUplink.Models;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
@@ -21,17 +21,16 @@ namespace myUplink
                 return 200;
             }
 
-            var settings = JsonSerializer.Deserialize< Settings >(File.ReadAllText(settingsFile));
+            var settings = JsonSerializer.Deserialize<Settings>(File.ReadAllText(settingsFile));
 
             var powerPrice = new EntsoeAPI();
             await powerPrice.FetchPriceInformation("5cd1c4f6-2172-4453-a8bb-c9467fa0fabc");
 
-            powerPrice.CreateSortedList(DateTime.Now,5, 6);
-            powerPrice.CreateSortedList(DateTime.Now.AddDays(1), 5, 6);
-
+            powerPrice.CreateSortedList(DateTime.Now,settings.WaterHeaterMaxPowerInHours, settings.WaterHeaterMediumPowerInHours);
+            powerPrice.CreateSortedList(DateTime.Now.AddDays(1), settings.WaterHeaterMaxPowerInHours, settings.WaterHeaterMediumPowerInHours);
             powerPrice.PrintScheudule();
 
-            var interalAPI = new InternalAPI();
+            var interalAPI = new myuplinkApi();
             await interalAPI.LoginToApi(settings.UserName, settings.Password);
 
             var test = await interalAPI.GetDevices();
@@ -54,12 +53,7 @@ namespace myUplink
                     }
                 }
             }
-
-            //var test = await interalAPI.GetCurrentSchedule();
-
             return 0;
         }
-
-
    }
 }

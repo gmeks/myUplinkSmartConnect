@@ -1,4 +1,4 @@
-﻿using myUplink.ModelsPublic.Internal;
+﻿using myUplink.Models;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -216,7 +216,7 @@ namespace myUplink
 
         public bool Equals(stPriceInformation other)
         {
-            return Id.Equals(other.Id);
+            return this.Id.Equals(other?.Id);
         }
 
         public WaterHeaterDesiredPower DesiredPower { get; set; }
@@ -226,6 +226,15 @@ namespace myUplink
     {
         public int Compare(stPriceInformation x, stPriceInformation y)
         {
+            if (x == null && y == null)
+                return 0;
+
+            if(x == null && y != null)
+                return 1;
+
+            if (y == null && x != null)
+                return -1;
+
             if (x.Price == y.Price)
                 return 0;
 
