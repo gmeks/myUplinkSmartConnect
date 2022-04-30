@@ -17,7 +17,7 @@ namespace myUplink
 
         public ApplyCostSavingRules()
         {
-            Log.Logger = new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console(restrictedToMinimumLevel: LogEventLevel.Debug).CreateLogger();
+            
         }
 
         internal List<WaterHeaterMode> WaterHeaterModes { get; set; } = new List<WaterHeaterMode>();
@@ -26,18 +26,10 @@ namespace myUplink
 
         public bool VerifyHeaterSchedule(List<stPriceInformation> priceList, params DateTime[] datesToSchuedule)
         {
-            List<HeaterWeeklyEvent> whScheadule;
-
+            // Turns out there is a maximum number of "events" so we have to wipe out all other days.
+            WaterHeaterSchedule.Clear();
             foreach (var targetSchedule in datesToSchuedule)
             {
-                whScheadule = new List<HeaterWeeklyEvent>();
-                //clean old values.
-
-                var itemsToRemove = WaterHeaterSchedule.Where(x => x.Day == targetSchedule.DayOfWeek).ToArray();
-                foreach(var item in itemsToRemove)
-                {
-                    WaterHeaterSchedule.Remove(item);   
-                }
 
                 HeaterWeeklyEvent sch = null;
                 var currentPowerLevel = WaterHeaterDesiredPower.Watt2000;
@@ -50,21 +42,19 @@ namespace myUplink
                     if (price.DesiredPower != currentPowerLevel || sch == null)
                     {
                         if(sch != null)
-                            whScheadule.Add(sch);
+                            WaterHeaterSchedule.Add(sch);
 
                         sch = new HeaterWeeklyEvent();
                         sch.startDay = targetSchedule.DayOfWeek.ToString();
-                        sch.startTime = price.Start.ToShortTimeString();
+                        sch.startTime = price.Start.ToString("HH:mm:ss");
                         sch.modeId = GetModeFromWaterHeaterDesiredPower(price.DesiredPower);
                         currentPowerLevel = price.DesiredPower;
                     }
 
                 }
 
-                whScheadule.Add(sch);
-                WaterHeaterSchedule.AddRange(whScheadule);
+                WaterHeaterSchedule.Add(sch);                
             }
-
             return false;
         }
 

@@ -1,5 +1,7 @@
 
 using myUplink.Models;
+using Serilog;
+using Serilog.Events;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
@@ -9,6 +11,7 @@ namespace myUplink
     {
         public static  async Task<int> Main(string[] args)
         {
+            Log.Logger = new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console(restrictedToMinimumLevel: LogEventLevel.Debug).CreateLogger();
             string settingsFile;
 #if DEBUG
             settingsFile = "appsettings.Development.json";
@@ -22,6 +25,12 @@ namespace myUplink
             }
 
             var settings = JsonSerializer.Deserialize<Settings>(File.ReadAllText(settingsFile));
+
+            if(settings.WaterHeaterMaxPowerInHours == 0 && settings.WaterHeaterMaxPowerInHours == 0)
+            {
+                Log.Logger.Error("WaterHeaterMaxPowerInHours and WaterHeaterMaxPowerInHours are both set to 0, aborting");
+                return 2004;
+            }
 
             var powerPrice = new EntsoeAPI();
             await powerPrice.FetchPriceInformation("5cd1c4f6-2172-4453-a8bb-c9467fa0fabc");
@@ -44,12 +53,24 @@ namespace myUplink
 
                     if(!costSaving.VerifyWaterHeaterModes())
                     {
-                        await interalAPI.SetCurrentModes(tmpdevice, costSaving.WaterHeaterModes);
+                        var status = await interalAPI.SetCurrentModes(tmpdevice, costSaving.WaterHeaterModes);
+
+                        if(!status)
+                        {
+                            Log.Logger.Error("Failed to update heater modes, aborting");
+                            return 203;
+                        }
                     }
 
                     if (!costSaving.VerifyHeaterSchedule(powerPrice.PriceList, DateTime.Now, DateTime.Now.AddDays(1)))
                     {
-                        await interalAPI.SetWheeklySchedules(tmpdevice, costSaving.WaterHeaterSchedule);
+                        var status = await interalAPI.SetWheeklySchedules(tmpdevice, costSaving.WaterHeaterSchedule);
+
+                        if (!status)
+                        {
+                            Log.Logger.Error("Failed to update heater schedule, aborting");
+                            return 205;
+                        }
                     }
                 }
             }
