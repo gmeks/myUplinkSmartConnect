@@ -15,21 +15,18 @@ namespace MyUplinkSmartConnect
     {
         readonly MqttFactory _mqttFactory;
         static IMqttClient? _mqttClient;
-        IEnumerable<Group>? _deviceGroup;
+        IEnumerable<DeviceGroup>? _deviceGroup;
 
         public JobCheckHeaterStatus()
         {
             _mqttFactory = new MqttFactory();
-        }
-
-        enum parameterValue
-        {
-            TargetTemprature= 527,
-            CurrentTemprature= 528,
-        }
+        }              
 
         public async Task Work()
         {
+            if (Settings.Instance.myuplinkApi == null)
+                return;
+
             if(_deviceGroup == null)
             {
                 _deviceGroup = await Settings.Instance.myuplinkApi.GetDevices();
@@ -39,15 +36,20 @@ namespace MyUplinkSmartConnect
             {
                 foreach (var tmpdevice in device.devices)
                 {
-                    var devicePointsList = await Settings.Instance.myuplinkApi.GetDevicePoints(tmpdevice);
+                    var devicePointsList = await Settings.Instance.myuplinkApi.GetDevicePoints(tmpdevice, CurrentPointParameterType.TargetTemprature, CurrentPointParameterType.CurrentTemprature, 
+                        CurrentPointParameterType.EstimatedPower, CurrentPointParameterType.EnergyTotal, CurrentPointParameterType.EnergiStored, CurrentPointParameterType.FillLevel);
                     foreach (var devicePoint in devicePointsList)
                     {
-                        var parm = (parameterValue)int.Parse(devicePoint.parameterId);
+                        var parm = (CurrentPointParameterType)int.Parse(devicePoint.parameterId);
 
                         switch(parm)
                         {
-                            case parameterValue.TargetTemprature:
-                            case parameterValue.CurrentTemprature:
+                            case CurrentPointParameterType.FillLevel:
+                            case CurrentPointParameterType.EnergiStored:
+                            case CurrentPointParameterType.EnergyTotal:
+                            case CurrentPointParameterType.EstimatedPower:
+                            case CurrentPointParameterType.TargetTemprature:
+                            case CurrentPointParameterType.CurrentTemprature:
                                 await SendUpdate(device.name, parm, devicePoint.value);
                                 break;
                         }                        
@@ -56,7 +58,7 @@ namespace MyUplinkSmartConnect
             }            
         }
 
-        async Task SendUpdate(string deviceName, parameterValue parameter,double value)
+        async Task SendUpdate(string deviceName, CurrentPointParameterType parameter,double value)
         {
             if(_mqttClient == null || !_mqttClient.IsConnected)
             {
@@ -75,16 +77,24 @@ namespace MyUplinkSmartConnect
                 catch(Exception ex)
                 {
                     Log.Logger.Error(ex,"Failed to connect to MTQQ server ");
+                    _mqttClient = null;
                 }                
             }
 
-
             if(_mqttClient != null && _mqttClient.IsConnected)
             {
-                var applicationMessage = new MqttApplicationMessageBuilder().WithTopic($"heater/{deviceName}/{parameter}").WithPayload(value.ToString()).Build();
-
-                await _mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
-                Log.Logger.Information($"Sending update {deviceName} - {parameter} - {value}");
+                try
+                {
+                    var applicationMessage = new MqttApplicationMessageBuilder().WithTopic($"heater/{deviceName}/{parameter}").WithPayload(value.ToString()).Build();
+                    await _mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
+                    Log.Logger.Information($"Sending update {deviceName} - {parameter} - {value}");
+                }
+                catch (Exception ex)
+                {
+                    Log.Logger.Error(ex, "Failed to send message to MTQQ message");
+                    _mqttClient?.Dispose();
+                    _mqttClient = null;
+                }
             }            
         }
     }

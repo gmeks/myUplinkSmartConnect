@@ -1,5 +1,4 @@
 ﻿using Hangfire;
-using Hangfire.MemoryStorage;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -8,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Topshelf;
+using Hangfire.LiteDB;
 
 namespace MyUplinkSmartConnect
 {
@@ -21,7 +21,7 @@ namespace MyUplinkSmartConnect
 #endif
         public PriceWatchService()
         {
-            GlobalConfiguration.Configuration.UseMemoryStorage();
+            GlobalConfiguration.Configuration.LiteDbStorage("myuplink-hangfire.db");
             var options = new BackgroundJobServerOptions
             {
                 // This is the default value

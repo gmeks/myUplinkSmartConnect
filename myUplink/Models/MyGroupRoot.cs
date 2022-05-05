@@ -2,6 +2,6 @@
 {
     public class MyGroupRoot
     {
-        public List<Group> groups { get; set; }
+        public List<DeviceGroup> groups { get; set; }
     }
 }

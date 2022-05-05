@@ -1,6 +1,6 @@
 ﻿namespace MyUplinkSmartConnect.Models
 {
-    public class Group
+    public class DeviceGroup
     {
         public string userRole { get; set; }
         public string id { get; set; }

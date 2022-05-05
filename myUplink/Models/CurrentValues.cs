@@ -6,6 +6,16 @@ using System.Threading.Tasks;
 
 namespace MyUplinkSmartConnect.Models
 {
+    enum CurrentPointParameterType
+    {
+        TargetTemprature = 527,
+        CurrentTemprature = 528,
+        FillLevel = 404, // How much water in tank
+        EnergiStored = 302, // Estimated energi stored in tank
+        EstimatedPower = 400, // Estimated electricity usage to heat water now.
+        EnergyTotal = 303, // Electricity used in total.
+    }
+
     internal class CurrentValues
     {
         public string parameterId { get; set; }

@@ -98,14 +98,23 @@ namespace MyUplinkSmartConnect
 
             return false;
         }
-        
-        public async Task<IEnumerable<CurrentValues>> GetDevicePoints(Device device)
+
+        public async Task<IEnumerable<CurrentValues>> GetDevicePoints(Device device, params CurrentPointParameterType[] points)
         {
             var loginStatus = await LoginToApi();
             if (!loginStatus)
                 return Array.Empty<CurrentValues>();
 
-            var request = new RestRequest($"https://internalapi.myuplink.com/v2/devices/{device.id}/points?parameters=527,528,527,528,517,406,500,501,404") { Method = Method.Get };
+            var parameters = new StringBuilder();
+            foreach (var point in points)
+            {
+                if (parameters.Length > 0)
+                    parameters.Append($",{(int)point}");
+                else
+                    parameters.Append($"{(int)point}");
+            }
+
+            var request = new RestRequest($"https://internalapi.myuplink.com/v2/devices/{device.id}/points?parameters={parameters.ToString()}") { Method = Method.Get };
             var tResponse = await _httpClient.ExecuteAsync(request);
 
             if (tResponse.StatusCode == System.Net.HttpStatusCode.OK && !string.IsNullOrEmpty(tResponse.Content))
@@ -117,11 +126,11 @@ namespace MyUplinkSmartConnect
             return Array.Empty<CurrentValues>();
         }
 
-        public async Task<IEnumerable<Group>> GetDevices()
+        public async Task<IEnumerable<DeviceGroup>> GetDevices()
         {
             var loginStatus = await LoginToApi();
             if(!loginStatus)
-                return Array.Empty<Group>();
+                return Array.Empty<DeviceGroup>();
 
             var request = new RestRequest("/v2/groups/me") { Method = Method.Get };
             var tResponse = await _httpClient.ExecuteAsync(request);
@@ -132,7 +141,7 @@ namespace MyUplinkSmartConnect
                 return devices.groups;
             }
 
-            return Array.Empty<Group>();
+            return Array.Empty<DeviceGroup>();
         }
 
         public async Task<List<HeaterWeeklyEvent>> GetWheeklySchedules(Device device)
