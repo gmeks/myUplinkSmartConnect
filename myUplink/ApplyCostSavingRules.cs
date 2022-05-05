@@ -1,4 +1,4 @@
-﻿using myUplink.Models;
+﻿using MyUplinkSmartConnect.Models;
 using Serilog;
 using Serilog.Events;
 using System;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace myUplink
+namespace MyUplinkSmartConnect
 {
     public class ApplyCostSavingRules
     {

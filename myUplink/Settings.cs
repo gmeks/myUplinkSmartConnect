@@ -1,6 +1,14 @@
-﻿namespace myUplink
+﻿using MyUplinkSmartConnect.Models;
+using System.Text.Json.Serialization;
+
+namespace MyUplinkSmartConnect
 {
-    class Settings
+    static class Settings
+    {
+        public static SettingsValues Instance { get; set; }
+    }
+
+    class SettingsValues
     {
         public string UserName { get; set; }
 
@@ -9,5 +17,13 @@
         public int WaterHeaterMaxPowerInHours { get; set; }
 
         public int WaterHeaterMediumPowerInHours { get; set; }
+
+
+        public string MTQQServer { get; set; }
+
+        public int MTQQServerPort { get; set; }
+
+        [JsonIgnore]
+        public myuplinkApi myuplinkApi { get; set; }
     }
 }

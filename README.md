@@ -8,6 +8,8 @@ This program connect to the myuplink.com and adjust the schedule of [Høiax CONNE
 ---
 It contacts a EU API [transparency.entsoe.eu](https://transparency.entsoe.eu) and gets the electricity price pr hour for your region. It will then set the schedule for when to increase the water temprature.
 
+**Legal**
+This is a 3d party program made to work against [myuplink](https://myuplink.com), and not afflilated with them in any way.
 
 **How to use:**
 ---

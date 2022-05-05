@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace myUplink.Models
+namespace MyUplinkSmartConnect.Models
 {
     public enum WaterheaterSettingsMode
     {

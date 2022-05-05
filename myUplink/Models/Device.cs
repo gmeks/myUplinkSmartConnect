@@ -1,4 +1,4 @@
-﻿namespace myUplink.Models
+﻿namespace MyUplinkSmartConnect.Models
 {
     public class Device
     {
