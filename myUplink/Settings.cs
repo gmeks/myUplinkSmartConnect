@@ -10,20 +10,19 @@ namespace MyUplinkSmartConnect
 
     class SettingsValues
     {
-        public string UserName { get; set; }
+        public string? UserName { get; set; }
 
-        public string Password { get; set; }
+        public string? Password { get; set; }
 
         public int WaterHeaterMaxPowerInHours { get; set; }
 
         public int WaterHeaterMediumPowerInHours { get; set; }
 
-
-        public string MTQQServer { get; set; }
+        public string? MTQQServer { get; set; }
 
         public int MTQQServerPort { get; set; }
 
         [JsonIgnore]
-        public myuplinkApi myuplinkApi { get; set; }
+        public myuplinkApi? myuplinkApi { get; set; }
     }
 }

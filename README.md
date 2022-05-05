@@ -1,6 +1,7 @@
 **MyUplink Schedule changer.**
 
 This program connect to the myuplink.com and adjust the schedule of [Høiax CONNECTED](https://www.hoiax.no/om-hoiax/articles/hoiax-connected-smart-varmtvannsbereder-med-skylosning) hot water heaters, and adjust the schedule so that it uses electricity when the price is low.
+It also allows you to periodicity publish current values from the heater via MTQQ to your home automation of choice.
 
 ![Screenshot](schedule_screenshot.png)
 
@@ -15,7 +16,7 @@ This is a 3d party program made to work against [myuplink](https://myuplink.com)
 ---
 1) Download the program.
 2) Configure the application.json
-3) Run the program once pr Day, after 14:00  (Before this time, "tomorrows" electricity price is not ready.)
+3) Install with *myuplink install* (Or you can just run it)
 
 
 **Configuration explained:**
@@ -24,7 +25,8 @@ This is a 3d party program made to work against [myuplink](https://myuplink.com)
 - Password - Your password for myuplink.com 
 - WaterHeaterMaxPowerInHours - This is the number of hours pr day the water heater is running full power.
 - WaterHeaterMediumPowerInHours - This the number of hours pr day the water heater is running at half power, but with a lower "target temprature"
-
+- MTQQServer - IP address or FQDN of MTQQ, this is optional.
+- MTQQServerPort - The port of the MTQQ server, this is optional.
 
 **Recommended configuration.**
 ---

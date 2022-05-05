@@ -38,18 +38,18 @@ namespace MyUplinkSmartConnect
                 return false;
             }
 
-            Settings.Instance = JsonSerializer.Deserialize<SettingsValues>(File.ReadAllText(settingsFile));
+            Settings.Instance = JsonSerializer.Deserialize<SettingsValues>(File.ReadAllText(settingsFile)) ?? new SettingsValues();
             if (Settings.Instance.WaterHeaterMaxPowerInHours == 0 && Settings.Instance.WaterHeaterMaxPowerInHours == 0)
             {
                 Log.Logger.Error("WaterHeaterMaxPowerInHours and WaterHeaterMaxPowerInHours are both set to 0, aborting");
                 return false;
             }
-
+            File.WriteAllText(settingsFile, JsonSerializer.Serialize(Settings.Instance,new JsonSerializerOptions() { WriteIndented = true, PropertyNameCaseInsensitive=true }));
             Settings.Instance.myuplinkApi = new myuplinkApi();
 
             RecurringJob.AddOrUpdate("Reschedule heaters", () => JobReScheuleheating.Work(), "0 0 17 * * ?");
 
-            if(string.IsNullOrEmpty(Settings.Instance.MTQQServer))
+            if(!string.IsNullOrEmpty(Settings.Instance.MTQQServer))
             {
                 RecurringJob.AddOrUpdate("Heaters status", () => new JobCheckHeaterStatus().Work(), Cron.MinuteInterval(10));
 #if DEBUG
