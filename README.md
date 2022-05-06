@@ -35,47 +35,47 @@ This is a 3d party program made to work against [myuplink](https://myuplink.com)
 ** Setup Homeassistant sensor, in configuration.yml**
 *18760NE2240322014631 needs to be replaced with the ID of your hotwater heater, simplest way to find out is to just read the console output of this application*
 
-> sensor:
->   - platform: mqtt
->     state_topic: "heater/18760NE2240322014631/TargetTemprature"
->     unique_id: "TargetTemprature"
->     name: "Target temprature"
->     unit_of_measurement: "°C"
->     
->   - platform: mqtt
->     state_topic: "heater/18760NE2240322014631/CurrentTemprature"
->     unique_id: "CurrentTemprature"
->     name: "Current temprature"
->     unit_of_measurement: "°C"
->     
->   - platform: mqtt
->     state_topic: "heater/18760NE2240322014631/EstimatedPower"
->     unique_id: "EstimatedPower"    
->     name: "Current Watt"
->     device_class: power    
->     state_class: measurement    
->     unit_of_measurement : W   
->    
->  - platform: mqtt
->    state_topic: "heater/18760NE2240322014631/EnergyTotal"
->    unique_id: "EnergyTotal"
->    name: "Energy Total"    
->    device_class: power
->    state_class: total_increasing
->    unit_of_measurement : kWh    
->    
->  - platform: mqtt
->    state_topic: "heater/18760NE2240322014631/EnergiStored"
->    unique_id: "EnergiStored"
->    name: "Energi in tank"
->    device_class: power
->    unit_of_measurement : kWh        
->    
->  - platform: mqtt
->    state_topic: "heater/18760NE2240322014631/FillLevel"
->    name: "Tank fill level"
->    unique_id: "FillLevel"    
->    unit_of_measurement: '%'
+     sensor:
+       - platform: mqtt
+         state_topic: "heater/18760NE2240322014631/TargetTemprature"
+         unique_id: "TargetTemprature"
+         name: "Target temprature"
+         unit_of_measurement: "°C"
+         
+       - platform: mqtt
+         state_topic: "heater/18760NE2240322014631/CurrentTemprature"
+         unique_id: "CurrentTemprature"
+         name: "Current temprature"
+         unit_of_measurement: "°C"
+         
+       - platform: mqtt
+         state_topic: "heater/18760NE2240322014631/EstimatedPower"
+         unique_id: "EstimatedPower"    
+         name: "Current Watt"
+         device_class: power    
+         state_class: measurement    
+         unit_of_measurement : W   
+        
+      - platform: mqtt
+        state_topic: "heater/18760NE2240322014631/EnergyTotal"
+        unique_id: "EnergyTotal"
+        name: "Energy Total"    
+        device_class: power
+        state_class: total_increasing
+        unit_of_measurement : kWh    
+        
+      - platform: mqtt
+        state_topic: "heater/18760NE2240322014631/EnergiStored"
+        unique_id: "EnergiStored"
+        name: "Energi in tank"
+        device_class: power
+        unit_of_measurement : kWh        
+        
+      - platform: mqtt
+        state_topic: "heater/18760NE2240322014631/FillLevel"
+        name: "Tank fill level"
+        unique_id: "FillLevel"    
+        unit_of_measurement: '%'
 
 
 **Recommended configuration.**
