@@ -1,7 +1,7 @@
 **MyUplink Schedule changer.**
 
 This program connect to the myuplink.com and adjust the schedule of [Høiax CONNECTED](https://www.hoiax.no/om-hoiax/articles/hoiax-connected-smart-varmtvannsbereder-med-skylosning) hot water heaters, and adjust the schedule so that it uses electricity when the price is low.
-It also allows you to periodicity publish current values from the heater via MTQQ to your home automation of choice.
+It also allows you to periodicity publish current values from the heater via mqtt to your home automation of choice.
 
 ![Screenshot](schedule_screenshot.png)
 
@@ -26,11 +26,11 @@ This is a 3d party program made to work against [myuplink](https://myuplink.com)
 - WaterHeaterMaxPowerInHours - This is the number of hours pr day the water heater is running full power.
 - WaterHeaterMediumPowerInHours - This the number of hours pr day the water heater is running at half power, but with a lower "target temprature"
 
-**Optional MTQQ Configuration, used to connect to smarthouse solution like homeassistant**
-- MTQQServer - IP address or FQDN of MTQQ, this is optional.
-- MTQQServerPort - The port of the MTQQ server, this is optional.
-- MTQQUserName - If the MTQQ requires username and passord.
-- MTQQPassword - If the MTQQ requires username and passord.
+**Optional mqtt Configuration, used to connect to smarthouse solution like homeassistant**
+- MQTTServer - IP address or FQDN of mqtt, this is optional.
+- MQTTServerPort - The port of the mqtt server, this is optional.
+- MQTTUserName - If the mqtt requires username and passord.
+- MQTTPassword - If the mqtt requires username and passord.
 
 ** Setup Homeassistant sensor, in configuration.yml**
 *18760NE2240322014631 needs to be replaced with the ID of your hotwater heater, simplest way to find out is to just read the console output of this application*

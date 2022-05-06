@@ -49,7 +49,7 @@ namespace MyUplinkSmartConnect
 
             RecurringJob.AddOrUpdate("Reschedule heaters", () => JobReScheuleheating.Work(), Cron.Daily(14,45));
 
-            if(!string.IsNullOrEmpty(Settings.Instance.MTQQServer))
+            if(!string.IsNullOrEmpty(Settings.Instance.MQTTServer))
             {
                 RecurringJob.AddOrUpdate("Heaters status", () => new JobCheckHeaterStatus().Work(), Cron.MinuteInterval(10));
                 RecurringJob.Trigger("Heaters status");

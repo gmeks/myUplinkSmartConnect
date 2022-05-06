@@ -53,7 +53,7 @@ namespace MyUplinkSmartConnect
                         {
                             Log.Logger.Information($"Changed schedule for {tmpdevice.id}");
 
-                            if(!string.IsNullOrEmpty(Settings.Instance.MTQQServer))
+                            if(!string.IsNullOrEmpty(Settings.Instance.MQTTServer))
                             {
                                 var job = new JobCheckHeaterStatus();
                                 await job.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChange, DateTime.Now);

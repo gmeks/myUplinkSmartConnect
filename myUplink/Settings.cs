@@ -18,13 +18,13 @@ namespace MyUplinkSmartConnect
 
         public int WaterHeaterMediumPowerInHours { get; set; }
 
-        public string? MTQQServer { get; set; }
+        public string? MQTTServer { get; set; }
 
-        public int MTQQServerPort { get; set; }
+        public int MQTTServerPort { get; set; }
 
-        public string? MTQQUserName { get; set; }
+        public string? MQTTUserName { get; set; }
 
-        public string? MTQQPassword { get; set; }
+        public string? MQTTPassword { get; set; }
 
         [JsonIgnore]
         public myuplinkApi? myuplinkApi { get; set; }

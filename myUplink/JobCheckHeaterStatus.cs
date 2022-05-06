@@ -68,14 +68,14 @@ namespace MyUplinkSmartConnect
                 MqttClientOptionsBuilder optionsBuilder;
 
 
-                if (Settings.Instance.MTQQServerPort != 0)
-                    optionsBuilder = new MqttClientOptionsBuilder().WithTcpServer(Settings.Instance.MTQQServer, Settings.Instance.MTQQServerPort);
+                if (Settings.Instance.MQTTServerPort != 0)
+                    optionsBuilder = new MqttClientOptionsBuilder().WithTcpServer(Settings.Instance.MQTTServer, Settings.Instance.MQTTServerPort);
                 else
-                    optionsBuilder = new MqttClientOptionsBuilder().WithTcpServer(Settings.Instance.MTQQServer);
+                    optionsBuilder = new MqttClientOptionsBuilder().WithTcpServer(Settings.Instance.MQTTServer);
 
-                if(!string.IsNullOrEmpty(Settings.Instance.MTQQUserName))
+                if(!string.IsNullOrEmpty(Settings.Instance.MQTTUserName))
                 {
-                    optionsBuilder = optionsBuilder.WithCredentials(Settings.Instance.MTQQUserName, Settings.Instance.MTQQPassword);
+                    optionsBuilder = optionsBuilder.WithCredentials(Settings.Instance.MQTTUserName, Settings.Instance.MQTTPassword);
                 }                
 
                 try
