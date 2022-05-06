@@ -1,4 +1,5 @@
-﻿using MQTTnet;
+﻿using Hangfire;
+using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
 using MyUplinkSmartConnect.Models;
@@ -20,8 +21,9 @@ namespace MyUplinkSmartConnect
         public JobCheckHeaterStatus()
         {
             _mqttFactory = new MqttFactory();
-        }              
+        }
 
+        [DisableConcurrentExecution(59)]
         public async Task Work()
         {
             if (Settings.Instance.myuplinkApi == null)
@@ -58,21 +60,27 @@ namespace MyUplinkSmartConnect
             }            
         }
 
-        async Task SendUpdate(string deviceName, CurrentPointParameterType parameter,double value)
+        internal async Task SendUpdate(string deviceName, CurrentPointParameterType parameter,object value)
         {
-            if(_mqttClient == null || !_mqttClient.IsConnected)
+            if (_mqttClient == null || !_mqttClient.IsConnected  )
             {
                 _mqttClient = _mqttFactory.CreateMqttClient();
-                IMqttClientOptions options;
+                MqttClientOptionsBuilder optionsBuilder;
+
 
                 if (Settings.Instance.MTQQServerPort != 0)
-                    options = new MqttClientOptionsBuilder().WithTcpServer(Settings.Instance.MTQQServer, Settings.Instance.MTQQServerPort).Build();
+                    optionsBuilder = new MqttClientOptionsBuilder().WithTcpServer(Settings.Instance.MTQQServer, Settings.Instance.MTQQServerPort);
                 else
-                    options = new MqttClientOptionsBuilder().WithTcpServer(Settings.Instance.MTQQServer).Build();
+                    optionsBuilder = new MqttClientOptionsBuilder().WithTcpServer(Settings.Instance.MTQQServer);
+
+                if(!string.IsNullOrEmpty(Settings.Instance.MTQQUserName))
+                {
+                    optionsBuilder = optionsBuilder.WithCredentials(Settings.Instance.MTQQUserName, Settings.Instance.MTQQPassword);
+                }                
 
                 try
                 {
-                    await _mqttClient.ConnectAsync(options, CancellationToken.None);
+                    await _mqttClient.ConnectAsync(optionsBuilder.Build(), CancellationToken.None);
                 }
                 catch(Exception ex)
                 {

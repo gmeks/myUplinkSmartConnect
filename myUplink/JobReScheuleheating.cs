@@ -1,4 +1,5 @@
-﻿using Serilog;
+﻿using Hangfire;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,7 @@ namespace MyUplinkSmartConnect
 {
     public class JobReScheuleheating
     {
+        [DisableConcurrentExecution(600)]
         public static async Task Work()
         {
             var powerPrice = new EntsoeAPI();
@@ -46,6 +48,16 @@ namespace MyUplinkSmartConnect
                         {
                             Log.Logger.Error("Failed to update heater schedule, aborting");
                             return;
+                        }
+                        else
+                        {
+                            Log.Logger.Information($"Changed schedule for {tmpdevice.id}");
+
+                            if(!string.IsNullOrEmpty(Settings.Instance.MTQQServer))
+                            {
+                                var job = new JobCheckHeaterStatus();
+                                await job.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChange, DateTime.Now);
+                            }
                         }
                     }
                 }

@@ -32,15 +32,14 @@ namespace MyUplinkSmartConnect
             {
                 return true;
             }
-
-            if (File.Exists(_tokenFile))
+            else if (_token == null && File.Exists(_tokenFile))
             {
                 _token = JsonSerializer.Deserialize<AuthToken>(File.ReadAllText(_tokenFile));
                 if (_token != null || _token?.IsExpired == false)
                 {
-                    _httpClient.AddDefaultHeader("authorization", "Bearer " + _token.access_token);
+                    CreateNewHttpClient(_token.access_token);
 
-                    var verifyToken = await Ping();
+                    var verifyToken = await Ping().ConfigureAwait(true);
                     if (!verifyToken)
                     {
                         _token = null;
@@ -55,6 +54,11 @@ namespace MyUplinkSmartConnect
 
             if (_token == null || _token.IsExpired)
             {
+                if (_token == null)
+                    Log.Logger.Information("Login is required, no old bear token found.");
+                else if (_token.IsExpired)
+                    Log.Logger.Information("Login is required, existing token is expired.");
+
                 var request = new RestRequest("oauth/token") { Method = Method.Post };
                 request.AddHeader("Accept", "application/json");
                 request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -63,16 +67,15 @@ namespace MyUplinkSmartConnect
                 request.AddParameter("username", Settings.Instance.UserName);
                 request.AddParameter("password", Settings.Instance.Password);
 
-                var tResponse = await _httpClient.ExecuteAsync(request);
+                var tResponse = await _httpClient.ExecuteAsync(request).ConfigureAwait(true);
                 if (tResponse.StatusCode == System.Net.HttpStatusCode.OK && !string.IsNullOrEmpty(tResponse.Content))
                 {
                     _token = JsonSerializer.Deserialize<AuthToken>(tResponse.Content);
                     if (_token != null)
                     {
-                        _httpClient = new RestClient(_apiUrl);
-                        _httpClient.AddDefaultHeader("authorization", "Bearer " + _token.access_token);
-
+                        CreateNewHttpClient(_token.access_token);
                         File.WriteAllText(_tokenFile, JsonSerializer.Serialize(_token));
+
                         Log.Logger.Information("Login via API got new token");
                         return true;
                     }
@@ -223,6 +226,12 @@ namespace MyUplinkSmartConnect
             }
 
             return false;
+        }
+
+        void CreateNewHttpClient(string bearHeader)
+        {
+            _httpClient = new RestClient(_apiUrl);
+            _httpClient.AddDefaultHeader("authorization", "Bearer " + bearHeader);
         }
     }
 }

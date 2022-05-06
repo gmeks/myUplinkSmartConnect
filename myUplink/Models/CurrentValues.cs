@@ -8,6 +8,7 @@ namespace MyUplinkSmartConnect.Models
 {
     enum CurrentPointParameterType
     {
+        LastScheduleChange=1,
         TargetTemprature = 527,
         CurrentTemprature = 528,
         FillLevel = 404, // How much water in tank

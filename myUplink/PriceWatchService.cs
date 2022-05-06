@@ -47,16 +47,13 @@ namespace MyUplinkSmartConnect
             File.WriteAllText(settingsFile, JsonSerializer.Serialize(Settings.Instance,new JsonSerializerOptions() { WriteIndented = true, PropertyNameCaseInsensitive=true }));
             Settings.Instance.myuplinkApi = new myuplinkApi();
 
-            RecurringJob.AddOrUpdate("Reschedule heaters", () => JobReScheuleheating.Work(), "0 0 17 * * ?");
+            RecurringJob.AddOrUpdate("Reschedule heaters", () => JobReScheuleheating.Work(), Cron.Daily(14,45));
 
             if(!string.IsNullOrEmpty(Settings.Instance.MTQQServer))
             {
                 RecurringJob.AddOrUpdate("Heaters status", () => new JobCheckHeaterStatus().Work(), Cron.MinuteInterval(10));
-#if DEBUG
                 RecurringJob.Trigger("Heaters status");
-#endif
             }
-
 
 #if DEBUG
             //RecurringJob.Trigger("Reschedule heaters");

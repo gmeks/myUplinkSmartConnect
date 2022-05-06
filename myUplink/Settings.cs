@@ -22,6 +22,10 @@ namespace MyUplinkSmartConnect
 
         public int MTQQServerPort { get; set; }
 
+        public string? MTQQUserName { get; set; }
+
+        public string? MTQQPassword { get; set; }
+
         [JsonIgnore]
         public myuplinkApi? myuplinkApi { get; set; }
     }
