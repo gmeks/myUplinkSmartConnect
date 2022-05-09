@@ -28,33 +28,77 @@ namespace MyUplinkSmartConnect
         {
             // Turns out there is a maximum number of "events" so we have to wipe out all other days.
             WaterHeaterSchedule.Clear();
-            foreach (var targetSchedule in datesToSchuedule)
+
+            var daysInWeek = Enum.GetValues<DayOfWeek>();
+
+            foreach(var day in daysInWeek)
             {
-
+                bool foundDayInTargetSchedules = false;
                 HeaterWeeklyEvent sch = null;
-                var currentPowerLevel = WaterHeaterDesiredPower.Watt2000;
 
-                foreach (var price in priceList)
+                foreach (var targetSchedule in datesToSchuedule)
                 {
-                    if (price.Start.Date != targetSchedule.Date)
+                    if(targetSchedule.DayOfWeek != day)
                         continue;
 
-                    if (price.DesiredPower != currentPowerLevel || sch == null)
-                    {
-                        if(sch != null)
-                            WaterHeaterSchedule.Add(sch);
+                    int addedPriceEvents = 0;
+                    var currentPowerLevel = WaterHeaterDesiredPower.Watt2000;
 
-                        sch = new HeaterWeeklyEvent();
-                        sch.startDay = targetSchedule.DayOfWeek.ToString();
-                        sch.startTime = price.Start.ToString("HH:mm:ss");
-                        sch.modeId = GetModeFromWaterHeaterDesiredPower(price.DesiredPower);
-                        currentPowerLevel = price.DesiredPower;
+                    foreach (var price in priceList)
+                    {
+                        if (price.Start.Date != targetSchedule.Date)
+                            continue;
+
+                        if (price.DesiredPower != currentPowerLevel || sch == null)
+                        {
+                            if (sch != null)
+                                WaterHeaterSchedule.Add(sch);
+
+                            sch = new HeaterWeeklyEvent();
+                            sch.startDay = targetSchedule.DayOfWeek.ToString();
+                            sch.startTime = price.Start.ToString("HH:mm:ss");
+                            sch.modeId = GetModeFromWaterHeaterDesiredPower(price.DesiredPower);
+                            currentPowerLevel = price.DesiredPower;
+                            addedPriceEvents++;
+                        }
+
                     }
 
+                    if(sch != null)
+                    {
+                        WaterHeaterSchedule.Add(sch);
+                        addedPriceEvents++;
+                    }
+                    
+                    if(addedPriceEvents > 0)
+                        foundDayInTargetSchedules = true;
                 }
 
-                WaterHeaterSchedule.Add(sch);                
+                if (!foundDayInTargetSchedules)
+                {
+                    sch = new HeaterWeeklyEvent();
+                    sch.startDay = day.ToString();
+                    sch.startTime = "00:00:00";
+                    sch.modeId = GetModeFromWaterHeaterDesiredPower( WaterHeaterDesiredPower.Watt2000);
+                    WaterHeaterSchedule.Add(sch);
+
+
+                    sch = new HeaterWeeklyEvent();
+                    sch.startDay = day.ToString();
+                    sch.startTime = "06:00:00";
+                    sch.modeId = GetModeFromWaterHeaterDesiredPower(WaterHeaterDesiredPower.None);
+                    WaterHeaterSchedule.Add(sch);
+
+
+                    sch = new HeaterWeeklyEvent();
+                    sch.startDay = day.ToString();
+                    sch.startTime = "12:00:00";
+                    sch.modeId = GetModeFromWaterHeaterDesiredPower(WaterHeaterDesiredPower.Watt700);
+                    WaterHeaterSchedule.Add(sch);
+                }
             }
+            
+            
             return false;
         }
 

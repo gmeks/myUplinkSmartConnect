@@ -56,7 +56,7 @@ namespace MyUplinkSmartConnect
             }
 
 #if DEBUG
-            //RecurringJob.Trigger("Reschedule heaters");
+            RecurringJob.Trigger("Reschedule heaters");
 #endif
             return true;
         }       
