@@ -159,8 +159,12 @@ namespace MyUplinkSmartConnect
             if (tResponse.StatusCode == System.Net.HttpStatusCode.OK && !string.IsNullOrEmpty(tResponse.Content))
             {
                 //fixme. this is likely not optimal, but for some reason this is also a array?
-                var heaterRoot = JsonSerializer.Deserialize<HeaterWeeklyRoot[]>(tResponse.Content);
-                _heaterScheduleRoot.Add(device.id, heaterRoot);
+                var heaterRoot = JsonSerializer.Deserialize<HeaterWeeklyRoot[]>(tResponse.Content) ?? Array.Empty<HeaterWeeklyRoot>();
+
+                if (_heaterScheduleRoot.ContainsKey(device.id))
+                    _heaterScheduleRoot[device.id] =  heaterRoot;
+                else
+                    _heaterScheduleRoot.Add(device.id, heaterRoot);
                 return heaterRoot.First().events;
             }
 

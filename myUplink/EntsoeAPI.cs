@@ -24,7 +24,7 @@ namespace MyUplinkSmartConnect
 
         public List<stPriceInformation> PriceList { get { return _priceList; } }
 
-        public async Task FetchPriceInformation(string apiToken)
+        public async Task<bool> FetchPriceInformation()
         {
             // i hate xml, and this function is a pure pain
 
@@ -96,7 +96,9 @@ namespace MyUplinkSmartConnect
                         }                       
                     }                                      
                 }
+                return true;
             }
+            return false;
         }
 
         public void CreateSortedList(DateTime filterDate,int desiredMaxpower,int mediumPower)

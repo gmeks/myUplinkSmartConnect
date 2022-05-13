@@ -14,7 +14,13 @@ namespace MyUplinkSmartConnect
         public static async Task Work()
         {
             var powerPrice = new EntsoeAPI();
-            await powerPrice.FetchPriceInformation("5cd1c4f6-2172-4453-a8bb-c9467fa0fabc");
+            var priceInformation = await powerPrice.FetchPriceInformation();
+
+            if(!priceInformation)
+            {
+                Log.Logger.Error("Failed to get updated price inforamtion, from EU API");
+                throw new Exception("Failed to get updated price inforamtion, from EU API");
+            }
 
             powerPrice.CreateSortedList(DateTime.Now, Settings.Instance.WaterHeaterMaxPowerInHours, Settings.Instance.WaterHeaterMediumPowerInHours);
             powerPrice.CreateSortedList(DateTime.Now.AddDays(1), Settings.Instance.WaterHeaterMaxPowerInHours, Settings.Instance.WaterHeaterMediumPowerInHours);

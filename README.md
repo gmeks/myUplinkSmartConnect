@@ -18,6 +18,11 @@ This is a 3d party program made to work against [myuplink](https://myuplink.com)
 2) Configure the application.json
 3) Install with *myuplink install* (Or you can just run it)
 
+**Future plan**
+- Better linux support, to allow containers.
+- Full integration with home assistant as a integration?
+
+* How far this is taken depends alot of to what degree others use it *
 
 **Configuration explained:**
 ---
