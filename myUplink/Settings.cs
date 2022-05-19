@@ -14,6 +14,8 @@ namespace MyUplinkSmartConnect
 
         public string? Password { get; set; }
 
+        public int CheckRemoteStatsIntervalInMinutes { get; set; } = 1;
+
         public int WaterHeaterMaxPowerInHours { get; set; }
 
         public int WaterHeaterMediumPowerInHours { get; set; }

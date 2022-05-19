@@ -1,5 +1,4 @@
-﻿using Hangfire;
-using Serilog;
+﻿using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,8 +9,7 @@ namespace MyUplinkSmartConnect
 {
     public class JobReScheuleheating
     {
-        [DisableConcurrentExecution(600)]
-        public static async Task Work()
+        public static async Task<bool> Work()
         {
             var powerPrice = new EntsoeAPI();
             var priceInformation = await powerPrice.FetchPriceInformation();
@@ -19,7 +17,7 @@ namespace MyUplinkSmartConnect
             if(!priceInformation)
             {
                 Log.Logger.Error("Failed to get updated price inforamtion, from EU API");
-                throw new Exception("Failed to get updated price inforamtion, from EU API");
+                return false;
             }
 
             powerPrice.CreateSortedList(DateTime.Now, Settings.Instance.WaterHeaterMaxPowerInHours, Settings.Instance.WaterHeaterMediumPowerInHours);
@@ -42,7 +40,7 @@ namespace MyUplinkSmartConnect
                         if (!status)
                         {
                             Log.Logger.Error("Failed to update heater modes, aborting");
-                            return;
+                            return false;
                         }
                     }
 
@@ -53,7 +51,7 @@ namespace MyUplinkSmartConnect
                         if (!status)
                         {
                             Log.Logger.Error("Failed to update heater schedule, aborting");
-                            return;
+                            return false;
                         }
                         else
                         {
@@ -62,12 +60,14 @@ namespace MyUplinkSmartConnect
                             if(!string.IsNullOrEmpty(Settings.Instance.MQTTServer))
                             {
                                 var job = new JobCheckHeaterStatus();
-                                await job.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChange, DateTime.Now);
+                                await job.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChangeInHours, Convert.ToInt32(0));
                             }
+                            return true;
                         }
                     }
                 }
             }
+            return false;
         }
     }
 }

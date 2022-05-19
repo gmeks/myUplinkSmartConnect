@@ -1,5 +1,4 @@
-﻿using Hangfire;
-using MQTTnet;
+﻿using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Client.Options;
 using MyUplinkSmartConnect.Models;
@@ -23,7 +22,6 @@ namespace MyUplinkSmartConnect
             _mqttFactory = new MqttFactory();
         }
 
-        [DisableConcurrentExecution(59)]
         public async Task Work()
         {
             if (Settings.Instance.myuplinkApi == null)

@@ -43,19 +43,19 @@ This is a 3d party program made to work against [myuplink](https://myuplink.com)
      sensor:
        - platform: mqtt
          state_topic: "heater/18760NE2240322014631/TargetTemprature"
-         unique_id: "TargetTemprature"
+         unique_id: "WaterHeaterTargetTemprature"
          name: "Target temprature"
          unit_of_measurement: "°C"
          
        - platform: mqtt
          state_topic: "heater/18760NE2240322014631/CurrentTemprature"
-         unique_id: "CurrentTemprature"
+         unique_id: "WaterHeaterCurrentTemprature"
          name: "Current temprature"
          unit_of_measurement: "°C"
          
        - platform: mqtt
          state_topic: "heater/18760NE2240322014631/EstimatedPower"
-         unique_id: "EstimatedPower"    
+         unique_id: "WaterHeaterEstimatedPower"    
          name: "Current Watt"
          device_class: power    
          state_class: measurement    
@@ -63,7 +63,7 @@ This is a 3d party program made to work against [myuplink](https://myuplink.com)
         
       - platform: mqtt
         state_topic: "heater/18760NE2240322014631/EnergyTotal"
-        unique_id: "EnergyTotal"
+        unique_id: "WaterHeaterEnergyTotal"
         name: "Energy Total"    
         device_class: power
         state_class: total_increasing
@@ -71,7 +71,7 @@ This is a 3d party program made to work against [myuplink](https://myuplink.com)
         
       - platform: mqtt
         state_topic: "heater/18760NE2240322014631/EnergiStored"
-        unique_id: "EnergiStored"
+        unique_id: "WaterHeaterEnergiStored"
         name: "Energi in tank"
         device_class: power
         unit_of_measurement : kWh        
@@ -79,8 +79,13 @@ This is a 3d party program made to work against [myuplink](https://myuplink.com)
       - platform: mqtt
         state_topic: "heater/18760NE2240322014631/FillLevel"
         name: "Tank fill level"
-        unique_id: "FillLevel"    
+        unique_id: "WaterHeaterFillLevel"    
         unit_of_measurement: '%'
+
+      - platform: mqtt
+        state_topic: "heater/18760NE2240322014631/LastScheduleChangeInHours"
+        name: "Last schedule change"
+        unique_id: "LastScheduleChange"    
 
 
 **Recommended configuration.**

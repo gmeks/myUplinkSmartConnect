@@ -1,5 +1,4 @@
-﻿using Hangfire;
-using Serilog;
+﻿using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,27 +6,22 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Topshelf;
-using Hangfire.LiteDB;
+
 
 namespace MyUplinkSmartConnect
 {
     internal class PriceWatchService : ServiceControl
     {
-        BackgroundJobServer _server;
 #if DEBUG
         const string settingsFile = "appsettings.Development.json";
 #else
         const string settingsFile = "appsettings.json";         
 #endif
+        readonly BackgroundJobSupervisor _backgroundJobs;
+
         public PriceWatchService()
         {
-            GlobalConfiguration.Configuration.LiteDbStorage("myuplink-hangfire.db");
-            var options = new BackgroundJobServerOptions
-            {
-                // This is the default value
-                WorkerCount = 2
-            };
-            _server = new BackgroundJobServer(options);            
+            _backgroundJobs = new BackgroundJobSupervisor();
         }
 
         public bool Start(HostControl hostControl)
@@ -44,27 +38,24 @@ namespace MyUplinkSmartConnect
                 Log.Logger.Error("WaterHeaterMaxPowerInHours and WaterHeaterMaxPowerInHours are both set to 0, aborting");
                 return false;
             }
+
+            if (Settings.Instance.CheckRemoteStatsIntervalInMinutes == 0)
+                Settings.Instance.CheckRemoteStatsIntervalInMinutes = 1;
+
+            if (Settings.Instance.MQTTServerPort == 0)
+                Settings.Instance.MQTTServerPort = 1883;
+
             File.WriteAllText(settingsFile, JsonSerializer.Serialize(Settings.Instance,new JsonSerializerOptions() { WriteIndented = true, PropertyNameCaseInsensitive=true }));
             Settings.Instance.myuplinkApi = new myuplinkApi();
 
-            RecurringJob.AddOrUpdate("Reschedule heaters", () => JobReScheuleheating.Work(), Cron.Daily(14,45));
-
-            if(!string.IsNullOrEmpty(Settings.Instance.MQTTServer))
-            {
-                RecurringJob.AddOrUpdate("Heaters status", () => new JobCheckHeaterStatus().Work(), Cron.MinuteInterval(10));
-                RecurringJob.Trigger("Heaters status");
-            }
-
-#if DEBUG
-            RecurringJob.Trigger("Reschedule heaters");
-#endif
+            _backgroundJobs.Start();
             return true;
         }       
 
         public bool Stop(HostControl hostControl)
         {
             Log.Logger.Information("MyUplink-smartconnect is stopping");
-            _server.Dispose();
+            _backgroundJobs.Stop();
             return true;
         }
     }
