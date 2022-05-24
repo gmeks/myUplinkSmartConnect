@@ -27,6 +27,12 @@ namespace MyUplinkSmartConnect
             var group = await Settings.Instance.myuplinkApi.GetDevices();
             foreach (var device in group)
             {
+                if (device.devices == null)
+                {
+                    Log.Logger.Error($"Group({device.id}) does not have devices");
+                    continue;
+                }
+
                 foreach (var tmpdevice in device.devices)
                 {
                     var costSaving = new ApplyCostSavingRules();
@@ -57,7 +63,7 @@ namespace MyUplinkSmartConnect
                         {
                             Log.Logger.Information($"Changed schedule for {tmpdevice.id}");
 
-                            if(!string.IsNullOrEmpty(Settings.Instance.MQTTServer))
+                            if(!string.IsNullOrEmpty(Settings.Instance.MQTTServer) && !string.IsNullOrEmpty(device.name))
                             {
                                 var job = new JobCheckHeaterStatus();
                                 await job.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChangeInHours, Convert.ToInt32(0));

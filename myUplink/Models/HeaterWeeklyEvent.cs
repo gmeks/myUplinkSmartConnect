@@ -12,10 +12,10 @@ namespace MyUplinkSmartConnect.Models
 
         public bool enabled { get; set; }
         public int modeId { get; set; }
-        public string startDay { get; set; }
-        public string startTime { get; set; }
-        public string stopDay { get; set; }
-        public string stopTime { get; set; }
+        public string? startDay { get; set; }
+        public string? startTime { get; set; }
+        public string? stopDay { get; set; }
+        public string? stopTime { get; set; }
         public Guid phantom_id { get; set; }
 
         [JsonIgnore]
@@ -23,6 +23,10 @@ namespace MyUplinkSmartConnect.Models
         {
             get
             {
+                if(string.IsNullOrEmpty(startDay))
+                    throw new NullReferenceException("startDay");
+
+
                 return Enum.Parse<DayOfWeek>(startDay);
             }
         }

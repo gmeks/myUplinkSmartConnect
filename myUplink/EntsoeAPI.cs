@@ -1,4 +1,5 @@
 ﻿using MyUplinkSmartConnect.Models;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -12,6 +13,8 @@ namespace MyUplinkSmartConnect
 {
     internal class EntsoeAPI
     {
+        static IList<string> NorwayPowerZones = new string[] { "NO-1", "NO-2", "NO-3", "NO-4", "NO-5" }.ToList();
+
         //https://transparency.entsoe.eu/content/static_content/Static%20content/web%20api/Guide.html#_authentication_and_authorisation
         HttpClient _client;
         List<stPriceInformation> _priceList;      
@@ -31,7 +34,27 @@ namespace MyUplinkSmartConnect
             string startDateFormat = DateTime.Now.ToString("yyyyMMdd") + "0000";
             string endDateFormat = DateTime.Now.AddDays(1).ToString("yyyyMMdd") + "0000";
 
-            string url = $"https://transparency.entsoe.eu/api?documentType=A44&in_Domain=10YNO-2--------T&out_Domain=10YNO-2--------T&periodStart={startDateFormat}&periodEnd={endDateFormat}&securityToken=5cd1c4f6-2172-4453-a8bb-c9467fa0fabc";
+            int powerRegionIndex = -1; 
+
+            if(!string.IsNullOrEmpty(Settings.Instance.PowerZone))
+            {
+                for(int i=0;i< NorwayPowerZones.Count;i++)
+                {
+                    if(Settings.Instance.PowerZone.Equals(NorwayPowerZones[i], StringComparison.OrdinalIgnoreCase) || Settings.Instance.PowerZone.Equals(NorwayPowerZones[i].Replace("-",""), StringComparison.OrdinalIgnoreCase))
+                    {
+                        powerRegionIndex = i;
+                        break;
+                    }
+                }
+            }
+            
+            if(powerRegionIndex == -1)
+            {
+                powerRegionIndex = NorwayPowerZones.IndexOf("NO-2");
+                Log.Logger.Warning("Using default power zone NO-2");
+            }
+
+            string url = $"https://transparency.entsoe.eu/api?documentType=A44&in_Domain=10Y{NorwayPowerZones[powerRegionIndex]}--------T&out_Domain=10Y{NorwayPowerZones[powerRegionIndex]}--------T&periodStart={startDateFormat}&periodEnd={endDateFormat}&securityToken=5cd1c4f6-2172-4453-a8bb-c9467fa0fabc";
 
             var response = await _client.GetAsync(url);
             if(response.IsSuccessStatusCode)
@@ -41,7 +64,12 @@ namespace MyUplinkSmartConnect
                 XmlDocument doc = new XmlDocument();
                 doc.LoadXml(xmlText);
 
-                XmlNode xmlNode = doc.LastChild;
+                XmlNode? xmlNode = doc?.LastChild;
+                if(xmlNode == null)
+                {
+                    Log.Logger.Warning("Failed to parse XML returned from entsoe");
+                    return false;
+                }
 
                 foreach (XmlNode child in xmlNode)
                 {
@@ -216,7 +244,7 @@ namespace MyUplinkSmartConnect
 
         public DateTime End { get; set; }
 
-        public bool Equals(stPriceInformation other)
+        public bool Equals(stPriceInformation? other)
         {
             return this.Id.Equals(other?.Id);
         }
@@ -226,15 +254,15 @@ namespace MyUplinkSmartConnect
 
     class SortByLowestPrice : IComparer<stPriceInformation>
     {
-        public int Compare(stPriceInformation x, stPriceInformation y)
+        public int Compare(stPriceInformation? x, stPriceInformation? y)
         {
             if (x == null && y == null)
                 return 0;
 
-            if(x == null && y != null)
+            if(x == null )
                 return 1;
 
-            if (y == null && x != null)
+            if (y == null )
                 return -1;
 
             if (x.Price == y.Price)
@@ -249,9 +277,12 @@ namespace MyUplinkSmartConnect
 
     class SortByStartDate : IComparer<stPriceInformation>
     {
-        public int Compare(stPriceInformation x, stPriceInformation y)
+        public int Compare(stPriceInformation? x, stPriceInformation? y)
         {
-            return x.Start.CompareTo(y.Start);
+            if (x == null)
+                return 1;
+
+            return x.Start.CompareTo(y?.Start);
         }
     }
 }

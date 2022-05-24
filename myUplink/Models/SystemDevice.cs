@@ -14,21 +14,21 @@ namespace MyUplinkSmartConnect.Models
     }
     public class SystemDevice
     {
-        public string id { get; set; }
+        public string? id { get; set; }
 
         public connectionState connectionState { get; set; }
 
-        public string currentFwVersion { get; set; }
+        public string? currentFwVersion { get; set; }
     }
 
     public class myUplinkSystem
     {
-        public string systemId { get; set; }
-        public string name { get; set; }
-        public string securityLevel { get; set; }
+        public string? systemId { get; set; }
+        public string? name { get; set; }
+        public string? securityLevel { get; set; }
         public bool hasAlarm { get; set; }
-        public string country { get; set; }
-        public List<SystemDevice> devices { get; set; }
+        public string? country { get; set; }
+        public List<SystemDevice>? devices { get; set; }
     }
 
     public class RootDevices
@@ -36,6 +36,6 @@ namespace MyUplinkSmartConnect.Models
         public int page { get; set; }
         public int itemsPerPage { get; set; }
         public int numItems { get; set; }
-        public List<myUplinkSystem> systems { get; set; }
+        public List<myUplinkSystem>? systems { get; set; }
     }
 }

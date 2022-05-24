@@ -34,7 +34,7 @@ namespace MyUplinkSmartConnect
             foreach(var day in daysInWeek)
             {
                 bool foundDayInTargetSchedules = false;
-                HeaterWeeklyEvent sch = null;
+                HeaterWeeklyEvent? sch = null;
 
                 foreach (var targetSchedule in datesToSchuedule)
                 {
@@ -108,6 +108,9 @@ namespace MyUplinkSmartConnect
 
             foreach (var mode in WaterHeaterModes)
             {
+                if (string.IsNullOrEmpty(mode.name))
+                    throw new NullReferenceException("mode.name cannot be null");
+
                 bool isGood = true;
                 if (mode.name.StartsWith("M6"))
                 {
@@ -136,6 +139,8 @@ namespace MyUplinkSmartConnect
             for(int i= (WaterHeaterModes.Count-1); i > 0;i--) // Some might call this a micro optimization, those people would be correct. But also since we place our modes in the end, why not start checking there.
             {
                 var item = WaterHeaterModes[i];
+                if (item.settings == null)
+                    throw new NullReferenceException("item.settings cannot be null");
 
                 foreach (var settings in item.settings)
                 {
@@ -153,6 +158,9 @@ namespace MyUplinkSmartConnect
 
         static bool VerifyWaterHeaterMode(WaterHeaterMode mode, WaterHeaterDesiredPower desiredPower,int targetTemprature)
         {
+            if (mode.settings == null)
+                throw new NullReferenceException("mode.settings cannot be null");
+
             bool isGood = true;
             foreach (var setting in mode.settings)
             {

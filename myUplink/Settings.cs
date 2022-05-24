@@ -5,7 +5,7 @@ namespace MyUplinkSmartConnect
 {
     static class Settings
     {
-        public static SettingsValues Instance { get; set; }
+        public static SettingsValues Instance { get; set; } = new SettingsValues();
     }
 
     class SettingsValues
@@ -20,6 +20,8 @@ namespace MyUplinkSmartConnect
 
         public int WaterHeaterMediumPowerInHours { get; set; }
 
+        public string? PowerZone { get; set; }
+
         public string? MQTTServer { get; set; }
 
         public int MQTTServerPort { get; set; }
@@ -29,6 +31,6 @@ namespace MyUplinkSmartConnect
         public string? MQTTPassword { get; set; }
 
         [JsonIgnore]
-        public myuplinkApi? myuplinkApi { get; set; }
+        public myuplinkApi myuplinkApi { get; set; } = new  myuplinkApi();
     }
 }

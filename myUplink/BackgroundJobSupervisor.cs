@@ -87,6 +87,9 @@ namespace MyUplinkSmartConnect
                         {
                             foreach (var device in group)
                             {
+                                if (device.devices == null || string.IsNullOrEmpty(device.name))
+                                    throw new NullReferenceException("device.devices or device.name cannot be null");
+
                                 foreach (var tmpdevice in device.devices)
                                 {
                                     await _heaterStatus.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChangeInHours, Convert.ToInt32(nextScheduleChange.TotalHours));

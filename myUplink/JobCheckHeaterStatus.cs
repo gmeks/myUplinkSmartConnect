@@ -3,11 +3,6 @@ using MQTTnet.Client;
 using MQTTnet.Client.Options;
 using MyUplinkSmartConnect.Models;
 using Serilog;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MyUplinkSmartConnect
 {
@@ -34,13 +29,17 @@ namespace MyUplinkSmartConnect
 
             foreach (var device in _deviceGroup)
             {
+                if (string.IsNullOrEmpty(device.name) || device.devices == null)
+                    throw new NullReferenceException("device name or device.devices is null");
+
                 foreach (var tmpdevice in device.devices)
                 {
                     var devicePointsList = await Settings.Instance.myuplinkApi.GetDevicePoints(tmpdevice, CurrentPointParameterType.TargetTemprature, CurrentPointParameterType.CurrentTemprature, 
                         CurrentPointParameterType.EstimatedPower, CurrentPointParameterType.EnergyTotal, CurrentPointParameterType.EnergiStored, CurrentPointParameterType.FillLevel);
+
                     foreach (var devicePoint in devicePointsList)
                     {
-                        var parm = (CurrentPointParameterType)int.Parse(devicePoint.parameterId);
+                        var parm = (CurrentPointParameterType)int.Parse(devicePoint.parameterId ?? "");
 
                         switch(parm)
                         {

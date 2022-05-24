@@ -35,7 +35,7 @@ namespace MyUplinkSmartConnect
             else if (_token == null && File.Exists(_tokenFile))
             {
                 _token = JsonSerializer.Deserialize<AuthToken>(File.ReadAllText(_tokenFile));
-                if (_token != null || _token?.IsExpired == false)
+                if (_token != null && !string.IsNullOrEmpty(_token.access_token) && _token.IsExpired == false)
                 {
                     CreateNewHttpClient(_token.access_token);
 
@@ -73,6 +73,9 @@ namespace MyUplinkSmartConnect
                     _token = JsonSerializer.Deserialize<AuthToken>(tResponse.Content);
                     if (_token != null)
                     {
+                        if (string.IsNullOrEmpty(_token.access_token))
+                            throw new NullReferenceException("Got token response without a token...");
+
                         CreateNewHttpClient(_token.access_token);
                         File.WriteAllText(_tokenFile, JsonSerializer.Serialize(_token));
 
@@ -122,7 +125,7 @@ namespace MyUplinkSmartConnect
 
             if (tResponse.StatusCode == System.Net.HttpStatusCode.OK && !string.IsNullOrEmpty(tResponse.Content))
             {
-                var devices = JsonSerializer.Deserialize<IEnumerable<CurrentValues>>(tResponse.Content);
+                var devices = JsonSerializer.Deserialize<IEnumerable<CurrentValues>>(tResponse.Content) ?? Array.Empty<CurrentValues>();
                 return devices;
             }
 
@@ -141,7 +144,7 @@ namespace MyUplinkSmartConnect
             if (tResponse.StatusCode == System.Net.HttpStatusCode.OK && !string.IsNullOrEmpty(tResponse.Content))
             {
                 var devices = JsonSerializer.Deserialize<MyGroupRoot>(tResponse.Content);
-                return devices.groups;
+                return devices?.groups ?? new List<DeviceGroup>();
             }
 
             return Array.Empty<DeviceGroup>();
@@ -150,7 +153,7 @@ namespace MyUplinkSmartConnect
         public async Task<List<HeaterWeeklyEvent>> GetWheeklySchedules(Device device)
         {
             var loginStatus = await LoginToApi();
-            if (!loginStatus)
+            if (!loginStatus || string.IsNullOrEmpty(device.id))
                 return Array.Empty<HeaterWeeklyEvent>().ToList();
 
             var request = new RestRequest($"/v2/devices/{device.id}/weekly-schedules") { Method = Method.Get };
@@ -165,7 +168,8 @@ namespace MyUplinkSmartConnect
                     _heaterScheduleRoot[device.id] =  heaterRoot;
                 else
                     _heaterScheduleRoot.Add(device.id, heaterRoot);
-                return heaterRoot.First().events;
+                
+                return heaterRoot.First().events ?? Array.Empty<HeaterWeeklyEvent>().ToList();
             }
 
             return Array.Empty<HeaterWeeklyEvent>().ToList();
@@ -174,7 +178,7 @@ namespace MyUplinkSmartConnect
         public async Task<bool> SetWheeklySchedules(Device device, IEnumerable<HeaterWeeklyEvent> adjustedSchedule)
         {
             var loginStatus = await LoginToApi();
-            if (!loginStatus)
+            if (!loginStatus || string.IsNullOrEmpty(device.id))
                 return false;
 
             //https://internalapi.myuplink.com/v2/devices/HOIAX_3083989de217_35f19927-203c-4a6b-a84b-9d1c1a9b8d6c/weekly-schedules
