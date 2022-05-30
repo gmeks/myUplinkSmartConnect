@@ -20,7 +20,7 @@ namespace MyUplinkSmartConnect
                 x.EnableServiceRecovery(r => r.RestartService(TimeSpan.FromSeconds(10)));
                 x.SetServiceName("MyUplink-smartconnect");
                 x.UseSerilog();
-                x.StartAutomatically();
+                x.StartAutomaticallyDelayed();
             });            
         }
    }

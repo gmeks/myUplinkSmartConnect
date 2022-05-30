@@ -15,7 +15,6 @@ namespace MyUplinkSmartConnect
     {
         RestClient _httpClient;
         AuthToken? _token;
-        const string _tokenFile = "tokenfile_internal.json";
         readonly Uri _apiUrl;
         Dictionary<string, HeaterWeeklyRoot[]> _heaterScheduleRoot;
 
@@ -28,13 +27,19 @@ namespace MyUplinkSmartConnect
 
         public async Task<bool> LoginToApi()
         {
+            string tmpFolder = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\MyUplink-smartconnect";
+            if (!Directory.Exists(tmpFolder))
+                Directory.CreateDirectory(tmpFolder);
+
+            string tokenFileFullPath = System.IO.Path.Combine(tmpFolder + "\\tokenfile_internal.json");
+
             if (_token != null && !_token.IsExpired)
             {
                 return true;
             }
-            else if (_token == null && File.Exists(_tokenFile))
+            else if (_token == null && File.Exists(tokenFileFullPath))
             {
-                _token = JsonSerializer.Deserialize<AuthToken>(File.ReadAllText(_tokenFile));
+                _token = JsonSerializer.Deserialize<AuthToken>(File.ReadAllText(tokenFileFullPath));
                 if (_token != null && !string.IsNullOrEmpty(_token.access_token) && _token.IsExpired == false)
                 {
                     CreateNewHttpClient(_token.access_token);
@@ -77,7 +82,7 @@ namespace MyUplinkSmartConnect
                             throw new NullReferenceException("Got token response without a token...");
 
                         CreateNewHttpClient(_token.access_token);
-                        File.WriteAllText(_tokenFile, JsonSerializer.Serialize(_token));
+                        File.WriteAllText(tokenFileFullPath, JsonSerializer.Serialize(_token));
 
                         Log.Logger.Information("Login via API got new token");
                         return true;

@@ -45,7 +45,17 @@ namespace MyUplinkSmartConnect
             if (Settings.Instance.MQTTServerPort == 0)
                 Settings.Instance.MQTTServerPort = 1883;
 
-            File.WriteAllText(settingsFile, JsonSerializer.Serialize(Settings.Instance,new JsonSerializerOptions() { WriteIndented = true, PropertyNameCaseInsensitive=true }));
+            try
+            {
+                // Its ok to fail to update settings file.
+                File.WriteAllText(settingsFile, JsonSerializer.Serialize(Settings.Instance, new JsonSerializerOptions() { WriteIndented = true, PropertyNameCaseInsensitive = true }));
+            }
+            catch
+            {
+                Log.Logger.Verbose($"Failed to update setting file {settingsFile}");
+            }
+
+            
             Settings.Instance.myuplinkApi = new myuplinkApi();
 
             _backgroundJobs.Start();

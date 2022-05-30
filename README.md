@@ -17,6 +17,7 @@ This is a 3d party program made to work against [myuplink](https://myuplink.com)
 1) Download the program.
 2) Configure the application.json
 3) Install with *myuplink install* (Or you can just run it)
+4) Start the service or reboot ( MyUplink-smartconnect.exe start )
 
 **Future plan**
 - Better linux support, to allow containers.
