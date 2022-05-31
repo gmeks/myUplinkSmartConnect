@@ -1,4 +1,5 @@
-﻿using Serilog;
+﻿using DetermenisticRandom;
+using Serilog;
 using Serilog.Core;
 using System;
 using System.Collections.Generic;
@@ -24,8 +25,16 @@ namespace MyUplinkSmartConnect
             _thread.IsBackground = true;
             _thread.Name = "BackgroundJobs";
 
+            var random = new DetermenisticInt();
+
+            int tmpHour = random.GetByte(13, 22, Settings.Instance.UserName, 3);
+            int tmpMinute = random.GetByte(13, 22, Settings.Instance.UserName, 2);
+
+            _nextScheduleUpdate = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day, tmpHour,tmpMinute,0);
             _nextStatusUpdate = DateTime.Now;
-            _nextScheduleUpdate = DateTime.Now.AddDays(-1);
+
+            _nextScheduleUpdate = _nextScheduleUpdate.AddDays(-1);
+            Log.Logger.Information($"Target Scheule change time is {_nextScheduleUpdate.ToLocalTime().ToShortTimeString()}");
         }
 
         public void Start()
@@ -64,8 +73,9 @@ namespace MyUplinkSmartConnect
                     }
                 }
 
-                var nextScheduleChange = DateTime.Now - _nextScheduleUpdate;
-                if (nextScheduleChange.TotalHours > 23 && DateTime.Now.ToUniversalTime().Hour > 15)
+                var nowUTC = DateTime.Now.ToUniversalTime();
+                var nextScheduleChange = nowUTC - _nextScheduleUpdate;
+                if (nextScheduleChange.TotalHours > 23 && nowUTC.Hour > 15)
                 {    
                     try
                     {
@@ -79,7 +89,6 @@ namespace MyUplinkSmartConnect
                 }
                 else
                 {
-                    //await _heaterStatus.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChangeInHours, 24);
                     if(_heaterStatus != null && Settings.Instance.myuplinkApi != null)
                     {
                         var group = await Settings.Instance.myuplinkApi.GetDevices();

@@ -18,11 +18,11 @@ namespace MyUplinkSmartConnect
 #else
         const string settingsFile = "appsettings.json";         
 #endif
-        readonly BackgroundJobSupervisor _backgroundJobs;
+        BackgroundJobSupervisor _backgroundJobs;
 
         public PriceWatchService()
         {
-            _backgroundJobs = new BackgroundJobSupervisor();
+            
         }
 
         public bool Start(HostControl hostControl)
@@ -103,6 +103,7 @@ namespace MyUplinkSmartConnect
                 }
             }
             
+            _backgroundJobs = new BackgroundJobSupervisor();
             Settings.Instance.myuplinkApi = new myuplinkApi();
 
             _backgroundJobs.Start();

@@ -12,16 +12,29 @@ It contacts a EU API [transparency.entsoe.eu](https://transparency.entsoe.eu) an
 **Legal**
 This is a 3d party program made to work against [myuplink](https://myuplink.com), and not afflilated with them in any way.
 
+Github link: https://github.com/gmeks/myUplinkSmartConnect
+
 **Docker-compose:**
 ---
-1) Download the program.
-2) Configure the application.json
-3) Install with *myuplink install* (Or you can just run it)
-4) Start the service or reboot ( MyUplink-smartconnect.exe start )
-
-**Future plan**
-- Better linux support, to allow containers.
-- Full integration with home assistant as a integration?
+     version: "2"
+     services:
+       server:
+         image: erlingsaeterdal/myuplinksmartconnect:1.0.0
+         restart: always
+         pull_policy: always
+         environment:
+           - TZ=Europe/Oslo     
+           - UserName=eks
+           - Password=UziqmhE95sW2hnt
+           - IsInsideDocker=1
+           - CheckRemoteStatsIntervalInMinutes=1      
+           - WaterHeaterMaxPowerInHours=5
+           - WaterHeaterMediumPowerInHours=8
+           - PowerZone=NO2
+           - MQTTServer=192.168.50.10
+           - MQTTServerPort=1883
+           - MQTTUserName=
+           - MQTTPassword=
 
 * How far this is taken depends alot of to what degree others use it *
 
