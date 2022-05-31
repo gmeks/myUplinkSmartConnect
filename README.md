@@ -19,6 +19,10 @@ This is a 3d party program made to work against [myuplink](https://myuplink.com)
 3) Install with *myuplink install* (Or you can just run it)
 4) Start the service or reboot ( MyUplink-smartconnect.exe start )
 
+Deploy via docker:
+https://hub.docker.com/repository/docker/erlingsaeterdal/myuplinksmartconnect
+
+
 **Future plan**
 - Better linux support, to allow containers.
 - Full integration with home assistant as a integration?
