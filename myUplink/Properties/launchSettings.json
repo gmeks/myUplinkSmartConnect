@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "MyUplink-smartconnect": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}

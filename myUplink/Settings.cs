@@ -1,4 +1,5 @@
 ﻿using MyUplinkSmartConnect.Models;
+using Serilog.Events;
 using System.Text.Json.Serialization;
 
 namespace MyUplinkSmartConnect
@@ -29,6 +30,8 @@ namespace MyUplinkSmartConnect
         public string? MQTTUserName { get; set; }
 
         public string? MQTTPassword { get; set; }
+
+        public LogEventLevel LogLevel { get; set; } = LogEventLevel.Information;
 
         [JsonIgnore]
         public myuplinkApi myuplinkApi { get; set; } = new  myuplinkApi();
