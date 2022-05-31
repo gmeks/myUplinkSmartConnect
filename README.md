@@ -20,8 +20,7 @@ This is a 3d party program made to work against [myuplink](https://myuplink.com)
 4) Start the service or reboot ( MyUplink-smartconnect.exe start )
 
 Deploy via docker:
-https://hub.docker.com/repository/docker/erlingsaeterdal/myuplinksmartconnect
-
+https://hub.docker.com/r/erlingsaeterdal/myuplinksmartconnect
 
 **Future plan**
 - Better linux support, to allow containers.
