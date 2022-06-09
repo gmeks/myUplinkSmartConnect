@@ -1,4 +1,5 @@
-﻿using MyUplinkSmartConnect.Models;
+﻿using MyUplinkSmartConnect.ExternalPrice;
+using MyUplinkSmartConnect.Models;
 using Serilog;
 using Serilog.Events;
 using System;
@@ -30,6 +31,13 @@ namespace MyUplinkSmartConnect
             WaterHeaterSchedule.Clear();
 
             var daysInWeek = Enum.GetValues<DayOfWeek>();
+
+            var requiredHours = datesToSchuedule.Length * 24;
+            if(priceList.Count < requiredHours)
+            {
+                Log.Logger.Warning($"Cannot build waterheater schedule, the pricelist only contains {priceList.Count}, but we are attemting to scheule {requiredHours}");
+                return false;
+            }
 
             foreach(var day in daysInWeek)
             {
@@ -96,8 +104,7 @@ namespace MyUplinkSmartConnect
                     sch.modeId = GetModeFromWaterHeaterDesiredPower(WaterHeaterDesiredPower.Watt700);
                     WaterHeaterSchedule.Add(sch);
                 }
-            }
-            
+            }            
             
             return false;
         }

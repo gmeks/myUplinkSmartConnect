@@ -197,7 +197,6 @@ namespace MyUplinkSmartConnect
             var tResponse = await _httpClient.ExecuteAsync(request);
             if (tResponse.StatusCode == System.Net.HttpStatusCode.OK || tResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
                 return true;
-
             
             return false;
         }

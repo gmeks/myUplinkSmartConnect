@@ -1,4 +1,5 @@
-﻿using Serilog;
+﻿using MyUplinkSmartConnect.ExternalPrice;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,20 +10,40 @@ namespace MyUplinkSmartConnect
 {
     public class JobReScheuleheating
     {
-        public static async Task<bool> Work()
-        {
+        static async Task<iBasePriceInformation?> GetPriceInformation()
+        {            
             var powerPrice = new EntsoeAPI();
             var priceInformation = await powerPrice.FetchPriceInformation();
-
-            if(!priceInformation)
+            if(powerPrice.PriceList.Count >= 48)
             {
-                Log.Logger.Error("Failed to get updated price inforamtion, from EU API");
-                return false;
+                return powerPrice;
+            }
+            
+
+            Log.Logger.Error("Failed to get updated price inforamtion, from EU API. Checking nordpool");
+
+            var nordpoolGroup = new Nordpoolgroup();
+            await nordpoolGroup.GetPriceInformation();
+
+            if (nordpoolGroup.PriceList.Count >= 48)
+            {
+                return nordpoolGroup;
             }
 
-            powerPrice.CreateSortedList(DateTime.Now, Settings.Instance.WaterHeaterMaxPowerInHours, Settings.Instance.WaterHeaterMediumPowerInHours);
-            powerPrice.CreateSortedList(DateTime.Now.AddDays(1), Settings.Instance.WaterHeaterMaxPowerInHours, Settings.Instance.WaterHeaterMediumPowerInHours);
-            powerPrice.PrintScheudule();
+            return null;
+        }
+
+        public static async Task<bool> Work()
+        {
+            var priceInformation = await GetPriceInformation();
+            if (priceInformation == null)
+                return false;
+
+            var cleanDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
+
+            priceInformation.CreateSortedList(cleanDate, Settings.Instance.WaterHeaterMaxPowerInHours, Settings.Instance.WaterHeaterMediumPowerInHours);
+            priceInformation.CreateSortedList(cleanDate.AddDays(1), Settings.Instance.WaterHeaterMaxPowerInHours, Settings.Instance.WaterHeaterMediumPowerInHours);
+            priceInformation.PrintScheudule();
 
             var group = await Settings.Instance.myuplinkApi.GetDevices();
             foreach (var device in group)
@@ -50,7 +71,9 @@ namespace MyUplinkSmartConnect
                         }
                     }
 
-                    if (!costSaving.VerifyHeaterSchedule(powerPrice.PriceList, DateTime.Now, DateTime.Now.AddDays(1)))
+                    
+
+                    if (!costSaving.VerifyHeaterSchedule(priceInformation.PriceList, cleanDate, cleanDate.AddDays(1)))
                     {
                         var status = await Settings.Instance.myuplinkApi.SetWheeklySchedules(tmpdevice, costSaving.WaterHeaterSchedule);
 

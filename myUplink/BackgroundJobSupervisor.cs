@@ -1,4 +1,5 @@
 ﻿using DetermenisticRandom;
+using MyUplinkSmartConnect.ExternalPrice;
 using Serilog;
 using Serilog.Core;
 using System;
@@ -73,10 +74,14 @@ namespace MyUplinkSmartConnect
                     }
                 }
 
-                var nowUTC = DateTime.Now.ToUniversalTime();
+                var nowUTC = DateTime.Now;
                 var nextScheduleChange = nowUTC - _nextScheduleUpdate;
+#if DEBUG
+                if (true)
+#else
                 if (nextScheduleChange.TotalHours > 23 && nowUTC.Hour > 15)
-                {    
+#endif
+                {
                     try
                     {
                         await JobReScheuleheating.Work();

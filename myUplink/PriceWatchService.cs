@@ -1,4 +1,5 @@
-﻿using Serilog;
+﻿using MyUplinkSmartConnect.ExternalPrice;
+using Serilog;
 using Serilog.Events;
 using System;
 using System.Collections.Generic;
@@ -82,7 +83,6 @@ namespace MyUplinkSmartConnect
                 Log.Logger.Error("WaterHeaterMaxPowerInHours and WaterHeaterMaxPowerInHours are both set to 0, aborting");
                 return false;
             }
-
 
             if (Settings.Instance.CheckRemoteStatsIntervalInMinutes == 0)
                 Settings.Instance.CheckRemoteStatsIntervalInMinutes = 1;
