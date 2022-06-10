@@ -18,7 +18,7 @@
         public object? invitationUserId { get; set; }
         public object? tags { get; set; }
         public string? brandId { get; set; }
-        public List<Device>? devices { get; set; }
+        public List<Device> devices { get; set; } = new List<Device>();
         public bool notifyByEmail { get; set; }
         public bool notifyByPush { get; set; }
         public string? serialNumber { get; set; }

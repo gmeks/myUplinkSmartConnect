@@ -25,12 +25,56 @@ namespace MyUplinkSmartConnect
 
         internal List<HeaterWeeklyEvent> WaterHeaterSchedule { get; set; } = new List<HeaterWeeklyEvent>();
 
-        public bool VerifyHeaterSchedule(List<stPriceInformation> priceList, params DateTime[] datesToSchuedule)
+        IEnumerable<DayOfWeek> GetWeekDayOrder(string input)
+        {
+            var weekOrder = new List<DayOfWeek>();
+            var splitDays = input.Split(',');
+
+            foreach(var strDay in splitDays)
+            {
+                switch(strDay)
+                {
+                    case "mon":
+                        weekOrder.Add(DayOfWeek.Monday);
+                        break;
+
+                    case "tue":
+                        weekOrder.Add(DayOfWeek.Tuesday);
+                        break;
+
+
+                    case "wed":
+                        weekOrder.Add(DayOfWeek.Wednesday);
+                        break;
+
+
+                    case "thu":
+                        weekOrder.Add(DayOfWeek.Thursday);
+                        break;
+
+                    case "fri":
+                        weekOrder.Add(DayOfWeek.Friday);
+                        break;
+
+                    case "sat":
+                        weekOrder.Add(DayOfWeek.Saturday);
+                        break;
+
+                    case "sun":
+                        weekOrder.Add(DayOfWeek.Sunday);
+                        break;
+                }
+            }
+            return weekOrder;
+        }
+
+        public bool VerifyHeaterSchedule(List<stPriceInformation> priceList,string weekFormat, params DateTime[] datesToSchuedule)
         {
             // Turns out there is a maximum number of "events" so we have to wipe out all other days.
             WaterHeaterSchedule.Clear();
 
-            var daysInWeek = Enum.GetValues<DayOfWeek>();
+            var daysInWeek = GetWeekDayOrder(weekFormat);
+
 
             var requiredHours = datesToSchuedule.Length * 24;
             if(priceList.Count < requiredHours)

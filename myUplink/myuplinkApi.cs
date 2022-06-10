@@ -51,7 +51,7 @@ namespace MyUplinkSmartConnect
                     }
                     else
                     {
-                        Log.Logger.Information("Loaded old token from tokenfile");
+                        Log.Logger.Verbose("Loaded old token from tokenfile");
                         return true;
                     }
                 }
@@ -60,9 +60,9 @@ namespace MyUplinkSmartConnect
             if (_token == null || _token.IsExpired)
             {
                 if (_token == null)
-                    Log.Logger.Information("Login is required, no old bear token found.");
+                    Log.Logger.Verbose("Login is required, no old bear token found.");
                 else if (_token.IsExpired)
-                    Log.Logger.Information("Login is required, existing token is expired.");
+                    Log.Logger.Verbose("Login is required, existing token is expired.");
 
                 var request = new RestRequest("oauth/token") { Method = Method.Post };
                 request.AddHeader("Accept", "application/json");
@@ -84,18 +84,18 @@ namespace MyUplinkSmartConnect
                         CreateNewHttpClient(_token.access_token);
                         File.WriteAllText(tokenFileFullPath, JsonSerializer.Serialize(_token));
 
-                        Log.Logger.Information("Login via API got new token");
+                        Log.Logger.Verbose("Login via API got new token");
                         return true;
                     }
                 }
                 else
                 {
-                    Log.Logger.Information($"Login to myUplink API failed with status {tResponse.StatusCode} and message {tResponse.Content}");
+                    Log.Logger.Warning($"Login to myUplink API failed with status {tResponse.StatusCode} and message {tResponse.Content}");
                     return false;
                 }
             }
 
-            Log.Logger.Information("Login to myUplink API failed.");
+            Log.Logger.Warning("Login to myUplink API failed.");
             return false;
         }
 
@@ -149,7 +149,17 @@ namespace MyUplinkSmartConnect
             if (tResponse.StatusCode == System.Net.HttpStatusCode.OK && !string.IsNullOrEmpty(tResponse.Content))
             {
                 var devices = JsonSerializer.Deserialize<MyGroupRoot>(tResponse.Content);
-                return devices?.groups ?? new List<DeviceGroup>();
+                var deviceList = devices?.groups ?? new List<DeviceGroup>();
+
+                foreach (var deviceGroup in deviceList)
+                {
+                    foreach(var device in deviceGroup.devices)
+                    {
+                        Log.Logger.Information($"Found device with ID: {device.id}");
+                    }                    
+                }
+
+                return deviceList;
             }
 
             return Array.Empty<DeviceGroup>();
@@ -178,6 +188,12 @@ namespace MyUplinkSmartConnect
             }
 
             return Array.Empty<HeaterWeeklyEvent>().ToList();
+        }
+
+        public string GetCurrentDayOrder(Device device)
+        {
+            var heaterRoot = _heaterScheduleRoot[device.id];
+            return heaterRoot.First().weekFormat ?? "mon,tue,wed,thu,fri,sat,sun";
         }
 
         public async Task<bool> SetWheeklySchedules(Device device, IEnumerable<HeaterWeeklyEvent> adjustedSchedule)
