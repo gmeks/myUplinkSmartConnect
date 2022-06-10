@@ -1,6 +1,9 @@
 #See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
-#docker build -t erlingsaeterdal/myuplinksmartconnect:1.0.0 .
-#docker push erlingsaeterdal/myuplinksmartconnect:1.0.0
+#docker build -t erlingsaeterdal/myuplinksmartconnect:1.0.0.1 .
+#docker tag erlingsaeterdal/myuplinksmartconnect:1.0.0.1 erlingsaeterdal/myuplinksmartconnect:latest
+#docker push erlingsaeterdal/myuplinksmartconnect:1.0.0.1
+##docker push erlingsaeterdal/myuplinksmartconnect:latest
+
 
 FROM mcr.microsoft.com/dotnet/runtime:6.0 AS base
 WORKDIR /app
