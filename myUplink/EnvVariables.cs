@@ -17,7 +17,7 @@ namespace MyUplinkSmartConnect
             GetVariables(ref _machine, EnvironmentVariableTarget.User);
             GetVariables(ref _machine, EnvironmentVariableTarget.Machine);
         }
-        public string? GetValue(string keyName)
+        public string GetValue(string keyName)
         {
             keyName = keyName.ToLower();
             if (_machine.ContainsKey(keyName))
@@ -27,7 +27,7 @@ namespace MyUplinkSmartConnect
             }
             
             Log.Logger.Verbose("Failed to find environmental variable {KeyName}",keyName);
-            return null;
+            return string.Empty;
         }
 
         public T GetValueEnum<T>(string keyName, T defaultValue) where T : Enum

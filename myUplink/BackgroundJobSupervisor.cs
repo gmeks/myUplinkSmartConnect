@@ -68,7 +68,7 @@ namespace MyUplinkSmartConnect
                     }
                     catch (Exception ex)
                     {
-                        Log.Logger.Error(ex,"Failed to run heater status job.");
+                        Log.Logger.Error(ex,"Failed to run heater status job");
                         _heaterStatus = null;
                     }
                 }
@@ -88,7 +88,7 @@ namespace MyUplinkSmartConnect
                     }
                     catch (Exception ex)
                     {
-                        Log.Logger.Error(ex, "Failed to run heater status job.");
+                        Log.Logger.Error(ex, "Failed to run heater status job");
                     }
                 }
                 else

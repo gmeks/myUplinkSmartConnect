@@ -19,33 +19,34 @@ namespace MyUplinkSmartConnect
 #else
         const string settingsFile = "appsettings.json";         
 #endif
-        BackgroundJobSupervisor _backgroundJobs;
+        readonly BackgroundJobSupervisor _backgroundJobs;
 
         public PriceWatchService()
         {
             _backgroundJobs = new BackgroundJobSupervisor();
         }
-
+        
         public bool Start(HostControl hostControl)
         {
             Log.Logger.Information("Starting up service");
 
             var env = new EnvVariables();
-            if(env.GetValue("IsInsideDocker") != null)
+            if(!string.IsNullOrEmpty(env.GetValue("IsInsideDocker")))
             {
-                Settings.Instance = new SettingsValues();
-                Settings.Instance.UserName = env.GetValue("UserName");
-                Settings.Instance.Password = env.GetValue("Password");
-                Settings.Instance.CheckRemoteStatsIntervalInMinutes = env.GetValueInt("CheckRemoteStatsIntervalInMinutes");
-                Settings.Instance.WaterHeaterMaxPowerInHours = env.GetValueInt("WaterHeaterMaxPowerInHours");
-                Settings.Instance.WaterHeaterMediumPowerInHours = env.GetValueInt("WaterHeaterMediumPowerInHours");
-                Settings.Instance.PowerZone = env.GetValue("PowerZone");
-                Settings.Instance.MQTTServer = env.GetValue("MQTTServer");
-                Settings.Instance.MQTTServerPort = env.GetValueInt("MQTTServerPort");
-                Settings.Instance.MQTTUserName = env.GetValue("MQTTUserName");
-                Settings.Instance.MQTTPassword = env.GetValue("MQTTPassword");
-
-                Settings.Instance.LogLevel = env.GetValueEnum<LogEventLevel>("LogLevel", LogEventLevel.Information);
+                Settings.Instance = new SettingsValues
+                {
+                    UserName = env.GetValue("UserName"),
+                    Password = env.GetValue("Password"),
+                    CheckRemoteStatsIntervalInMinutes = env.GetValueInt("CheckRemoteStatsIntervalInMinutes"),
+                    WaterHeaterMaxPowerInHours = env.GetValueInt("WaterHeaterMaxPowerInHours"),
+                    WaterHeaterMediumPowerInHours = env.GetValueInt("WaterHeaterMediumPowerInHours"),
+                    PowerZone = env.GetValue("PowerZone"),
+                    MQTTServer = env.GetValue("MQTTServer"),
+                    MQTTServerPort = env.GetValueInt("MQTTServerPort"),
+                    MQTTUserName = env.GetValue("MQTTUserName"),
+                    MQTTPassword = env.GetValue("MQTTPassword"),
+                    LogLevel = env.GetValueEnum<LogEventLevel>("LogLevel", LogEventLevel.Information)
+                };
 
                 Log.Logger.Information("Reading settings from environmental variables");
             }
@@ -78,7 +79,7 @@ namespace MyUplinkSmartConnect
                 return false;
             }
 
-            if (Settings.Instance.WaterHeaterMaxPowerInHours == 0 && Settings.Instance.WaterHeaterMaxPowerInHours == 0)
+            if (Settings.Instance.WaterHeaterMaxPowerInHours is 0 and 0)
             {
                 Log.Logger.Error("WaterHeaterMaxPowerInHours and WaterHeaterMaxPowerInHours are both set to 0, aborting");
                 return false;
@@ -90,7 +91,7 @@ namespace MyUplinkSmartConnect
             if (Settings.Instance.MQTTServerPort == 0)
                 Settings.Instance.MQTTServerPort = 1883;
 
-            if(env.GetValue("IsInsideDocker") == null)
+            if(string.IsNullOrEmpty(env.GetValue("IsInsideDocker")))
             {
                 try
                 {
