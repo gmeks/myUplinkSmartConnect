@@ -20,7 +20,7 @@ namespace MyUplinkSmartConnect
             }
             
 
-            Log.Logger.Error("Failed to get updated price inforamtion, from EU API. Checking nordpool");
+            Log.Logger.Error("Failed to get updated price information, from EU API. Checking nordpool");
 
             var nordpoolGroup = new Nordpoolgroup();
             await nordpoolGroup.GetPriceInformation();
@@ -52,7 +52,7 @@ namespace MyUplinkSmartConnect
             {
                 if (device.devices == null)
                 {
-                    Log.Logger.Error($"Group({device.id}) does not have devices");
+                    Log.Logger.Error("Group({DeviceId}) does not have devices",device.id);
                     continue;
                 }
 
@@ -85,7 +85,7 @@ namespace MyUplinkSmartConnect
                         }
                         else
                         {
-                            Log.Logger.Information($"Changed schedule for {tmpdevice.id}");
+                            Log.Logger.Information("Changed schedule for {DeviceId}",tmpdevice.id);
 
                             if(!string.IsNullOrEmpty(Settings.Instance.MQTTServer) && !string.IsNullOrEmpty(device.name))
                             {

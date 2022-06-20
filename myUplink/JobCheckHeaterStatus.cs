@@ -91,7 +91,7 @@ namespace MyUplinkSmartConnect
                 {
                     var applicationMessage = new MqttApplicationMessageBuilder().WithTopic($"heater/{deviceName}/{parameter}").WithPayload(value.ToString()).Build();
                     await _mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
-                    Log.Logger.Verbose($"Sending update {deviceName} - {parameter} - {value}");
+                    Log.Logger.Verbose("Sending update {DeviceName} - {Parameter} - {Value}",deviceName,parameter,value);
                 }
                 catch (Exception ex)
                 {

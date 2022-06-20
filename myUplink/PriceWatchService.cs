@@ -23,7 +23,7 @@ namespace MyUplinkSmartConnect
 
         public PriceWatchService()
         {
-            
+            _backgroundJobs = new BackgroundJobSupervisor();
         }
 
         public bool Start(HostControl hostControl)
@@ -47,7 +47,7 @@ namespace MyUplinkSmartConnect
 
                 Settings.Instance.LogLevel = env.GetValueEnum<LogEventLevel>("LogLevel", LogEventLevel.Information);
 
-                Log.Logger.Information("Reading settings from enviromental variables");
+                Log.Logger.Information("Reading settings from environmental variables");
             }
             else
             {
@@ -68,13 +68,13 @@ namespace MyUplinkSmartConnect
 
             if (string.IsNullOrEmpty(Settings.Instance.UserName))
             {
-                Log.Logger.Error("UserName setting cannot be null or ematy");
+                Log.Logger.Error("UserName setting cannot be null or empty");
                 return false;
             }
 
             if (string.IsNullOrEmpty(Settings.Instance.Password))
             {
-                Log.Logger.Error("Password setting cannot be null or ematy");
+                Log.Logger.Error("Password setting cannot be null or empty");
                 return false;
             }
 
@@ -103,7 +103,6 @@ namespace MyUplinkSmartConnect
                 }
             }
             
-            _backgroundJobs = new BackgroundJobSupervisor();
             Settings.Instance.myuplinkApi = new myuplinkApi();
 
             _backgroundJobs.Start();

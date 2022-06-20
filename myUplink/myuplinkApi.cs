@@ -60,9 +60,9 @@ namespace MyUplinkSmartConnect
             if (_token == null || _token.IsExpired)
             {
                 if (_token == null)
-                    Log.Logger.Verbose("Login is required, no old bear token found.");
+                    Log.Logger.Verbose("Login is required, no old bear token found");
                 else if (_token.IsExpired)
-                    Log.Logger.Verbose("Login is required, existing token is expired.");
+                    Log.Logger.Verbose("Login is required, existing token is expired");
 
                 var request = new RestRequest("oauth/token") { Method = Method.Post };
                 request.AddHeader("Accept", "application/json");
@@ -90,12 +90,12 @@ namespace MyUplinkSmartConnect
                 }
                 else
                 {
-                    Log.Logger.Warning($"Login to myUplink API failed with status {tResponse.StatusCode} and message {tResponse.Content}");
+                    Log.Logger.Warning("Login to myUplink API failed with status {StatusCode} and message {Content}",tResponse.StatusCode,tResponse.Content);
                     return false;
                 }
             }
 
-            Log.Logger.Warning("Login to myUplink API failed.");
+            Log.Logger.Warning("Login to myUplink API failed");
             return false;
         }
 
@@ -155,7 +155,7 @@ namespace MyUplinkSmartConnect
                 {
                     foreach(var device in deviceGroup.devices)
                     {
-                        Log.Logger.Information($"Found device with ID: {device.id}");
+                        Log.Logger.Information("Found device with ID: {DeviceId}",device.id);
                     }                    
                 }
 

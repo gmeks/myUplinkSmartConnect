@@ -27,7 +27,6 @@ namespace MyUplinkSmartConnect
             _thread.Name = "BackgroundJobs";
 
             var random = new DetermenisticInt();
-
             int tmpHour = random.GetByte(13, 22, Settings.Instance.UserName, 3);
             int tmpMinute = random.GetByte(13, 22, Settings.Instance.UserName, 2);
 
@@ -35,7 +34,7 @@ namespace MyUplinkSmartConnect
             _nextStatusUpdate = DateTime.Now;
 
             _nextScheduleUpdate = _nextScheduleUpdate.AddDays(-1);
-            Log.Logger.Information($"Target Scheule change time is {_nextScheduleUpdate.ToLocalTime().ToShortTimeString()}");
+            Log.Logger.Information("Target Schedule change time is {NextScheduleUpdate}",_nextScheduleUpdate.ToLocalTime().ToShortTimeString());
         }
 
         public void Start()

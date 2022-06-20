@@ -22,11 +22,11 @@ namespace MyUplinkSmartConnect
             keyName = keyName.ToLower();
             if (_machine.ContainsKey(keyName))
             {
-                Log.Logger.Verbose($"Enviromental variable {keyName} - {_machine[keyName]}");
+                Log.Logger.Verbose("Environmental variable {KeyName} - {KeyValue}",keyName,_machine[keyName]);
                 return _machine[keyName];
             }
             
-            Log.Logger.Verbose($"Failed to find enviromental variable {keyName}");
+            Log.Logger.Verbose("Failed to find environmental variable {KeyName}",keyName);
             return null;
         }
 
@@ -42,7 +42,7 @@ namespace MyUplinkSmartConnect
             }
             catch
             {
-                Log.Logger.Error($"{keyName} has invalid value and cannot be read as a {typeof(T)}: {strValue}");
+                Log.Logger.Error("{KeyName} has invalid value and cannot be read as a {Type}: {KeyValue}",keyName,typeof(T),strValue);
                 return defaultValue;
             }            
         }
@@ -59,9 +59,9 @@ namespace MyUplinkSmartConnect
             }
             catch
             {
-                Log.Logger.Error($"{keyName} has invalid value and cannot be read as a int: {strValue}");
+                Log.Logger.Error("{KeyName} has invalid value and cannot be read as a int: {Value}",keyName,strValue);
                 return 0;
-            }            
+            }
         }
 
         void GetVariables(ref Dictionary<string, string> dic, EnvironmentVariableTarget target)
