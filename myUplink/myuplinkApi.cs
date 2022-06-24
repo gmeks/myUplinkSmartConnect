@@ -17,12 +17,19 @@ namespace MyUplinkSmartConnect
         AuthToken? _token;
         readonly Uri _apiUrl;
         Dictionary<string, HeaterWeeklyRoot[]> _heaterScheduleRoot;
+        List<DeviceGroup>? _devices;
 
         public myuplinkApi()
         {
             _heaterScheduleRoot = new Dictionary<string, HeaterWeeklyRoot[]>();
             _apiUrl = new Uri("https://internalapi.myuplink.com");
             _httpClient = new RestClient(_apiUrl);
+        }
+
+        public void ClearCached()
+        {
+            _heaterScheduleRoot?.Clear();
+            _devices?.Clear();
         }
 
         public async Task<bool> LoginToApi()
@@ -143,6 +150,9 @@ namespace MyUplinkSmartConnect
             if(!loginStatus)
                 return Array.Empty<DeviceGroup>();
 
+            if (_devices != null && _devices.Count != 0)
+                return _devices;
+
             var request = new RestRequest("/v2/groups/me") { Method = Method.Get };
             var tResponse = await _httpClient.ExecuteAsync(request);
 
@@ -159,6 +169,7 @@ namespace MyUplinkSmartConnect
                     }                    
                 }
 
+                _devices = deviceList;
                 return deviceList;
             }
 

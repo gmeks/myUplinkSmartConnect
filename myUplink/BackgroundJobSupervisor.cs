@@ -83,6 +83,8 @@ namespace MyUplinkSmartConnect
                 {
                     try
                     {
+                        Settings.Instance.myuplinkApi.ClearCached();
+
                         await JobReScheuleheating.Work();
                         _nextScheduleUpdate = DateTime.Now;
                     }
