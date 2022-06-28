@@ -13,7 +13,7 @@ namespace MyUplinkSmartConnect
         static async Task<iBasePriceInformation?> GetPriceInformation()
         {            
             var powerPrice = new EntsoeAPI();
-            var priceInformation = await powerPrice.FetchPriceInformation();
+           _r = await powerPrice.FetchPriceInformation();
             if(powerPrice.PriceList.Count >= 48)
             {
                 return powerPrice;

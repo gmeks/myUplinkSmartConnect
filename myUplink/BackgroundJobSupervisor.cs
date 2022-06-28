@@ -27,14 +27,30 @@ namespace MyUplinkSmartConnect
             _thread.Name = "BackgroundJobs";
 
             var random = new DetermenisticInt();
-            int tmpHour = random.GetByte(13, 22, Settings.Instance.UserName, 3);
-            int tmpMinute = random.GetByte(13, 22, Settings.Instance.UserName, 2);
+            int tmpHour = random.GetByte(13, 22, BuildDetermenisticRandomSeed(), 3);
+            int tmpMinute = random.GetByte(13, 22, BuildDetermenisticRandomSeed(), 2);
 
             _nextScheduleUpdate = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day, tmpHour,tmpMinute,0);
             _nextStatusUpdate = DateTime.Now;
 
             _nextScheduleUpdate = _nextScheduleUpdate.AddDays(-1);
             Log.Logger.Information("Target Schedule change time is {NextScheduleUpdate}",_nextScheduleUpdate.ToLocalTime().ToShortTimeString());
+        }
+
+        string BuildDetermenisticRandomSeed()
+        {
+            var seed = new StringBuilder();
+
+            if (!string.IsNullOrEmpty(Settings.Instance.UserName))
+                seed.Append(Settings.Instance.UserName);
+
+            if (!string.IsNullOrEmpty(Settings.Instance.MQTTServer))
+                seed.Append(Settings.Instance.MQTTServer);
+
+            if (!string.IsNullOrEmpty(Settings.Instance.PowerZone))
+                seed.Append(Settings.Instance.PowerZone);
+
+            return seed.ToString();
         }
 
         public void Start()
