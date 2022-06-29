@@ -12,8 +12,12 @@ namespace MyUplinkSmartConnect
 {
     internal class BackgroundJobSupervisor
     {
-        Thread _thread;
+        Thread _threadWorker;
+        Thread _threadHealthChecker;
         bool _killWorker;
+
+        DateTime _lastWorkerAliveCheck;
+        DateTime _lastWorkerHealthAlive;
 
         DateTime _nextStatusUpdate;
         DateTime _nextScheduleUpdate;
@@ -22,10 +26,6 @@ namespace MyUplinkSmartConnect
 
         public BackgroundJobSupervisor()
         {
-            _thread = new Thread(Worker);
-            _thread.IsBackground = true;
-            _thread.Name = "BackgroundJobs";
-
             var random = new DetermenisticInt();
             int tmpHour = random.GetByte(13, 22, BuildDetermenisticRandomSeed(), 3);
             int tmpMinute = random.GetByte(13, 22, BuildDetermenisticRandomSeed(), 2);
@@ -35,6 +35,24 @@ namespace MyUplinkSmartConnect
 
             _nextScheduleUpdate = _nextScheduleUpdate.AddDays(-1);
             Log.Logger.Information("Target Schedule change time is {NextScheduleUpdate}",_nextScheduleUpdate.ToLocalTime().ToShortTimeString());
+        }
+
+        void CreateWorkerThread()
+        {
+            _lastWorkerAliveCheck = DateTime.Now;
+            _threadWorker = new Thread(Worker);
+            _threadWorker.IsBackground = true;
+            _threadWorker.Name = "BackgroundJobs";
+            _threadWorker.Start();
+        }
+
+        void CreateWorkerHealthCheckThread()
+        {
+            _lastWorkerHealthAlive = DateTime.Now;
+            _threadHealthChecker = new Thread(WorkerHealthCheck);
+            _threadHealthChecker.IsBackground = true;
+            _threadHealthChecker.Name = "BackgroundJobs healthcheck";
+            _threadHealthChecker.Start();
         }
 
         string BuildDetermenisticRandomSeed()
@@ -56,9 +74,14 @@ namespace MyUplinkSmartConnect
         public void Start()
         {
             _killWorker = false;
-            if (!_thread.IsAlive)
+            if (_threadWorker == null || !_threadWorker.IsAlive)
             {
-                _thread.Start();
+                CreateWorkerThread();
+            }
+
+            if (_threadHealthChecker == null || !_threadHealthChecker.IsAlive)
+            {
+                CreateWorkerHealthCheckThread();
             }
         }
 
@@ -67,10 +90,34 @@ namespace MyUplinkSmartConnect
             _killWorker = true;
         }
 
+        void WorkerHealthCheck()
+        {
+            while (!_killWorker)
+            {
+#if DEBUG
+                Thread.Sleep(TimeSpan.FromMinutes(1));
+#else
+                Thread.Sleep(TimeSpan.FromMinutes(10));
+#endif
+
+                if (_killWorker)
+                    break;
+
+                _lastWorkerHealthAlive = DateTime.Now;
+                var lastJobTime = DateTime.Now - _lastWorkerAliveCheck;
+                if (lastJobTime.TotalMinutes > 20)
+                {
+                    Log.Logger.Error("Worker thread had stopped, restarting it.");
+                    //CreateWorkerThread();
+                }                
+            }
+        }
+
         async void Worker()
         {
             while(!_killWorker)
             {
+                _lastWorkerAliveCheck = DateTime.Now;
                 var nextStatusUpdate = DateTime.Now - _nextStatusUpdate;
                 if (_heaterStatus == null)
                     _heaterStatus = new JobCheckHeaterStatus();
@@ -131,6 +178,12 @@ namespace MyUplinkSmartConnect
                 }
 
                 Thread.Sleep(TimeSpan.FromMinutes(1));
+
+                var lastJobTime = DateTime.Now - _lastWorkerHealthAlive;
+                if (!_killWorker && lastJobTime.TotalMinutes > 20)
+                {
+                    CreateWorkerHealthCheckThread();
+                }
             }
         }
     }

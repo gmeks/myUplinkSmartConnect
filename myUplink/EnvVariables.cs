@@ -22,11 +22,11 @@ namespace MyUplinkSmartConnect
             keyName = keyName.ToLower();
             if (_machine.ContainsKey(keyName))
             {
-                Log.Logger.Verbose("Environmental variable {KeyName} - {KeyValue}",keyName,_machine[keyName]);
+                Log.Logger.Debug("Environmental variable {KeyName} - {KeyValue}",keyName,_machine[keyName]);
                 return _machine[keyName];
             }
             
-            Log.Logger.Verbose("Failed to find environmental variable {KeyName}",keyName);
+            Log.Logger.Debug("Failed to find environmental variable {KeyName}",keyName);
             return string.Empty;
         }
 

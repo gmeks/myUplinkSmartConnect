@@ -8,6 +8,7 @@ namespace MyUplinkSmartConnect
     internal class JobCheckHeaterStatus
     {
         readonly MqttFactory _mqttFactory;
+        static readonly object _lock = new object();
         static IMqttClient? _mqttClient;
         IEnumerable<DeviceGroup>? _deviceGroup;
 
@@ -58,32 +59,35 @@ namespace MyUplinkSmartConnect
 
         internal async Task SendUpdate(string deviceName, CurrentPointParameterType parameter,object value)
         {
-            if (_mqttClient == null || !_mqttClient.IsConnected  )
+            lock(_lock)
             {
-                _mqttClient = _mqttFactory.CreateMqttClient();
-                MqttClientOptionsBuilder optionsBuilder;
-
-
-                if (Settings.Instance.MQTTServerPort != 0)
-                    optionsBuilder = new MqttClientOptionsBuilder().WithTcpServer(Settings.Instance.MQTTServer, Settings.Instance.MQTTServerPort);
-                else
-                    optionsBuilder = new MqttClientOptionsBuilder().WithTcpServer(Settings.Instance.MQTTServer);
-
-                if(!string.IsNullOrEmpty(Settings.Instance.MQTTUserName))
+                if (_mqttClient == null || !_mqttClient.IsConnected)
                 {
-                    optionsBuilder = optionsBuilder.WithCredentials(Settings.Instance.MQTTUserName, Settings.Instance.MQTTPassword);
-                }                
+                    _mqttClient = _mqttFactory.CreateMqttClient();
+                    MqttClientOptionsBuilder optionsBuilder;
 
-                try
-                {
-                    await _mqttClient.ConnectAsync(optionsBuilder.Build(), CancellationToken.None);
+
+                    if (Settings.Instance.MQTTServerPort != 0)
+                        optionsBuilder = new MqttClientOptionsBuilder().WithTcpServer(Settings.Instance.MQTTServer, Settings.Instance.MQTTServerPort);
+                    else
+                        optionsBuilder = new MqttClientOptionsBuilder().WithTcpServer(Settings.Instance.MQTTServer);
+
+                    if (!string.IsNullOrEmpty(Settings.Instance.MQTTUserName))
+                    {
+                        optionsBuilder = optionsBuilder.WithCredentials(Settings.Instance.MQTTUserName, Settings.Instance.MQTTPassword);
+                    }
+
+                    try
+                    {
+                        _= _mqttClient.ConnectAsync(optionsBuilder.Build(), CancellationToken.None).Result;
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Logger.Error(ex, "Failed to connect to MTQQ server ");
+                        _mqttClient = null;
+                    }
                 }
-                catch(Exception ex)
-                {
-                    Log.Logger.Error(ex,"Failed to connect to MTQQ server ");
-                    _mqttClient = null;
-                }                
-            }
+            }            
 
             if(_mqttClient != null && _mqttClient.IsConnected)
             {
@@ -91,7 +95,7 @@ namespace MyUplinkSmartConnect
                 {
                     var applicationMessage = new MqttApplicationMessageBuilder().WithTopic($"heater/{deviceName}/{parameter}").WithPayload(value.ToString()).Build();
                     await _mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
-                    Log.Logger.Verbose("Sending update {DeviceName} - {Parameter} - {Value}",deviceName,parameter,value);
+                    Log.Logger.Debug("Sending update {DeviceName} - {Parameter} - {Value}",deviceName,parameter,value);
                 }
                 catch (Exception ex)
                 {

@@ -58,7 +58,7 @@ namespace MyUplinkSmartConnect
                     }
                     else
                     {
-                        Log.Logger.Verbose("Loaded old token from tokenfile");
+                        Log.Logger.Debug("Loaded old token from tokenfile");
                         return true;
                     }
                 }
@@ -67,9 +67,9 @@ namespace MyUplinkSmartConnect
             if (_token == null || _token.IsExpired)
             {
                 if (_token == null)
-                    Log.Logger.Verbose("Login is required, no old bear token found");
+                    Log.Logger.Debug("Login is required, no old bear token found");
                 else if (_token.IsExpired)
-                    Log.Logger.Verbose("Login is required, existing token is expired");
+                    Log.Logger.Debug("Login is required, existing token is expired");
 
                 var request = new RestRequest("oauth/token") { Method = Method.Post };
                 request.AddHeader("Accept", "application/json");
@@ -91,7 +91,7 @@ namespace MyUplinkSmartConnect
                         CreateNewHttpClient(_token.access_token);
                         File.WriteAllText(tokenFileFullPath, JsonSerializer.Serialize(_token));
 
-                        Log.Logger.Verbose("Login via API got new token");
+                        Log.Logger.Debug("Login via API got new token");
                         return true;
                     }
                 }

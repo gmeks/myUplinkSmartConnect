@@ -100,7 +100,7 @@ namespace MyUplinkSmartConnect
                 }
                 catch
                 {
-                    Log.Logger.Verbose($"Failed to update setting file {settingsFile}");
+                    Log.Logger.Debug($"Failed to update setting file {settingsFile}");
                 }
             }
             
