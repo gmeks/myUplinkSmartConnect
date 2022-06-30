@@ -224,7 +224,8 @@ namespace MyUplinkSmartConnect
             var tResponse = await _httpClient.ExecuteAsync(request);
             if (tResponse.StatusCode == System.Net.HttpStatusCode.OK || tResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
                 return true;
-            
+
+            Log.Logger.Warning("Failed to set schedule {StatusCode} and message {Content}", tResponse.StatusCode, tResponse.Content);
             return false;
         }
 
@@ -245,6 +246,7 @@ namespace MyUplinkSmartConnect
                 return devices;
             }
 
+            Log.Logger.Warning("Failed to get modes {StatusCode} and message {Content}", tResponse.StatusCode, tResponse.Content);
             return Array.Empty<WaterHeaterMode>().ToList();
         }
 
@@ -264,6 +266,7 @@ namespace MyUplinkSmartConnect
                 return true;
             }
 
+            Log.Logger.Warning("Failed to update modes {StatusCode} and message {Content}", tResponse.StatusCode, tResponse.Content);
             return false;
         }
 

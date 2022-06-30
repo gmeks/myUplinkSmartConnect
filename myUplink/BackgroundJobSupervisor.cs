@@ -148,8 +148,12 @@ namespace MyUplinkSmartConnect
                     {
                         Settings.Instance.myuplinkApi.ClearCached();
 
-                        await JobReScheuleheating.Work();
-                        _nextScheduleUpdate = DateTime.Now;
+                        var status = await JobReScheuleheating.Work();
+
+                        if(status)
+                        {
+                            _nextScheduleUpdate = DateTime.Now;
+                        }                        
                     }
                     catch (Exception ex)
                     {
