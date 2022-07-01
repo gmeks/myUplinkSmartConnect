@@ -25,17 +25,59 @@ namespace MyUplinkSmartConnect
 
         internal List<HeaterWeeklyEvent> WaterHeaterSchedule { get; set; } = new List<HeaterWeeklyEvent>();
 
-        public bool VerifyHeaterSchedule(List<stPriceInformation> priceList, params DateTime[] datesToSchuedule)
+        IEnumerable<DayOfWeek> GetWeekDayOrder(string input)
+        {
+            var weekOrder = new List<DayOfWeek>();
+            var splitDays = input.Split(',');
+
+            foreach(var strDay in splitDays)
+            {
+                switch(strDay)
+                {
+                    case "mon":
+                        weekOrder.Add(DayOfWeek.Monday);
+                        break;
+
+                    case "tue":
+                        weekOrder.Add(DayOfWeek.Tuesday);
+                        break;
+
+                    case "wed":
+                        weekOrder.Add(DayOfWeek.Wednesday);
+                        break;
+
+                    case "thu":
+                        weekOrder.Add(DayOfWeek.Thursday);
+                        break;
+
+                    case "fri":
+                        weekOrder.Add(DayOfWeek.Friday);
+                        break;
+
+                    case "sat":
+                        weekOrder.Add(DayOfWeek.Saturday);
+                        break;
+
+                    case "sun":
+                        weekOrder.Add(DayOfWeek.Sunday);
+                        break;
+                }
+            }
+            return weekOrder;
+        }
+
+        public bool VerifyHeaterSchedule(List<stPriceInformation> priceList,string weekFormat, params DateTime[] datesToSchuedule)
         {
             // Turns out there is a maximum number of "events" so we have to wipe out all other days.
             WaterHeaterSchedule.Clear();
 
-            var daysInWeek = Enum.GetValues<DayOfWeek>();
+            var daysInWeek = GetWeekDayOrder(weekFormat);
+
 
             var requiredHours = datesToSchuedule.Length * 24;
             if(priceList.Count < requiredHours)
             {
-                Log.Logger.Warning($"Cannot build waterheater schedule, the pricelist only contains {priceList.Count}, but we are attemting to scheule {requiredHours}");
+                Log.Logger.Warning("Cannot build waterheater schedule, the price list only contains {priceListCount}, but we are attempting to schedule {RequiredHours}",priceList.Count,requiredHours);
                 return false;
             }
 
@@ -178,7 +220,7 @@ namespace MyUplinkSmartConnect
                         {
                             isGood = false;
                             setting.value = (int)desiredPower;
-                            Log.Logger.Warning($"Water heater desired power level is incorrect for {mode.name} , changing from {setting.HelperDesiredHeatingPower} to {desiredPower}");
+                            Log.Logger.Warning("Water heater desired power level is incorrect for {modename} , changing from {settingHelperDesiredHeatingPower} to {desiredPower}",mode.name,setting.HelperDesiredHeatingPower,desiredPower);
                         }
                         break;
 
@@ -186,7 +228,7 @@ namespace MyUplinkSmartConnect
                         if (setting.value != targetTemprature)
                         {
                             isGood = false;
-                            Log.Logger.Warning($"Water heater target temprature is incorrect ({setting.value}) for {mode.name} , changing to {targetTemprature}");
+                            Log.Logger.Warning("Water heater target temperature is incorrect ({settingValue}) for {modename} , changing to {targetTemprature}",setting.value,mode.name,targetTemprature);
 
                             setting.value = targetTemprature;
                         }

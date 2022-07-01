@@ -11,9 +11,9 @@ namespace MyUplinkSmartConnect
 
     class SettingsValues
     {
-        public string? UserName { get; set; }
+        public string UserName { get; set; } = "";
 
-        public string? Password { get; set; }
+        public string Password { get; set; } = "";
 
         public int CheckRemoteStatsIntervalInMinutes { get; set; } = 1;
 

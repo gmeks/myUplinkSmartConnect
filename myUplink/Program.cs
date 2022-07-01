@@ -24,8 +24,18 @@ namespace MyUplinkSmartConnect
                 while(true)
                 {
                     var result = Console.ReadLine();
+
                     if (!string.IsNullOrEmpty(result))
+                    {
+                        if (result.StartsWith("d"))
+                        {
+                            Console.WriteLine("Enabling debug logging");
+                            Log.Logger = new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console(restrictedToMinimumLevel: LogEventLevel.Debug).CreateLogger();
+                            continue;
+                        }
+                        
                         break;
+                    }
 
                     Thread.Sleep(100);
                 }
