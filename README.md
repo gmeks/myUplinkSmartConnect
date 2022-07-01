@@ -52,11 +52,15 @@ This works for my famility, with 1 adult male and a wife. Both taking showers th
 *If your wondering how many hours pr day the water heater is potensialy on, please combine the 2 above numbers.*
 
 **FAQ**
+---
 Q) What are modes and how are they used?
 A)
 The heater has 5 different modes ( Mode is a combination of target temprature for water and how much power to use to heat it.), this program uses 3 of them ( And will automaticly configure this)
+
 M6: Target temp 70c ( 2000w)
+
 M5: Target temp 50c ( 700w)
+
 M4: Target temp 50c ( 0w)
 
 It will then use these modes based on electricity price.
@@ -69,6 +73,8 @@ A) Yes, if you restart the service/docker after the target schedule change time 
 
 
 ** Setup Homeassistant sensor, in configuration.yml**
+---
+
 *18760NE2240322014631 needs to be replaced with the ID of your hotwater heater, simplest way to find out is to just read the console output of this application*
 
      sensor:
