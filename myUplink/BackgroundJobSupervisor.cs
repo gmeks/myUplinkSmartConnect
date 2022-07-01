@@ -20,6 +20,8 @@ namespace MyUplinkSmartConnect
 
         JobCheckHeaterStatus? _heaterStatus;
 
+        const int _minimumStartHourForSchedule = 14;
+
         public BackgroundJobSupervisor()
         {
             _thread = new Thread(Worker);
@@ -28,8 +30,8 @@ namespace MyUplinkSmartConnect
 
             var random = new DetermenisticInt();
 
-            int tmpHour = random.GetByte(13, 22, Settings.Instance.UserName, 3);
-            int tmpMinute = random.GetByte(13, 22, Settings.Instance.UserName, 2);
+            int tmpHour = random.GetByte(_minimumStartHourForSchedule, 22, Settings.Instance.UserName, 3);
+            int tmpMinute = random.GetByte(_minimumStartHourForSchedule, 22, Settings.Instance.UserName, 2);
 
             _nextScheduleUpdate = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day, tmpHour,tmpMinute,0);
             _nextStatusUpdate = DateTime.Now;
@@ -79,7 +81,7 @@ namespace MyUplinkSmartConnect
 #if DEBUG
                 if (true)
 #else
-                if (nextScheduleChange.TotalHours > 23 && nowUTC.Hour > 15)
+                if (nextScheduleChange.TotalHours > 23 && nowUTC.Hour > _minimumStartHourForSchedule)
 #endif
                 {
                     try
