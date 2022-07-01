@@ -42,11 +42,9 @@ namespace MyUplinkSmartConnect
                         weekOrder.Add(DayOfWeek.Tuesday);
                         break;
 
-
                     case "wed":
                         weekOrder.Add(DayOfWeek.Wednesday);
                         break;
-
 
                     case "thu":
                         weekOrder.Add(DayOfWeek.Thursday);
@@ -79,7 +77,7 @@ namespace MyUplinkSmartConnect
             var requiredHours = datesToSchuedule.Length * 24;
             if(priceList.Count < requiredHours)
             {
-                Log.Logger.Warning("Cannot build waterheater schedule, the price list only contains {priceList.Count}, but we are attempting to schedule {RequiredHours}",priceList.Count,requiredHours);
+                Log.Logger.Warning("Cannot build waterheater schedule, the price list only contains {priceListCount}, but we are attempting to schedule {RequiredHours}",priceList.Count,requiredHours);
                 return false;
             }
 
@@ -222,7 +220,7 @@ namespace MyUplinkSmartConnect
                         {
                             isGood = false;
                             setting.value = (int)desiredPower;
-                            Log.Logger.Warning("Water heater desired power level is incorrect for {mode.name} , changing from {setting.HelperDesiredHeatingPower} to {desiredPower}",mode.name,setting.HelperDesiredHeatingPower,desiredPower);
+                            Log.Logger.Warning("Water heater desired power level is incorrect for {modename} , changing from {settingHelperDesiredHeatingPower} to {desiredPower}",mode.name,setting.HelperDesiredHeatingPower,desiredPower);
                         }
                         break;
 
@@ -230,7 +228,7 @@ namespace MyUplinkSmartConnect
                         if (setting.value != targetTemprature)
                         {
                             isGood = false;
-                            Log.Logger.Warning("Water heater target temperature is incorrect ({setting.value}) for {mode.name} , changing to {targetTemprature}",setting.value,mode.name,targetTemprature);
+                            Log.Logger.Warning("Water heater target temperature is incorrect ({settingValue}) for {modename} , changing to {targetTemprature}",setting.value,mode.name,targetTemprature);
 
                             setting.value = targetTemprature;
                         }
