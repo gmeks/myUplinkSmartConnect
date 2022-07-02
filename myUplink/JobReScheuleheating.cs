@@ -20,7 +20,7 @@ namespace MyUplinkSmartConnect
             }
             
 
-            Log.Logger.Error("Failed to get updated price information, from EU API. Checking nordpool");
+            Log.Logger.Debug("Failed to get updated price information, from EU API. Checking nordpool");
 
             var nordpoolGroup = new Nordpoolgroup();
             await nordpoolGroup.GetPriceInformation();
@@ -30,6 +30,8 @@ namespace MyUplinkSmartConnect
                 return nordpoolGroup;
             }
 
+            Log.Logger.Warning("¨Failed to get price information from both EU API and nordpool" +
+                "");
             return null;
         }
 

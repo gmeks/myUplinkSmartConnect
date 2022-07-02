@@ -5,14 +5,14 @@ It also allows you to periodicity publish current values from the heater via mqt
 
 ![Screenshot](schedule_screenshot.png)
 
-**How does program work:**
+#**How does program work:**
 ---
 It contacts a EU API [transparency.entsoe.eu](https://transparency.entsoe.eu) and gets the electricity price pr hour for your region. It will then set the schedule for when to increase the water temprature.
 
-**Legal**
+#**Legal**
 This is a 3d party program made to work against [myuplink](https://myuplink.com), and not afflilated with them in any way.
 
-**How to use:**
+#**How to use:**
 ---
 1) Download the program.
 2) Configure the application.json
@@ -28,7 +28,7 @@ https://hub.docker.com/r/erlingsaeterdal/myuplinksmartconnect
 
 * How far this is taken depends alot of to what degree others use it *
 
-**Configuration explained:**
+##**Configuration explained:**
 ---
 - UserName - Your username to myuplink.com ( Sadly the public facing APi, does not allow for reschedules..) 
 - Password - Your password for myuplink.com 
@@ -51,28 +51,25 @@ This works for my famility, with 1 adult male and a wife. Both taking showers th
  *Heater should be in schedule mode.*
 *If your wondering how many hours pr day the water heater is potensialy on, please combine the 2 above numbers.*
 
-**FAQ**
+##**FAQ**
 ---
-Q) What are modes and how are they used?
+###Q) What are modes and how are they used?
 A)
 The heater has 5 different modes ( Mode is a combination of target temprature for water and how much power to use to heat it.), this program uses 3 of them ( And will automaticly configure this)
-
 M6: Target temp 70c ( 2000w)
-
 M5: Target temp 50c ( 700w)
-
 M4: Target temp 50c ( 0w)
 
 It will then use these modes based on electricity price.
 
-Q) When does the application change the schedule?
+###Q) When does the application change the schedule?
 A) The application will change the schedule at a set thats different for each user. You will see you time in the logs ( [16:47:05 INF] Target Schedule change time is 15:17  ) We spread out the load of when to change the schedule, simply because having all heaters attemting to do it at the same is bad practice and might overload the remote apis.
 
-Q) Can i force it to update the schedule?
+###Q) Can i force it to update the schedule?
 A) Yes, if you restart the service/docker after the target schedule change time ( But before midnight), it will force a schedule update.
 
 
-** Setup Homeassistant sensor, in configuration.yml**
+##** Setup Homeassistant sensor, in configuration.yml**
 ---
 
 *18760NE2240322014631 needs to be replaced with the ID of your hotwater heater, simplest way to find out is to just read the console output of this application*

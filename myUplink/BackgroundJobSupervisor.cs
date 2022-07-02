@@ -124,6 +124,7 @@ namespace MyUplinkSmartConnect
                 if (_heaterStatus == null)
                     _heaterStatus = new JobCheckHeaterStatus();
 
+                Log.Logger.Debug("Next status update in {Minutes}", nextStatusUpdate.TotalMinutes);
                 if (nextStatusUpdate.TotalMinutes > Settings.Instance.CheckRemoteStatsIntervalInMinutes)
                 {
                     try
