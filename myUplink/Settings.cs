@@ -1,5 +1,4 @@
-﻿using MyUplinkSmartConnect.Models;
-using Serilog.Events;
+﻿using Serilog.Events;
 using System.Text.Json.Serialization;
 
 namespace MyUplinkSmartConnect

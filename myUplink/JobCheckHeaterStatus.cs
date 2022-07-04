@@ -27,6 +27,9 @@ namespace MyUplinkSmartConnect
                 _deviceGroup = await Settings.Instance.myuplinkApi.GetDevices();
             }
 
+            if(_deviceGroup.Any())
+                Log.Logger.Debug("Found {DeviceCount} devices, will attemt to check for status updates", _deviceGroup.Count());
+
             foreach (var device in _deviceGroup)
             {
                 if (string.IsNullOrEmpty(device.name) || device.devices == null)

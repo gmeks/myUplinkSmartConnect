@@ -17,6 +17,26 @@ namespace MyUplinkSmartConnect
             GetVariables(ref _machine, EnvironmentVariableTarget.User);
             GetVariables(ref _machine, EnvironmentVariableTarget.Machine);
         }
+
+        public EnvVariables(Dictionary<string,object> tmpList)
+        {
+            _machine = new Dictionary<string, string>();
+
+            foreach(var item in tmpList)
+            {
+                var value = tmpList[item.Key]?.ToString() ?? "";
+
+                if(value == null)
+                {
+                    _machine.Add(item.Key.ToLower(), "");
+                }
+                else
+                {
+                    _machine.Add(item.Key.ToLower(), value);
+                }                
+            }
+        }
+
         public string GetValue(string keyName)
         {
             keyName = keyName.ToLower();
