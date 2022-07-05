@@ -124,6 +124,12 @@ namespace MyUplinkSmartConnect
                 if (_heaterStatus == null)
                     _heaterStatus = new JobCheckHeaterStatus();
 
+                if(Settings.Instance.myuplinkApi == null)
+                {
+                    Log.Logger.Debug("myUplink API is not ready", nextStatusUpdate.TotalMinutes);
+                    continue;
+                }
+
                 Log.Logger.Debug("Next status update in {Minutes}", nextStatusUpdate.TotalMinutes);
                 if (nextStatusUpdate.TotalMinutes > Settings.Instance.CheckRemoteStatsIntervalInMinutes)
                 {
@@ -163,25 +169,27 @@ namespace MyUplinkSmartConnect
                         Log.Logger.Error(ex, "Failed to run heater status job");
                     }
                 }
-                else
-                {
-                    if(_heaterStatus != null && Settings.Instance.myuplinkApi != null)
-                    {
-                        var group = await Settings.Instance.myuplinkApi.GetDevices();
-                        if (group != null)
-                        {
-                            foreach (var device in group)
-                            {
-                                if (device.devices == null || string.IsNullOrEmpty(device.name))
-                                    throw new NullReferenceException("device.devices or device.name cannot be null");
 
-                                foreach (var tmpdevice in device.devices)
-                                {
-                                    await _heaterStatus.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChangeInHours, Convert.ToInt32(nextScheduleChange.TotalHours));
-                                }
+                if (_heaterStatus != null)
+                {
+                    var group = await Settings.Instance.myuplinkApi.GetDevices();
+                    if (group != null)
+                    {
+                        foreach (var device in group)
+                        {
+                            if (device.devices == null || string.IsNullOrEmpty(device.name))
+                                throw new NullReferenceException("device.devices or device.name cannot be null");
+
+                            foreach (var tmpdevice in device.devices)
+                            {
+                                await _heaterStatus.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChangeInHours, Convert.ToInt32(nextScheduleChange.TotalHours));
                             }
                         }
-                    }                                   
+                    }
+                }
+                else
+                {
+                    Log.Logger.Debug("Cannot do status updates heaterstatus is null {_heaterStatus} or API is down {myapi}",(_heaterStatus is null),(Settings.Instance.myuplinkApi is null));
                 }
 
                 Thread.Sleep(TimeSpan.FromMinutes(1));
