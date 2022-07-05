@@ -109,8 +109,8 @@ namespace MyUplinkSmartConnect
                 var lastJobTime = DateTime.Now - _lastWorkerAliveCheck;
                 if (lastJobTime.TotalMinutes > 20)
                 {
-                    Log.Logger.Error("Worker thread had stopped, restarting it.");
-                    //CreateWorkerThread();
+                    Log.Logger.Warning("Worker thread had stopped, restarting it.");
+                    CreateWorkerThread();
                 }                
             }
         }
@@ -151,6 +151,7 @@ namespace MyUplinkSmartConnect
                 if (true)
 #else
                 if (nextScheduleChange.TotalHours > 23 && nowUTC.Hour > _minimumHourForScheduleStart)
+                Log.Logger.Debug("Last schedule was {hours} hours ago and above minimum hour for schedule start {minHour}",nextScheduleChange.TotalHours,(nowUTC.Hour > _minimumHourForScheduleStart));
 #endif
                 {
                     try
@@ -186,6 +187,8 @@ namespace MyUplinkSmartConnect
                             }
                         }
                     }
+                    else
+                        Log.Logger.Debug("Failed to do device status updates, found no devices");
                 }
                 else
                 {
@@ -198,6 +201,7 @@ namespace MyUplinkSmartConnect
                 if (!_killWorker && lastJobTime.TotalMinutes > 20)
                 {
                     CreateWorkerHealthCheckThread();
+                    Log.Logger.Warning("Main worker thread was dead, restaring. Has been down for {min} minutes", lastJobTime.TotalMinutes);
                 }
             }
         }
