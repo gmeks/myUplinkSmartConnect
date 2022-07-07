@@ -12,8 +12,8 @@ namespace MyUplinkSmartConnect
 {
     internal class BackgroundJobSupervisor
     {
-        Thread _threadWorker;
-        Thread _threadHealthChecker;
+        Thread? _threadWorker;
+        Thread? _threadHealthChecker;
         bool _killWorker;
 
         DateTime _lastWorkerAliveCheck;
@@ -131,17 +131,17 @@ namespace MyUplinkSmartConnect
                 }
 
                 Log.Logger.Debug("Next status update in {Minutes}", nextStatusUpdate.TotalMinutes);
+                _nextStatusUpdate = DateTime.Now;
                 if (nextStatusUpdate.TotalMinutes > Settings.Instance.CheckRemoteStatsIntervalInMinutes)
                 {
                     try
                     {
-                        await _heaterStatus.Work();
-                        _nextStatusUpdate = DateTime.Now;
+                        await _heaterStatus.Work();                        
                     }
                     catch (Exception ex)
                     {
                         Log.Logger.Error(ex,"Failed to run heater status job");
-                        _heaterStatus = null;
+                        _heaterStatus = null;                        
                     }
                 }
 
@@ -150,10 +150,10 @@ namespace MyUplinkSmartConnect
 #if DEBUG
                 if (true)
 #else
-                if (nextScheduleChange.TotalHours > 23 && nowUTC.Hour > _minimumHourForScheduleStart)
-                Log.Logger.Debug("Last schedule was {hours} hours ago and above minimum hour for schedule start {minHour}",nextScheduleChange.TotalHours,(nowUTC.Hour > _minimumHourForScheduleStart));
+                if (nextScheduleChange.TotalHours > 23 && nowUTC.Hour > _minimumHourForScheduleStart)                
 #endif
                 {
+                    Log.Logger.Debug("Last schedule was {hours} hours ago and above minimum hour for schedule start {minHour}", nextScheduleChange.TotalHours, (nowUTC.Hour > _minimumHourForScheduleStart));
                     try
                     {
                         Settings.Instance.myuplinkApi.ClearCached();
@@ -176,16 +176,21 @@ namespace MyUplinkSmartConnect
                     var group = await Settings.Instance.myuplinkApi.GetDevices();
                     if (group != null)
                     {
+                        var devicesStatusUpdatedCount = 0;
                         foreach (var device in group)
                         {
                             if (device.devices == null || string.IsNullOrEmpty(device.name))
                                 throw new NullReferenceException("device.devices or device.name cannot be null");
 
                             foreach (var tmpdevice in device.devices)
-                            {
+                            {                                
                                 await _heaterStatus.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChangeInHours, Convert.ToInt32(nextScheduleChange.TotalHours));
                             }
+
+                            devicesStatusUpdatedCount++;
                         }
+
+                        Log.Logger.Debug("Updated status for {devicesStatusUpdatedCount} devices", devicesStatusUpdatedCount);
                     }
                     else
                         Log.Logger.Debug("Failed to do device status updates, found no devices");

@@ -71,9 +71,9 @@ namespace MyUplinkSmartConnect
 
 
                     if (Settings.Instance.MQTTServerPort != 0)
-                        optionsBuilder = new MqttClientOptionsBuilder().WithTcpServer(Settings.Instance.MQTTServer, Settings.Instance.MQTTServerPort);
+                        optionsBuilder = new MqttClientOptionsBuilder().WithTcpServer(Settings.Instance.MQTTServer, Settings.Instance.MQTTServerPort).WithKeepAlivePeriod(TimeSpan.FromMinutes(Settings.Instance.CheckRemoteStatsIntervalInMinutes +1 ));
                     else
-                        optionsBuilder = new MqttClientOptionsBuilder().WithTcpServer(Settings.Instance.MQTTServer);
+                        optionsBuilder = new MqttClientOptionsBuilder().WithTcpServer(Settings.Instance.MQTTServer).WithKeepAlivePeriod(TimeSpan.FromMinutes(Settings.Instance.CheckRemoteStatsIntervalInMinutes + 1));
 
                     if (!string.IsNullOrEmpty(Settings.Instance.MQTTUserName))
                     {
@@ -87,6 +87,7 @@ namespace MyUplinkSmartConnect
                     catch (Exception ex)
                     {
                         Log.Logger.Error(ex, "Failed to connect to MTQQ server ");
+                        _mqttClient?.Dispose();
                         _mqttClient = null;
                     }
                 }

@@ -30,8 +30,7 @@ namespace MyUplinkSmartConnect
                 return nordpoolGroup;
             }
 
-            Log.Logger.Warning("¨Failed to get price information from both EU API and nordpool" +
-                "");
+            Log.Logger.Warning("¨Failed to get price information from both EU API and nordpool");
             return null;
         }
 

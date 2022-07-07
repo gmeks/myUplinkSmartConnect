@@ -28,79 +28,85 @@ namespace MyUplinkSmartConnect.ExternalPrice
             string startDateFormat = DateTime.Now.ToString("yyyyMMdd") + "0000";
             string endDateFormat = DateTime.Now.AddDays(1).ToString("yyyyMMdd") + "0000";
 
-            var powerRegionIndex = GetPowerRegionIndex();
-
-            string url = $"https://transparency.entsoe.eu/api?documentType=A44&in_Domain=10Y{NorwayPowerZones[powerRegionIndex]}--------T&out_Domain=10Y{NorwayPowerZones[powerRegionIndex]}--------T&periodStart={startDateFormat}&periodEnd={endDateFormat}&securityToken=5cd1c4f6-2172-4453-a8bb-c9467fa0fabc";
-
-            var response = await _client.GetAsync(url);
-            if (response.IsSuccessStatusCode)
+            try
             {
-                var xmlText = await response.Content.ReadAsStringAsync();
+                var powerRegionIndex = GetPowerRegionIndex();
 
-                XmlDocument doc = new XmlDocument();
-                doc.LoadXml(xmlText);
-
-                XmlNode? xmlNode = doc?.LastChild;
-                if (xmlNode == null)
+                string url = $"https://transparency.entsoe.eu/api?documentType=A44&in_Domain=10Y{NorwayPowerZones[powerRegionIndex]}--------T&out_Domain=10Y{NorwayPowerZones[powerRegionIndex]}--------T&periodStart={startDateFormat}&periodEnd={endDateFormat}&securityToken=5cd1c4f6-2172-4453-a8bb-c9467fa0fabc";
+                var response = await _client.GetAsync(url);
+                if (response.IsSuccessStatusCode)
                 {
-                    Log.Logger.Warning("Failed to parse XML returned from entsoe");
-                    return false;
-                }
+                    var xmlText = await response.Content.ReadAsStringAsync();
 
-                foreach (XmlNode child in xmlNode)
-                {
-                    if (child.Name != "TimeSeries")
-                        continue;
+                    XmlDocument doc = new XmlDocument();
+                    doc.LoadXml(xmlText);
 
-                    DateTime startTime = DateTime.MinValue;
-                    foreach (XmlNode xmlPeriod in child.ChildNodes)
+                    XmlNode? xmlNode = doc?.LastChild;
+                    if (xmlNode == null)
                     {
-                        if (xmlPeriod.Name != "Period")
+                        Log.Logger.Warning("Failed to parse XML returned from entsoe");
+                        return false;
+                    }
+
+                    foreach (XmlNode child in xmlNode)
+                    {
+                        if (child.Name != "TimeSeries")
                             continue;
 
-
-                        foreach (XmlNode actualData in xmlPeriod.ChildNodes)
+                        DateTime startTime = DateTime.MinValue;
+                        foreach (XmlNode xmlPeriod in child.ChildNodes)
                         {
-                            if (actualData.Name == "timeInterval")
+                            if (xmlPeriod.Name != "Period")
+                                continue;
+
+
+                            foreach (XmlNode actualData in xmlPeriod.ChildNodes)
                             {
-                                foreach (XmlNode timeIntervalNode in actualData.ChildNodes)
+                                if (actualData.Name == "timeInterval")
                                 {
-                                    if (timeIntervalNode.Name == "end")
+                                    foreach (XmlNode timeIntervalNode in actualData.ChildNodes)
                                     {
-                                        string strDate = timeIntervalNode.InnerText.Substring(0, timeIntervalNode.InnerText.IndexOf('T'));
-                                        startTime = ParseDateTime(strDate);
+                                        if (timeIntervalNode.Name == "end")
+                                        {
+                                            string strDate = timeIntervalNode.InnerText.Substring(0, timeIntervalNode.InnerText.IndexOf('T'));
+                                            startTime = ParseDateTime(strDate);
+                                        }
                                     }
                                 }
-                            }
-                            else if (actualData.Name == "Point")
-                            {
-                                var price = new stPriceInformation();
-
-                                foreach (XmlNode timeIntervalNode in actualData.ChildNodes)
+                                else if (actualData.Name == "Point")
                                 {
-                                    if (timeIntervalNode.Name == "position")
-                                    {
-                                        int iPosition = int.Parse(timeIntervalNode.InnerText);
+                                    var price = new stPriceInformation();
 
-                                        if (iPosition > 1)
-                                            price.Start = startTime.AddHours(iPosition - 1);
-                                        else
-                                            price.Start = startTime;
-
-                                        price.End = startTime.AddHours(iPosition);
-                                    }
-                                    else if (timeIntervalNode.Name == "price.amount")
+                                    foreach (XmlNode timeIntervalNode in actualData.ChildNodes)
                                     {
-                                        price.Price = Parse(timeIntervalNode.InnerText);
+                                        if (timeIntervalNode.Name == "position")
+                                        {
+                                            int iPosition = int.Parse(timeIntervalNode.InnerText);
+
+                                            if (iPosition > 1)
+                                                price.Start = startTime.AddHours(iPosition - 1);
+                                            else
+                                                price.Start = startTime;
+
+                                            price.End = startTime.AddHours(iPosition);
+                                        }
+                                        else if (timeIntervalNode.Name == "price.amount")
+                                        {
+                                            price.Price = Parse(timeIntervalNode.InnerText);
+                                        }
                                     }
+
+                                    _priceList.Add(price);
                                 }
-
-                                _priceList.Add(price);
                             }
                         }
                     }
-                }
-                return true;
+                    return true;
+                }                
+            }
+            catch(Exception ex)
+            {
+                Log.Logger.Error(ex,"Failed to check EntsoeAPI");
             }
             return false;
         }       
