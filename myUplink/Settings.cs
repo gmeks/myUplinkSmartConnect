@@ -40,7 +40,7 @@ namespace MyUplinkSmartConnect
         {
             get
             {
-                if(string.IsNullOrEmpty(MQTTServer) && CheckRemoteStatsIntervalInMinutes >= 1)
+                if(!string.IsNullOrEmpty(MQTTServer) && CheckRemoteStatsIntervalInMinutes >= 1)
                     return true;
 
                 return false;
