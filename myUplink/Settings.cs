@@ -34,5 +34,17 @@ namespace MyUplinkSmartConnect
 
         [JsonIgnore]
         public myuplinkApi myuplinkApi { get; set; } = new  myuplinkApi();
+
+        [JsonIgnore]
+        public bool MQTTActive
+        {
+            get
+            {
+                if(string.IsNullOrEmpty(MQTTServer) && CheckRemoteStatsIntervalInMinutes >= 1)
+                    return true;
+
+                return false;
+            }
+        }
     }
 }

@@ -82,7 +82,7 @@ namespace MyUplinkSmartConnect
 
                     try
                     {
-                        _= _mqttClient.ConnectAsync(optionsBuilder.Build(), CancellationToken.None).Result;
+                        _ = _mqttClient.ConnectAsync(optionsBuilder.Build(), CancellationToken.None).Result;
                     }
                     catch (Exception ex)
                     {

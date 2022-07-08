@@ -32,11 +32,11 @@ namespace MyUplinkSmartConnect
             int tmpHour = random.GetByte(_minimumHourForScheduleStart, 22, BuildDetermenisticRandomSeed(), 3);
             int tmpMinute = random.GetByte(_minimumHourForScheduleStart, 22, BuildDetermenisticRandomSeed(), 2);
 
-            _nextScheduleUpdate = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day, tmpHour,tmpMinute,0);
+            _nextScheduleUpdate = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day, tmpHour, tmpMinute, 0);
             _nextStatusUpdate = DateTime.Now;
 
             _nextScheduleUpdate = _nextScheduleUpdate.AddDays(-1);
-            Log.Logger.Information("Target Schedule change time is {NextScheduleUpdate}",_nextScheduleUpdate.ToLocalTime().ToShortTimeString());
+            Log.Logger.Information("Target Schedule change time is {NextScheduleUpdate}", _nextScheduleUpdate.ToLocalTime().ToShortTimeString());
         }
 
         void CreateWorkerThread()
@@ -111,94 +111,31 @@ namespace MyUplinkSmartConnect
                 {
                     Log.Logger.Warning("Worker thread had stopped, restarting it.");
                     CreateWorkerThread();
-                }                
+                }
             }
         }
 
         async void Worker()
         {
-            while(!_killWorker)
+            while (!_killWorker)
             {
                 _lastWorkerAliveCheck = DateTime.Now;
-                var nextStatusUpdate = DateTime.Now - _nextStatusUpdate;
+
                 if (_heaterStatus == null)
                     _heaterStatus = new JobCheckHeaterStatus();
 
-                if(Settings.Instance.myuplinkApi == null)
+                if (Settings.Instance.myuplinkApi == null)
                 {
-                    Log.Logger.Debug("myUplink API is not ready", nextStatusUpdate.TotalMinutes);
+                    Log.Logger.Debug("myUplink API is not ready");
                     continue;
                 }
 
-                Log.Logger.Debug("Next status update in {Minutes}", nextStatusUpdate.TotalMinutes);
-                _nextStatusUpdate = DateTime.Now;
-                if (nextStatusUpdate.TotalMinutes > Settings.Instance.CheckRemoteStatsIntervalInMinutes)
+                await WorkerSchedule();
+
+                if(Settings.Instance.MQTTActive)
                 {
-                    try
-                    {
-                        await _heaterStatus.Work();                        
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Logger.Error(ex,"Failed to run heater status job");
-                        _heaterStatus = null;                        
-                    }
-                }
-
-                var nowUTC = DateTime.Now;
-                var nextScheduleChange = nowUTC - _nextScheduleUpdate;
-#if DEBUG
-                if (true)
-#else
-                if (nextScheduleChange.TotalHours > 23 && nowUTC.Hour > _minimumHourForScheduleStart)                
-#endif
-                {
-                    Log.Logger.Debug("Last schedule was {hours} hours ago and above minimum hour for schedule start {minHour}", nextScheduleChange.TotalHours, (nowUTC.Hour > _minimumHourForScheduleStart));
-                    try
-                    {
-                        Settings.Instance.myuplinkApi.ClearCached();
-
-                        var status = await JobReScheuleheating.Work();
-
-                        if(status)
-                        {
-                            _nextScheduleUpdate = DateTime.Now;
-                        }                        
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Logger.Error(ex, "Failed to run heater status job");
-                    }
-                }
-
-                if (_heaterStatus != null)
-                {
-                    var group = await Settings.Instance.myuplinkApi.GetDevices();
-                    if (group != null)
-                    {
-                        var devicesStatusUpdatedCount = 0;
-                        foreach (var device in group)
-                        {
-                            if (device.devices == null || string.IsNullOrEmpty(device.name))
-                                throw new NullReferenceException("device.devices or device.name cannot be null");
-
-                            foreach (var tmpdevice in device.devices)
-                            {                                
-                                await _heaterStatus.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChangeInHours, Convert.ToInt32(nextScheduleChange.TotalHours));
-                            }
-
-                            devicesStatusUpdatedCount++;
-                        }
-
-                        Log.Logger.Debug("Updated status for {devicesStatusUpdatedCount} devices", devicesStatusUpdatedCount);
-                    }
-                    else
-                        Log.Logger.Debug("Failed to do device status updates, found no devices");
-                }
-                else
-                {
-                    Log.Logger.Debug("Cannot do status updates heaterstatus is null {_heaterStatus} or API is down {myapi}",(_heaterStatus is null),(Settings.Instance.myuplinkApi is null));
-                }
+                    await WorkerHeaterStatus();
+                }                    
 
                 Thread.Sleep(TimeSpan.FromMinutes(1));
 
@@ -209,6 +146,87 @@ namespace MyUplinkSmartConnect
                     Log.Logger.Warning("Main worker thread was dead, restaring. Has been down for {min} minutes", lastJobTime.TotalMinutes);
                 }
             }
+        }
+
+        async Task WorkerSchedule()
+        {
+            var nowUTC = DateTime.Now;
+            var nextScheduleChange = nowUTC - _nextScheduleUpdate;
+#if DEBUG
+            if (true)
+#else
+            if (nextScheduleChange.TotalHours > 23 && nowUTC.Hour > _minimumHourForScheduleStart)                
+#endif
+            {
+                Log.Logger.Debug("Last schedule was {hours} hours ago and above minimum hour for schedule start {minHour}", nextScheduleChange.TotalHours, (nowUTC.Hour > _minimumHourForScheduleStart));
+                try
+                {
+                    Settings.Instance.myuplinkApi.ClearCached();
+
+                    var status = await JobReScheuleheating.Work();
+
+                    if (status)
+                    {
+                        _nextScheduleUpdate = DateTime.Now;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Logger.Error(ex, "Failed to run heater status job");
+                }
+
+                
+                // We now update the MQTT with information about when the next update will happen
+                var group = await Settings.Instance.myuplinkApi.GetDevices();
+                if (group != null && _heaterStatus != null && Settings.Instance.MQTTActive)
+                {
+                    var devicesStatusUpdatedCount = 0;
+                    foreach (var device in group)
+                    {
+                        if (device.devices == null || string.IsNullOrEmpty(device.name))
+                            throw new NullReferenceException("device.devices or device.name cannot be null");
+
+                        foreach (var tmpdevice in device.devices)
+                        {
+                            await _heaterStatus.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChangeInHours, Convert.ToInt32(nextScheduleChange.TotalHours));
+                        }
+
+                        devicesStatusUpdatedCount++;
+
+                    }
+
+                    Log.Logger.Debug("Updated status for {devicesStatusUpdatedCount} devices", devicesStatusUpdatedCount);
+                }
+                else
+                    Log.Logger.Debug("Failed to do device status updates, found no devices");
+            }
+        }
+
+        async Task WorkerHeaterStatus()
+        {
+            if (_heaterStatus == null)
+            {
+                Log.Logger.Debug("Cannot do status updates heaterstatus is null {_heaterStatus} or API is down {myapi}", (_heaterStatus is null), (Settings.Instance.myuplinkApi is null));
+                return;
+            }
+            var nextStatusUpdate = DateTime.Now - _nextStatusUpdate;
+
+            Log.Logger.Debug("Next status update in {Minutes}", nextStatusUpdate.TotalMinutes);
+            if (nextStatusUpdate.TotalMinutes > Settings.Instance.CheckRemoteStatsIntervalInMinutes)
+            {
+                try
+                {
+                    await _heaterStatus.Work();
+                }
+                catch (Exception ex)
+                {
+                    Log.Logger.Error(ex, "Failed to run heater status job");
+                    _heaterStatus = null;
+                    return;
+                }
+            }            
+
+            _nextStatusUpdate = DateTime.Now;
         }
     }
 }

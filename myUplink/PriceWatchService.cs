@@ -103,7 +103,9 @@ namespace MyUplinkSmartConnect
             if (Settings.Instance.MQTTServerPort == 0)
                 Settings.Instance.MQTTServerPort = 1883;
 
-            if(string.IsNullOrEmpty(env.GetValue("IsInsideDocker")))
+            Log.Logger.Information("Reporting to MQTT is: {status}",Settings.Instance.MQTTActive);
+
+            if (string.IsNullOrEmpty(env.GetValue("IsInsideDocker")))
             {
                 try
                 {
