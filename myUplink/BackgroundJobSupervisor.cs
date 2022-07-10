@@ -212,11 +212,12 @@ namespace MyUplinkSmartConnect
             var nextStatusUpdate = DateTime.Now - _nextStatusUpdate;
 
             Log.Logger.Debug("Next status update in {Minutes}", nextStatusUpdate.TotalMinutes);
-            if (nextStatusUpdate.TotalMinutes > Settings.Instance.CheckRemoteStatsIntervalInMinutes)
+            if (nextStatusUpdate.TotalMinutes >= Settings.Instance.CheckRemoteStatsIntervalInMinutes)
             {
                 try
                 {
                     await _heaterStatus.Work();
+                    _nextStatusUpdate = DateTime.Now;
                 }
                 catch (Exception ex)
                 {
@@ -224,9 +225,7 @@ namespace MyUplinkSmartConnect
                     _heaterStatus = null;
                     return;
                 }
-            }            
-
-            _nextStatusUpdate = DateTime.Now;
+            }                        
         }
     }
 }
