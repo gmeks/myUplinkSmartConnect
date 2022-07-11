@@ -212,7 +212,7 @@ namespace MyUplinkSmartConnect
             var nextStatusUpdate = DateTime.Now - _nextStatusUpdate;
 
             Log.Logger.Debug("Next status update in {Minutes}", nextStatusUpdate.TotalMinutes);
-            if (nextStatusUpdate.TotalMinutes >= Settings.Instance.CheckRemoteStatsIntervalInMinutes)
+            if (nextStatusUpdate.TotalMinutes >= (double)Settings.Instance.CheckRemoteStatsIntervalInMinutes)
             {
                 try
                 {
