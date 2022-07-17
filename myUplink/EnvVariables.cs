@@ -50,21 +50,19 @@ namespace MyUplinkSmartConnect
             return string.Empty;
         }
 
-        public T GetValueEnum<T>(string keyName, T defaultValue) where T : Enum
+        public TEnum GetValueEnum<TEnum>(string keyName, TEnum defaultValue) where TEnum : struct
         {
             var strValue = GetValue(keyName);
             if (string.IsNullOrWhiteSpace(strValue))
                 return defaultValue;
 
-            try
+            if (Enum.TryParse<TEnum>(strValue, true,out TEnum result))
             {
-                return (T)Enum.Parse(typeof(T), strValue);
+                return result;
             }
-            catch
-            {
-                Log.Logger.Error("{KeyName} has invalid value and cannot be read as a {Type}: {KeyValue}",keyName,typeof(T),strValue);
-                return defaultValue;
-            }            
+
+            Log.Logger.Error("{KeyName} has invalid value and cannot be read as a {Type}: {KeyValue}", keyName, typeof(TEnum), strValue);
+            return defaultValue;
         }
 
         public int GetValueInt(string keyName)
