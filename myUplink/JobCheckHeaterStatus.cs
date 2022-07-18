@@ -20,15 +20,17 @@ namespace MyUplinkSmartConnect
         public async Task Work()
         {
             if (Settings.Instance.myuplinkApi == null)
+            {
+                Log.Logger.Debug("myUplink APi is null, cannot do status updates");
                 return;
+            }
 
             if(_deviceGroup == null)
             {
                 _deviceGroup = await Settings.Instance.myuplinkApi.GetDevices();
             }
 
-            if(_deviceGroup.Any())
-                Log.Logger.Debug("Found {DeviceCount} devices, will attemt to check for status updates", _deviceGroup.Count());
+            Log.Logger.Debug("Found {DeviceCount} devices, will attemt to check for status updates", _deviceGroup.Count());
 
             foreach (var device in _deviceGroup)
             {

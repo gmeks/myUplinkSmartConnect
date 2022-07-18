@@ -65,12 +65,14 @@ namespace MyUplinkSmartConnect
             {
                 UserName = env.GetValue("UserName"),
                 Password = env.GetValue("Password"),
-                CheckRemoteStatsIntervalInMinutes = env.GetValueInt("CheckRemoteStatsIntervalInMinutes"),
-                WaterHeaterMaxPowerInHours = env.GetValueInt("WaterHeaterMaxPowerInHours"),
-                WaterHeaterMediumPowerInHours = env.GetValueInt("WaterHeaterMediumPowerInHours"),
+                CheckRemoteStatsIntervalInMinutes = env.GetValueInt("CheckRemoteStatsIntervalInMinutes",1),
+                WaterHeaterMaxPowerInHours = env.GetValueInt("WaterHeaterMaxPowerInHours",6),
+                WaterHeaterMediumPowerInHours = env.GetValueInt("WaterHeaterMediumPowerInHours",4),
+                MediumPowerTargetTemprature = env.GetValueInt("MediumPowerTargetTemprature", 50),
+                HighPowerTargetTemprature = env.GetValueInt("HighPowerTargetTemprature", 70),
                 PowerZone = env.GetValue("PowerZone"),
                 MQTTServer = env.GetValue("MQTTServer"),
-                MQTTServerPort = env.GetValueInt("MQTTServerPort"),
+                MQTTServerPort = env.GetValueInt("MQTTServerPort", 1883),
                 MQTTUserName = env.GetValue("MQTTUserName"),
                 MQTTPassword = env.GetValue("MQTTPassword"),
                 LogLevel = logLevel
@@ -98,10 +100,19 @@ namespace MyUplinkSmartConnect
             {
                 Log.Logger.Error("CheckRemoteStatsIntervalInMinutes settings value is invalid, cannot be 0 or lower. Was {CheckRemoteStatsIntervalInMinutes}", Settings.Instance.CheckRemoteStatsIntervalInMinutes);
                 Settings.Instance.CheckRemoteStatsIntervalInMinutes = 1;
-            }                
+            }
 
-            if (Settings.Instance.MQTTServerPort == 0)
-                Settings.Instance.MQTTServerPort = 1883;
+            if (!IsValidTempratureSelection(Settings.Instance.MediumPowerTargetTemprature) )
+            {
+                Log.Logger.Error("MediumPowerTargetTemprature is not valid, expect value between 50 and 90, was {HighTemp}", Settings.Instance.MediumPowerTargetTemprature);
+                Settings.Instance.HighPowerTargetTemprature = 50;
+            }
+
+            if (!IsValidTempratureSelection(Settings.Instance.HighPowerTargetTemprature) || Settings.Instance.HighPowerTargetTemprature <= Settings.Instance.MediumPowerTargetTemprature)
+            {
+                Log.Logger.Error("HighPowerTargetTemprature is not valid, expect value between {MediumTemp} and 90, was {HighTemp}", Settings.Instance.MediumPowerTargetTemprature, Settings.Instance.HighPowerTargetTemprature);
+                Settings.Instance.HighPowerTargetTemprature = 70;
+            }
 
             Log.Logger.Information("Reporting to MQTT is: {status}",Settings.Instance.MQTTActive);
 
@@ -129,6 +140,17 @@ namespace MyUplinkSmartConnect
             Log.Logger.Information("MyUplink-smartconnect is stopping");
             _backgroundJobs.Stop();
             return true;
+        }
+
+        static bool IsValidTempratureSelection(int value)
+        {
+            if (value < 50)
+                return false;
+
+            if (value > 90)
+                return false;
+
+            return false;
         }
     }
 }

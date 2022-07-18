@@ -54,7 +54,10 @@ namespace MyUplinkSmartConnect
         {
             var strValue = GetValue(keyName);
             if (string.IsNullOrWhiteSpace(strValue))
+            {
+                Log.Logger.Debug("Environmental variable {KeyName} using default value of {defaultValue}", keyName, defaultValue);
                 return defaultValue;
+            }
 
             if (Enum.TryParse<TEnum>(strValue, true,out TEnum result))
             {
@@ -65,21 +68,22 @@ namespace MyUplinkSmartConnect
             return defaultValue;
         }
 
-        public int GetValueInt(string keyName)
+        public int GetValueInt(string keyName, int defaultValue = 0)
         {
             var strValue = GetValue(keyName);
             if (string.IsNullOrWhiteSpace(strValue))
-                return 0;
+            {
+                Log.Logger.Debug("Environmental variable {KeyName} using default value of {defaultValue}", keyName, defaultValue);
+                return defaultValue;
+            }
 
-            try
+            if (int.TryParse(strValue, out int result))
             {
-                return int.Parse(strValue);                
+                return result;
             }
-            catch
-            {
-                Log.Logger.Error("{KeyName} has invalid value and cannot be read as a int: {Value}",keyName,strValue);
-                return 0;
-            }
+
+            Log.Logger.Error("{KeyName} has invalid value and cannot be read as a int: {Value}", keyName, strValue);
+            return defaultValue;
         }
 
         void GetVariables(ref Dictionary<string, string> dic, EnvironmentVariableTarget target)

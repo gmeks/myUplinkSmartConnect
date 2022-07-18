@@ -34,6 +34,8 @@ https://hub.docker.com/r/erlingsaeterdal/myuplinksmartconnect
 - Password - Your password for myuplink.com 
 - WaterHeaterMaxPowerInHours - This is the number of hours pr day the water heater is running full power.
 - WaterHeaterMediumPowerInHours - This the number of hours pr day the water heater is running at half power, but with a lower "target temprature"
+- MediumPowerTargetTemprature - Target temprature in medium mode, default 50c
+- HighPowerTargetTemprature - Target temprature in high mode, default 70c
 
 **Optional mqtt Configuration, used to connect to smarthouse solution like homeassistant**
 - MQTTServer - IP address or FQDN of mqtt, this is optional.

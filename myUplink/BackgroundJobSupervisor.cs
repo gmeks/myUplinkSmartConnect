@@ -150,15 +150,14 @@ namespace MyUplinkSmartConnect
 
         async Task WorkerSchedule()
         {
-            var nowUTC = DateTime.Now;
-            var nextScheduleChange = nowUTC - _nextScheduleUpdate;
+            var nextScheduleChange = DateTime.Now - _nextScheduleUpdate;
 #if DEBUG
             if (true)
 #else
-            if (nextScheduleChange.TotalHours > 23 && nowUTC.Hour > _minimumHourForScheduleStart)                
+            if (nextScheduleChange.TotalHours > 23 && DateTime.Now.Hour > _minimumHourForScheduleStart)                
 #endif
             {
-                Log.Logger.Debug("Last schedule was {hours} hours ago and above minimum hour for schedule start {minHour}", nextScheduleChange.TotalHours, (nowUTC.Hour > _minimumHourForScheduleStart));
+                Log.Logger.Debug("Last schedule was {hours} hours ago and above minimum hour for schedule start {minHour}", nextScheduleChange.TotalHours, (DateTime.Now.Hour > _minimumHourForScheduleStart));
                 try
                 {
                     Settings.Instance.myuplinkApi.ClearCached();
@@ -210,9 +209,10 @@ namespace MyUplinkSmartConnect
                 return;
             }
             var nextStatusUpdate = DateTime.Now - _nextStatusUpdate;
+            bool updateNow = nextStatusUpdate.TotalMinutes >= (double)Settings.Instance.CheckRemoteStatsIntervalInMinutes;
 
-            Log.Logger.Debug("Next status update in {Minutes}", nextStatusUpdate.TotalMinutes);
-            if (nextStatusUpdate.TotalMinutes >= (double)Settings.Instance.CheckRemoteStatsIntervalInMinutes)
+            Log.Logger.Debug("Next status update in {Minutes} should update now {UpdateNow}", nextStatusUpdate.TotalMinutes, updateNow);
+            if (updateNow)
             {
                 try
                 {

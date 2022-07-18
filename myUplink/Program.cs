@@ -15,8 +15,11 @@ namespace MyUplinkSmartConnect
         {
             Log.Logger = new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console(restrictedToMinimumLevel: LogEventLevel.Information).CreateLogger();
 
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
-                )
+#if DEBUG
+            if (true)
+#else
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+#endif
             {
                 var service = new PriceWatchService();
                 service.Start(null);

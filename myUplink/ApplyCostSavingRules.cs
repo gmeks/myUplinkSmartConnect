@@ -12,10 +12,6 @@ namespace MyUplinkSmartConnect
 {
     public class ApplyCostSavingRules
     {
-        const int TempratureTargetLow = 50;
-        const int TempratureTargetHigh = 70;
-
-
         public ApplyCostSavingRules()
         {
             
@@ -163,17 +159,17 @@ namespace MyUplinkSmartConnect
                 bool isGood = true;
                 if (mode.name.StartsWith("M6"))
                 {
-                    isGood = VerifyWaterHeaterMode(mode, WaterHeaterDesiredPower.Watt2000, TempratureTargetHigh);
+                    isGood = VerifyWaterHeaterMode(mode, WaterHeaterDesiredPower.Watt2000, Settings.Instance.HighPowerTargetTemprature);
                 }
 
                 if (mode.name.StartsWith("M5"))
                 {
-                    isGood = VerifyWaterHeaterMode(mode, WaterHeaterDesiredPower.Watt700, TempratureTargetLow);
+                    isGood = VerifyWaterHeaterMode(mode, WaterHeaterDesiredPower.Watt700, Settings.Instance.MediumPowerTargetTemprature);
                 }
 
                 if (mode.name.StartsWith("M4"))
                 {
-                    isGood = VerifyWaterHeaterMode(mode, WaterHeaterDesiredPower.None, TempratureTargetLow);
+                    isGood = VerifyWaterHeaterMode(mode, WaterHeaterDesiredPower.None, Settings.Instance.MediumPowerTargetTemprature);
                 }
 
                 if(!isGood)

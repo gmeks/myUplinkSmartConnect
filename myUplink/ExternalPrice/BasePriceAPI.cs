@@ -70,8 +70,14 @@ namespace MyUplinkSmartConnect.ExternalPrice
             }
 
             sortedList.Sort(new SortByLowestPrice());
-            var maxPowerHours = sortedList.Take(desiredMaxpower);
-            var mediumPowerHours = sortedList.Take(mediumPower + desiredMaxpower);
+
+            IEnumerable<stPriceInformation> maxPowerHours = Array.Empty<stPriceInformation>();
+            IEnumerable<stPriceInformation> mediumPowerHours = Array.Empty<stPriceInformation>();
+            if (desiredMaxpower != 0)
+                maxPowerHours = sortedList.Take(desiredMaxpower);
+
+            if(mediumPower != 0)
+                mediumPowerHours = sortedList.Take(mediumPower + desiredMaxpower);
 
             for (int i = 0; i < sortedList.Count; i++)
             {
