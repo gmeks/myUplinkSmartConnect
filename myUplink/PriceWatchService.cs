@@ -150,7 +150,7 @@ namespace MyUplinkSmartConnect
             if (value > 90)
                 return false;
 
-            return false;
+            return true;
         }
     }
 }
