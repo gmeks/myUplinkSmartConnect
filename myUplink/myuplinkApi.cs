@@ -18,12 +18,17 @@ namespace MyUplinkSmartConnect
         readonly Uri _apiUrl;
         Dictionary<string, HeaterWeeklyRoot[]> _heaterScheduleRoot;
         List<DeviceGroup>? _devices;
+        string _myUplinkDirectory;
 
         public myuplinkApi()
         {
             _heaterScheduleRoot = new Dictionary<string, HeaterWeeklyRoot[]>();
             _apiUrl = new Uri("https://internalapi.myuplink.com");
             _httpClient = new RestClient(_apiUrl);
+
+            _myUplinkDirectory = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\MyUplink-smartconnect";
+            if (!Directory.Exists(_myUplinkDirectory))
+                Directory.CreateDirectory(_myUplinkDirectory);
         }
 
         public void ClearCached()
@@ -34,11 +39,7 @@ namespace MyUplinkSmartConnect
 
         public async Task<bool> LoginToApi()
         {
-            string tmpFolder = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + "\\MyUplink-smartconnect";
-            if (!Directory.Exists(tmpFolder))
-                Directory.CreateDirectory(tmpFolder);
-
-            string tokenFileFullPath = System.IO.Path.Combine(tmpFolder + "\\tokenfile_internal.json");
+            string tokenFileFullPath = System.IO.Path.Combine(_myUplinkDirectory + "\\tokenfile_internal.json");
 
             if (_token != null && !_token.IsExpired)
             {
@@ -146,12 +147,15 @@ namespace MyUplinkSmartConnect
 
         public async Task<IEnumerable<DeviceGroup>> GetDevices()
         {
-            var loginStatus = await LoginToApi();
-            if(!loginStatus)
-                return Array.Empty<DeviceGroup>();
-
-            if (_devices != null && _devices.Count != 0)
+            if (_devices?.Count > 0)
                 return _devices;
+
+            var loginStatus = await LoginToApi();
+            if (!loginStatus)
+            {
+                Log.Logger.Debug("Not logged in to myUplink api, cannot get device list");
+                return Array.Empty<DeviceGroup>();
+            }
 
             var request = new RestRequest("/v2/groups/me") { Method = Method.Get };
             var tResponse = await _httpClient.ExecuteAsync(request);

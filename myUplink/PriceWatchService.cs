@@ -63,18 +63,18 @@ namespace MyUplinkSmartConnect
 
             Settings.Instance = new SettingsValues
             {
-                UserName = env.GetValue("UserName"),
-                Password = env.GetValue("Password"),
-                CheckRemoteStatsIntervalInMinutes = env.GetValueInt("CheckRemoteStatsIntervalInMinutes",1),
-                WaterHeaterMaxPowerInHours = env.GetValueInt("WaterHeaterMaxPowerInHours",6),
-                WaterHeaterMediumPowerInHours = env.GetValueInt("WaterHeaterMediumPowerInHours",4),
-                MediumPowerTargetTemprature = env.GetValueInt("MediumPowerTargetTemprature", 50),
-                HighPowerTargetTemprature = env.GetValueInt("HighPowerTargetTemprature", 70),
-                PowerZone = env.GetValue("PowerZone"),
-                MQTTServer = env.GetValue("MQTTServer"),
-                MQTTServerPort = env.GetValueInt("MQTTServerPort", 1883),
-                MQTTUserName = env.GetValue("MQTTUserName"),
-                MQTTPassword = env.GetValue("MQTTPassword"),
+                UserName = env.GetValue(nameof(SettingsValues.UserName)),
+                Password = env.GetValue(nameof(SettingsValues.Password)),
+                CheckRemoteStatsIntervalInMinutes = env.GetValueInt(nameof(SettingsValues.CheckRemoteStatsIntervalInMinutes), 1),
+                WaterHeaterMaxPowerInHours = env.GetValueInt(nameof(SettingsValues.WaterHeaterMaxPowerInHours), 6),
+                WaterHeaterMediumPowerInHours = env.GetValueInt(nameof(SettingsValues.WaterHeaterMediumPowerInHours), 4),
+                MediumPowerTargetTemperature = env.GetValueInt(50,nameof(SettingsValues.MediumPowerTargetTemperature),"MediumPowerTargetTemprature"),
+                HighPowerTargetTemperature = env.GetValueInt(70,nameof(SettingsValues.HighPowerTargetTemperature),"HighPowerTargetTemprature"),
+                PowerZone = env.GetValue(nameof(SettingsValues.PowerZone)),
+                MQTTServer = env.GetValue(nameof(SettingsValues.MQTTServer)),
+                MQTTServerPort = env.GetValueInt(nameof(SettingsValues.MQTTServerPort), 1883),
+                MQTTUserName = env.GetValue(nameof(SettingsValues.MQTTUserName)),
+                MQTTPassword = env.GetValue(nameof(SettingsValues.MQTTPassword)),
                 LogLevel = logLevel
             };
 
@@ -102,16 +102,16 @@ namespace MyUplinkSmartConnect
                 Settings.Instance.CheckRemoteStatsIntervalInMinutes = 1;
             }
 
-            if (!IsValidTempratureSelection(Settings.Instance.MediumPowerTargetTemprature) )
+            if (!IsValidTempratureSelection(Settings.Instance.MediumPowerTargetTemperature) )
             {
-                Log.Logger.Error("MediumPowerTargetTemprature is not valid, expect value between 50 and 90, was {HighTemp}", Settings.Instance.MediumPowerTargetTemprature);
-                Settings.Instance.HighPowerTargetTemprature = 50;
+                Log.Logger.Error("MediumPowerTargetTemprature is not valid, expect value between 50 and 90, was {HighTemp}", Settings.Instance.MediumPowerTargetTemperature);
+                Settings.Instance.MediumPowerTargetTemperature = 50;
             }
 
-            if (!IsValidTempratureSelection(Settings.Instance.HighPowerTargetTemprature) || Settings.Instance.HighPowerTargetTemprature <= Settings.Instance.MediumPowerTargetTemprature)
+            if (!IsValidTempratureSelection(Settings.Instance.HighPowerTargetTemperature) || Settings.Instance.HighPowerTargetTemperature <= Settings.Instance.MediumPowerTargetTemperature)
             {
-                Log.Logger.Error("HighPowerTargetTemprature is not valid, expect value between {MediumTemp} and 90, was {HighTemp}", Settings.Instance.MediumPowerTargetTemprature, Settings.Instance.HighPowerTargetTemprature);
-                Settings.Instance.HighPowerTargetTemprature = 70;
+                Log.Logger.Error("HighPowerTargetTemprature is not valid, expect value between {MediumTemp} and 90, was {HighTemp}", Settings.Instance.MediumPowerTargetTemperature, Settings.Instance.HighPowerTargetTemperature);
+                Settings.Instance.HighPowerTargetTemperature = 70;
             }
 
             Log.Logger.Information("Reporting to MQTT is: {status}",Settings.Instance.MQTTActive);

@@ -29,8 +29,20 @@ namespace MyUplinkSmartConnect
             {
                 _deviceGroup = await Settings.Instance.myuplinkApi.GetDevices();
             }
-
+            
             Log.Logger.Debug("Found {DeviceCount} devices, will attemt to check for status updates", _deviceGroup.Count());
+
+            if (_deviceGroup.Count() == 0)
+            {
+                Log.Logger.Debug("Unable to find any devices to check in cache for stats update, will reset cache.");
+                Settings.Instance.myuplinkApi.ClearCached();
+                _deviceGroup = await Settings.Instance.myuplinkApi.GetDevices();
+
+                if(_deviceGroup.Count() == 0)
+                {
+                    Log.Logger.Warning("Reset device cache failed, device list returned is still 0, updating stats will fail");
+                }
+            }
 
             foreach (var device in _deviceGroup)
             {

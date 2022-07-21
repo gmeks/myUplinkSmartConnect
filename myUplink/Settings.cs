@@ -20,9 +20,9 @@ namespace MyUplinkSmartConnect
 
         public int WaterHeaterMediumPowerInHours { get; set; }
 
-        public int MediumPowerTargetTemprature { get; set; }
+        public int MediumPowerTargetTemperature { get; set; }
 
-        public int HighPowerTargetTemprature { get; set; }
+        public int HighPowerTargetTemperature{ get; set; }
 
         public string? PowerZone { get; set; }
 

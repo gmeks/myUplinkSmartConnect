@@ -153,8 +153,9 @@ namespace MyUplinkSmartConnect
             var nextScheduleChange = DateTime.Now - _nextScheduleUpdate;
 #if DEBUG
             if (true)
+            //if (nextScheduleChange.TotalHours >= 24 && DateTime.Now.Hour > _minimumHourForScheduleStart ||  _nextScheduleUpdate > DateTime.Now && DateTime.Now.Hour > _minimumHourForScheduleStart )   
 #else
-            if (nextScheduleChange.TotalHours > 23 && DateTime.Now.Hour > _minimumHourForScheduleStart)                
+            if (nextScheduleChange.TotalHours >= 24 && DateTime.Now.Hour > _minimumHourForScheduleStart ||  _nextScheduleUpdate > DateTime.Now && DateTime.Now.Hour > _minimumHourForScheduleStart )                
 #endif
             {
                 Log.Logger.Debug("Last schedule was {hours} hours ago and above minimum hour for schedule start {minHour}", nextScheduleChange.TotalHours, (DateTime.Now.Hour > _minimumHourForScheduleStart));
@@ -165,8 +166,9 @@ namespace MyUplinkSmartConnect
                     var status = await JobReScheuleheating.Work();
 
                     if (status)
-                    {
-                        _nextScheduleUpdate = DateTime.Now;
+                    {                        
+                        _nextScheduleUpdate = _nextScheduleUpdate.AddDays(1);
+                        Log.Logger.Debug("Schedule update was successfull next one will be {nextUpdate}", _nextScheduleUpdate.ToString());
                     }
                 }
                 catch (Exception ex)
@@ -183,7 +185,7 @@ namespace MyUplinkSmartConnect
                     foreach (var device in group)
                     {
                         if (device.devices == null || string.IsNullOrEmpty(device.name))
-                            throw new NullReferenceException("device.devices or device.name cannot be null");
+                            throw new NullReferenceException("device.devices or device.name is null");
 
                         foreach (var tmpdevice in device.devices)
                         {

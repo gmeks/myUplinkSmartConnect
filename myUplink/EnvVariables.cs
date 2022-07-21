@@ -68,6 +68,20 @@ namespace MyUplinkSmartConnect
             return defaultValue;
         }
 
+        public string GetValue(params string[] keyName)
+        {
+            for(int i=0;i<keyName.Length;i++)
+            {
+                var tmpKey = keyName[i].ToLowerInvariant();
+
+                if (_machine.ContainsKey(tmpKey))
+                    return GetValue(tmpKey);
+            }
+
+            Log.Logger.Debug("Environmental variable {KeyName} using default value of {defaultValue}", keyName);
+            return string.Empty;
+        }
+
         public int GetValueInt(string keyName, int defaultValue = 0)
         {
             var strValue = GetValue(keyName);
@@ -83,6 +97,20 @@ namespace MyUplinkSmartConnect
             }
 
             Log.Logger.Error("{KeyName} has invalid value and cannot be read as a int: {Value}", keyName, strValue);
+            return defaultValue;
+        }
+
+        public int GetValueInt(int defaultValue = 0,params string[] keyName)
+        {
+            for (int i = 0; i < keyName.Length; i++)
+            {
+                var tmpKey = keyName[i].ToLowerInvariant();
+
+                if (_machine.ContainsKey(tmpKey))
+                    return GetValueInt(tmpKey, defaultValue);
+            }
+
+            Log.Logger.Debug("Environmental variable {KeyName} using default value of {defaultValue}", keyName);
             return defaultValue;
         }
 
