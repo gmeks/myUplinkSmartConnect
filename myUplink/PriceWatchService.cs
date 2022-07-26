@@ -55,10 +55,10 @@ namespace MyUplinkSmartConnect
                 Log.Logger.Information("Reading settings from configuration file");
             }
 
-            var logLevel = env.GetValueEnum<LogEventLevel>("LogLevel", LogEventLevel.Information);
-            if (Settings.Instance.LogLevel != LogEventLevel.Information)
+            var consoleLogLevel = env.GetValueEnum<LogEventLevel>(LogEventLevel.Information, nameof(SettingsValues.ConsoleLogLevel), "LogLevel");
+            if (Settings.Instance.ConsoleLogLevel != LogEventLevel.Information)
             {
-                Log.Logger = new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console(restrictedToMinimumLevel: Settings.Instance.LogLevel).CreateLogger();
+                Log.Logger = Settings.CreateLogger(Settings.Instance.ConsoleLogLevel);
             }
 
             Settings.Instance = new SettingsValues
@@ -75,7 +75,8 @@ namespace MyUplinkSmartConnect
                 MQTTServerPort = env.GetValueInt(nameof(SettingsValues.MQTTServerPort), 1883),
                 MQTTUserName = env.GetValue(nameof(SettingsValues.MQTTUserName)),
                 MQTTPassword = env.GetValue(nameof(SettingsValues.MQTTPassword)),
-                LogLevel = logLevel
+                MQTTLogLevel = env.GetValueEnum<LogEventLevel>(LogEventLevel.Warning, nameof(SettingsValues.MQTTLogLevel)),
+                ConsoleLogLevel = consoleLogLevel
             };
 
             if (string.IsNullOrEmpty(Settings.Instance.UserName))

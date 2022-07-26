@@ -29,16 +29,18 @@ Deploy via docker:
 **Future plan**
 ---
 
-- Full integration with home assistant as a integration? ( This depends a bit on having someone know the homeassistant part, so help building a package that runs the existing container)
+- Full integration with home assistant as a integration? ( This depends a bit on having someone know the homeassistant part, to help build a homeassistant integration that can connect to the docker container over MTQQ)
 - Support a more targeted heating mode, where you set desired energi in the tank for spesific hours, and it calculates the cheapest way to reach this goal.
 
-- How far this is taken depends alot of to what degree others use it *
+
+*How far this is taken depends alot of to what degree others use it*
 
 **Configuration explained:**
 ---
 
 - UserName - Your username to myuplink.com ( Sadly the public facing APi, does not allow for reschedules..)
 - Password - Your password for myuplink.com
+- ConsoleLogLevel - Sets the logs shown in the console window (Default Information), posible values Verbose,Debug,Information,Warning,Error,Fatal
 - WaterHeaterMaxPowerInHours - This is the number of hours pr day the water heater is running full power.
 - WaterHeaterMediumPowerInHours - This the number of hours pr day the water heater is running at half power, but with a lower "target temperature"
 - MediumPowerTargetTemperature - Target temperature in medium mode, default 50c
@@ -51,6 +53,7 @@ Deploy via docker:
 - MQTTServerPort - The port of the mqtt server, this is optional.
 - MQTTUserName - If the mqtt requires username and passord.
 - MQTTPassword - If the mqtt requires username and passord.
+- MQTTLogLevel - Sets the logs shown in the console window (Default Warning), posible values Verbose,Debug,Information,Warning,Error,Fatal
 
 **Recommended configuration.**
 ---

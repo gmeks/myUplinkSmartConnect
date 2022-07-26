@@ -1,5 +1,6 @@
 
 using MyUplinkSmartConnect.Models;
+using MyUplinkSmartConnect.MQTT;
 using Serilog;
 using Serilog.Events;
 using System.Net.Http.Headers;
@@ -13,7 +14,7 @@ namespace MyUplinkSmartConnect
     {
         public static  void Main(string[] args)
         {
-            Log.Logger = new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console(restrictedToMinimumLevel: LogEventLevel.Information).CreateLogger();
+            Log.Logger = Settings.CreateLogger(LogEventLevel.Information);
 
 #if DEBUG
             if (true)
@@ -33,7 +34,7 @@ namespace MyUplinkSmartConnect
                         if (result.StartsWith("d"))
                         {
                             Console.WriteLine("Enabling debug logging");
-                            Log.Logger = new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console(restrictedToMinimumLevel: LogEventLevel.Debug).CreateLogger();
+                            Log.Logger = Settings.CreateLogger(LogEventLevel.Debug);
                             continue;
                         }
                         

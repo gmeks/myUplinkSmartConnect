@@ -169,11 +169,17 @@ namespace MyUplinkSmartConnect
                     {                        
                         _nextScheduleUpdate = _nextScheduleUpdate.AddDays(1);
                         Log.Logger.Debug("Schedule update was successfull next one will be {nextUpdate}", _nextScheduleUpdate.ToString());
+                        CurrentState.SetSuccess(States.Schedule);
+                    }
+                    else
+                    {
+                        CurrentState.SetFailed(States.Schedule);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Log.Logger.Error(ex, "Failed to run heater status job");
+                    Log.Logger.Error(ex, "Failed to run heater schedule job");
+                    CurrentState.SetFailed(States.Schedule);
                 }
 
                 
@@ -189,17 +195,18 @@ namespace MyUplinkSmartConnect
 
                         foreach (var tmpdevice in device.devices)
                         {
-                            await _heaterStatus.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChangeInHours, Convert.ToInt32(nextScheduleChange.TotalHours));
+                            await Settings.Instance.MQTTSender.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChangeInHours, Convert.ToInt32(nextScheduleChange.TotalHours));
                         }
 
                         devicesStatusUpdatedCount++;
-
                     }
 
                     Log.Logger.Debug("Updated status for {devicesStatusUpdatedCount} devices", devicesStatusUpdatedCount);
                 }
                 else
+                {
                     Log.Logger.Debug("Failed to do device status updates, found no devices");
+                }
             }
         }
 
@@ -218,12 +225,25 @@ namespace MyUplinkSmartConnect
             {
                 try
                 {
-                    await _heaterStatus.Work();
-                    _nextStatusUpdate = DateTime.Now;
+                    var itemsUpdated = await _heaterStatus.Work();
+
+                    if(itemsUpdated != 0)
+                    {
+                        _nextStatusUpdate = DateTime.Now;
+                        CurrentState.SetSuccess(States.HeaterStats);
+                    }
+                    else
+                    {
+                        CurrentState.SetFailed(States.HeaterStats);
+                    }                    
                 }
                 catch (Exception ex)
                 {
                     Log.Logger.Error(ex, "Failed to run heater status job");
+
+                    if (Settings.Instance.MQTTActive)
+                        CurrentState.SetFailed(States.HeaterStats);
+
                     _heaterStatus = null;
                     return;
                 }

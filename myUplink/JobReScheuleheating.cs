@@ -106,8 +106,7 @@ namespace MyUplinkSmartConnect
 
                             if (!string.IsNullOrEmpty(Settings.Instance.MQTTServer) && !string.IsNullOrEmpty(device.name))
                             {
-                                var job = new JobCheckHeaterStatus();
-                                await job.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChangeInHours, Convert.ToInt32(0));
+                                await Settings.Instance.MQTTSender.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChangeInHours, Convert.ToInt32(0));
                             }
                             return hasTomorrowElectricityPrice; // If we did not get tomorrows prices we return false so we can try the schedule again.
                         }

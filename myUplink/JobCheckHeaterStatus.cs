@@ -7,22 +7,14 @@ namespace MyUplinkSmartConnect
 {
     internal class JobCheckHeaterStatus
     {
-        readonly MqttFactory _mqttFactory;
-        static readonly object _lock = new object();
-        static IMqttClient? _mqttClient;
         IEnumerable<DeviceGroup>? _deviceGroup;
 
-        public JobCheckHeaterStatus()
-        {
-            _mqttFactory = new MqttFactory();
-        }
-
-        public async Task Work()
+        public async Task<int> Work()
         {
             if (Settings.Instance.myuplinkApi == null)
             {
                 Log.Logger.Debug("myUplink APi is null, cannot do status updates");
-                return;
+                return 0;
             }
 
             if(_deviceGroup == null)
@@ -43,6 +35,8 @@ namespace MyUplinkSmartConnect
                     Log.Logger.Warning("Reset device cache failed, device list returned is still 0, updating stats will fail");
                 }
             }
+
+            var deviceStatsUpdatesSendt = 0;
 
             foreach (var device in _deviceGroup)
             {
@@ -66,62 +60,20 @@ namespace MyUplinkSmartConnect
                             case CurrentPointParameterType.EstimatedPower:
                             case CurrentPointParameterType.TargetTemprature:
                             case CurrentPointParameterType.CurrentTemprature:
-                                await SendUpdate(device.name, parm, devicePoint.value);
+                                deviceStatsUpdatesSendt++;
+                                await Settings.Instance.MQTTSender.SendUpdate(device.name, parm, devicePoint.value);
                                 break;
                         }                        
                     }
                 }
-            }            
-        }
+            }
 
-        internal async Task SendUpdate(string deviceName, CurrentPointParameterType parameter,object value)
-        {
-            lock(_lock)
+            if(deviceStatsUpdatesSendt == 0)
             {
-                if (_mqttClient == null || !_mqttClient.IsConnected)
-                {
-                    _mqttClient = _mqttFactory.CreateMqttClient();
-                    MqttClientOptionsBuilder optionsBuilder;
+                Log.Logger.Warning("When doing stats update for water heaters, 0 stats items where sendt");
+            }
 
-
-                    if (Settings.Instance.MQTTServerPort != 0)
-                        optionsBuilder = new MqttClientOptionsBuilder().WithTcpServer(Settings.Instance.MQTTServer, Settings.Instance.MQTTServerPort).WithKeepAlivePeriod(TimeSpan.FromMinutes(Settings.Instance.CheckRemoteStatsIntervalInMinutes +1 ));
-                    else
-                        optionsBuilder = new MqttClientOptionsBuilder().WithTcpServer(Settings.Instance.MQTTServer).WithKeepAlivePeriod(TimeSpan.FromMinutes(Settings.Instance.CheckRemoteStatsIntervalInMinutes + 1));
-
-                    if (!string.IsNullOrEmpty(Settings.Instance.MQTTUserName))
-                    {
-                        optionsBuilder = optionsBuilder.WithCredentials(Settings.Instance.MQTTUserName, Settings.Instance.MQTTPassword);
-                    }
-
-                    try
-                    {
-                        _ = _mqttClient.ConnectAsync(optionsBuilder.Build(), CancellationToken.None).Result;
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Logger.Error(ex, "Failed to connect to MTQQ server ");
-                        _mqttClient?.Dispose();
-                        _mqttClient = null;
-                    }
-                }
-            }            
-
-            if(_mqttClient != null && _mqttClient.IsConnected)
-            {
-                try
-                {
-                    var applicationMessage = new MqttApplicationMessageBuilder().WithTopic($"heater/{deviceName}/{parameter}").WithPayload(value.ToString()).Build();
-                    await _mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
-                    Log.Logger.Debug("Sending update {DeviceName} - {Parameter} - {Value}",deviceName,parameter,value);
-                }
-                catch (Exception ex)
-                {
-                    Log.Logger.Error(ex, "Failed to send message to MTQQ message");
-                    _mqttClient?.Dispose();
-                    _mqttClient = null;
-                }
-            }            
-        }
+            return deviceStatsUpdatesSendt;
+        }        
     }
 }

@@ -1,4 +1,7 @@
-﻿using Serilog.Events;
+﻿using MyUplinkSmartConnect.MQTT;
+using Serilog;
+using Serilog.Core;
+using Serilog.Events;
 using System.Text.Json.Serialization;
 
 namespace MyUplinkSmartConnect
@@ -6,6 +9,11 @@ namespace MyUplinkSmartConnect
     static class Settings
     {
         public static SettingsValues Instance { get; set; } = new SettingsValues();
+
+        public static Logger CreateLogger(LogEventLevel consoleLogLevel)
+        {
+            return new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console(restrictedToMinimumLevel: consoleLogLevel).WriteTo.MQTTSink().CreateLogger();
+        }
     }
 
     class SettingsValues
@@ -34,10 +42,15 @@ namespace MyUplinkSmartConnect
 
         public string? MQTTPassword { get; set; }
 
-        public LogEventLevel LogLevel { get; set; } = LogEventLevel.Information;
+        public LogEventLevel ConsoleLogLevel { get; set; } = LogEventLevel.Information;
+
+        public LogEventLevel MQTTLogLevel { get; set; } = LogEventLevel.Warning;
 
         [JsonIgnore]
         public myuplinkApi myuplinkApi { get; set; } = new  myuplinkApi();
+
+        [JsonIgnore]
+        public MQTTSender MQTTSender { get; set; } = new MQTTSender();
 
         [JsonIgnore]
         public bool MQTTActive

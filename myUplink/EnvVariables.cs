@@ -50,7 +50,7 @@ namespace MyUplinkSmartConnect
             return string.Empty;
         }
 
-        public TEnum GetValueEnum<TEnum>(string keyName, TEnum defaultValue) where TEnum : struct
+        public TEnum GetValueEnum<TEnum>(TEnum defaultValue, params string[] keyName) where TEnum : struct
         {
             var strValue = GetValue(keyName);
             if (string.IsNullOrWhiteSpace(strValue))
