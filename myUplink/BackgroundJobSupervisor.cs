@@ -195,7 +195,7 @@ namespace MyUplinkSmartConnect
 
                         foreach (var tmpdevice in device.devices)
                         {
-                            await Settings.Instance.MQTTSender.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChangeInHours, Convert.ToInt32(nextScheduleChange.TotalHours));
+                            await Settings.Instance.MQTTSender.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChangeInHours, Convert.ToInt32(nextScheduleChange.TotalHours),true);
                         }
 
                         devicesStatusUpdatedCount++;

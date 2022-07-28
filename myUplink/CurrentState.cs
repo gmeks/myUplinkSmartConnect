@@ -36,7 +36,7 @@ namespace MyUplinkSmartConnect
 
             if(_lastStatePublish == DateTime.MinValue)
             {
-                Settings.Instance.MQTTSender.SendUpdate(Models.CurrentPointParameterType.LogEntry, "").Wait(); // Incase the last run had a log entry
+                Settings.Instance.MQTTSender.SendUpdate(Models.CurrentPointParameterType.LogEntry, "",true).Wait(); // Incase the last run had a log entry
                 _lastStatePublish = DateTime.Now;
                 foundChanges = true;
             }
@@ -68,7 +68,7 @@ namespace MyUplinkSmartConnect
         static void PublishChanges()
         {
             _lastStatePublish = DateTime.Now;
-            Settings.Instance.MQTTSender.SendUpdate(Models.CurrentPointParameterType.ServiceStatus, _currentFailed).Wait();
+            Settings.Instance.MQTTSender.SendUpdate(Models.CurrentPointParameterType.ServiceStatus, _currentFailed, true).Wait();
         }
     }
 }

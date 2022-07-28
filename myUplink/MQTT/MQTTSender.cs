@@ -21,7 +21,7 @@ namespace MyUplinkSmartConnect.MQTT
             _mqttFactory = new MqttFactory();
         }       
 
-        internal async Task SendUpdate(string deviceName, CurrentPointParameterType parameter, object value)
+        internal async Task SendUpdate(string deviceName, CurrentPointParameterType parameter, object value, bool retainMessage = false)
         {
             CheckMQttConnectionStatus();
 
@@ -29,7 +29,7 @@ namespace MyUplinkSmartConnect.MQTT
             {
                 try
                 {
-                    var applicationMessage = new MqttApplicationMessageBuilder().WithTopic($"heater/{deviceName}/{parameter}").WithPayload(value.ToString()).Build();
+                    var applicationMessage = new MqttApplicationMessageBuilder().WithTopic($"heater/{deviceName}/{parameter}").WithPayload(value.ToString()).WithRetainFlag(retainMessage).Build();
                     await _mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
                     Log.Logger.Debug("Sending update {DeviceName} - {Parameter} - {Value}", deviceName, parameter, value);
                 }
@@ -42,7 +42,7 @@ namespace MyUplinkSmartConnect.MQTT
             }
         }
 
-        internal async Task SendUpdate(CurrentPointParameterType parameter, object value)
+        internal async Task SendUpdate(CurrentPointParameterType parameter, object value,bool retainMessage = false)
         {
             CheckMQttConnectionStatus();
 
@@ -50,13 +50,13 @@ namespace MyUplinkSmartConnect.MQTT
             {
                 try
                 {
-                    var applicationMessage = new MqttApplicationMessageBuilder().WithTopic($"heater/{parameter}").WithPayload(value.ToString()).Build();
+                    var applicationMessage = new MqttApplicationMessageBuilder().WithTopic($"heater/{parameter}").WithPayload(value.ToString()).WithRetainFlag(retainMessage).Build();
                     await _mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
                     //Log.Logger.Debug("Sending update - {Parameter} - {Value}", parameter, value);
                 }
                 catch (Exception ex)
                 {
-                    Log.Logger.Error(ex, "Failed to send message to MTQQ message");
+                    Console.WriteLine("Failed to write log to MQTT, with error " + ex.Message);
                     _mqttClient?.Dispose();
                     _mqttClient = null;
                 }

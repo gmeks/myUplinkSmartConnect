@@ -33,7 +33,7 @@ namespace MyUplinkSmartConnect.MQTT
 
                 try
                 {
-                    Settings.Instance.MQTTSender.SendUpdate(Models.CurrentPointParameterType.LogEntry,message).Wait();
+                    Settings.Instance.MQTTSender.SendUpdate(Models.CurrentPointParameterType.LogEntry,message,true).Wait();
                 }
                 catch
                 {
