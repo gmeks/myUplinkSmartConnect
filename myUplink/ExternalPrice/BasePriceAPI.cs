@@ -101,6 +101,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
                 }
             }
         }
+
         internal static double Parse(string input)
         {
             if (input == null || input.Length == 0)
@@ -115,11 +116,22 @@ namespace MyUplinkSmartConnect.ExternalPrice
                     var tmpStr = input.ToArray();
                     tmpStr[i] = '.';
 
-                    return double.Parse(tmpStr, NumberStyles.Any, CultureInfo.InvariantCulture);
+                    return ParseDoubleLogFail(new string(tmpStr));
                 }
             }
 
-            return double.Parse(input, NumberStyles.Any, CultureInfo.InvariantCulture);
+            return ParseDoubleLogFail(input);
+        }
+
+        static double ParseDoubleLogFail(ReadOnlySpan<char> input)
+        {
+            if (double.TryParse(input, NumberStyles.Any, CultureInfo.InvariantCulture, out double result))
+            {
+                return result;
+            }
+
+            Log.Logger.Error("Failed to parse double from string {value}", input.ToString());
+            return double.MinValue;
         }
 
         public List<stPriceInformation> PriceList { get { return _priceList; } }

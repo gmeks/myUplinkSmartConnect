@@ -40,7 +40,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
                             price.End = item.EndTime;
                             price.Price = Parse(column.Value);
 
-                            if (!_priceList.Contains(price))
+                            if (!_priceList.Contains(price) && price.Price != double.MinValue)
                             {
                                 _priceList.Add(price);
                             }
@@ -76,7 +76,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
                             price.End = item.EndTime;
                             price.Price = Parse(column.Value);
 
-                            if(!_priceList.Contains(price))
+                            if(!_priceList.Contains(price) && price.Price != double.MinValue)
                             {
                                 _priceList.Add(price);
                             }
