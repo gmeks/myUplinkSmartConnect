@@ -135,3 +135,13 @@ Q) Can i force it to update the schedule?
 >         state_topic: "heater/18760NE2240322014631/LastScheduleChangeInHours"
 >         name: "Last schedule change"
 >         unique_id: "LastScheduleChange"
+> 
+>       - platform: mqtt
+>         state_topic: "heater/LogEntry"
+>         name: "MyUplinkSmartConnectLogs"
+>         unique_id: "MyUplinkSmartConnectLogs"
+> 
+>       - platform: mqtt
+>         state_topic: "heater/ServiceStatus"
+>         name: "MyUplinkSmartConnect status"
+>         unique_id: "MyUplinkSmartConnectStatus"
