@@ -15,6 +15,9 @@ namespace MyUplinkSmartConnect.MQTT
         readonly MqttFactory _mqttFactory;
         static readonly object _lock = new object();
         static IMqttClient? _mqttClient;
+        
+        static int _connectionFailedCount = 0;
+        const int ConnectionFailedCountConsiderError = 3;
 
         public MQTTSender()
         {
@@ -35,7 +38,11 @@ namespace MyUplinkSmartConnect.MQTT
                 }
                 catch (Exception ex)
                 {
-                    Log.Logger.Error(ex, "Failed to send message to MTQQ message");
+                    if(_connectionFailedCount >= ConnectionFailedCountConsiderError)
+                        Log.Logger.Error(ex, "Failed to send message to MTQQ message");
+                    else
+                        Log.Logger.Debug(ex, "Failed to send message to MTQQ message");
+
                     _mqttClient?.Dispose();
                     _mqttClient = null;
                 }
@@ -85,11 +92,24 @@ namespace MyUplinkSmartConnect.MQTT
 
                     try
                     {
-                        _ = _mqttClient.ConnectAsync(optionsBuilder.Build(), CancellationToken.None).Result;
+                        var timeoutCts = new CancellationTokenSource();
+                        timeoutCts.CancelAfter(TimeSpan.FromSeconds(30));
+
+                        var tmp = _mqttClient.ConnectAsync(optionsBuilder.Build(), timeoutCts.Token).Result;
+
+                        if(tmp.ResultCode == MqttClientConnectResultCode.Success)
+                        {
+                            _connectionFailedCount = 0;
+                        }
                     }
                     catch (Exception ex)
                     {
-                        Log.Logger.Error(ex, "Failed to connect to MTQQ server ");
+                        _connectionFailedCount++;
+                        if (_connectionFailedCount >= ConnectionFailedCountConsiderError)
+                            Log.Logger.Error(ex, "Failed to connect to MTQQ server ");
+                        else
+                            Log.Logger.Debug(ex, "Failed to connect to MTQQ server ");
+
                         _mqttClient?.Dispose();
                         _mqttClient = null;
                     }
