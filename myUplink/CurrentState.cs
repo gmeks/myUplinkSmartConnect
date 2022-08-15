@@ -30,6 +30,7 @@ namespace MyUplinkSmartConnect
             if(_currentFailed.HasFlag(state))
             {
                 Log.Logger.Debug("{state} is now working, removing from failed", state);
+                Settings.Instance.MQTTSender.SendUpdate(Models.CurrentPointParameterType.LogEntry, "", true).Wait(); // Incase the last run had a log entry
                 _currentFailed -= _currentFailed;
                 foundChanges = true;
             }
