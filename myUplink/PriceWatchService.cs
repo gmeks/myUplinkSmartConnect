@@ -56,10 +56,19 @@ namespace MyUplinkSmartConnect
                 Log.Logger.Information("Reading settings from configuration file");
             }
 
-            var consoleLogLevel = env.GetValueEnum<LogEventLevel>(LogEventLevel.Information, nameof(SettingsValues.ConsoleLogLevel), "LogLevel");
-            if (Settings.Instance.ConsoleLogLevel != LogEventLevel.Information)
+            Settings.Instance.ConsoleLogLevel = env.GetValueEnum<LogEventLevel>(LogEventLevel.Warning, nameof(SettingsValues.MQTTLogLevel));
+            Settings.Instance.MQTTLogLevel = env.GetValueEnum<LogEventLevel>(LogEventLevel.Information, nameof(SettingsValues.ConsoleLogLevel), "LogLevel");
+
+            if (Settings.Instance.ConsoleLogLevel != LogEventLevel.Information || Settings.Instance.ConsoleLogLevel > Settings.Instance.MQTTLogLevel)
             {
+                if(Settings.Instance.ConsoleLogLevel > Settings.Instance.MQTTLogLevel)
+                {
+                    Log.Logger.Information("MQTTLogLevel cannot be more verbose then console, moving Console log to {loglevel}", Settings.Instance.MQTTLogLevel);
+                    Settings.Instance.ConsoleLogLevel = Settings.Instance.MQTTLogLevel;
+                }
+
                 Log.Logger = Settings.CreateLogger(Settings.Instance.ConsoleLogLevel);
+                Console.WriteLine($"Setting console log level to {Settings.Instance.ConsoleLogLevel}");
             }
 
             Settings.Instance = new SettingsValues
@@ -77,7 +86,7 @@ namespace MyUplinkSmartConnect
                 MQTTUserName = env.GetValue(nameof(SettingsValues.MQTTUserName)),
                 MQTTPassword = env.GetValue(nameof(SettingsValues.MQTTPassword)),
                 MQTTLogLevel = env.GetValueEnum<LogEventLevel>(LogEventLevel.Warning, nameof(SettingsValues.MQTTLogLevel)),
-                ConsoleLogLevel = consoleLogLevel
+                ConsoleLogLevel = env.GetValueEnum<LogEventLevel>(LogEventLevel.Information, nameof(SettingsValues.ConsoleLogLevel), "LogLevel")                
             };
 
             if (string.IsNullOrEmpty(Settings.Instance.UserName))

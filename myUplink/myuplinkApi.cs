@@ -207,6 +207,9 @@ namespace MyUplinkSmartConnect
 
         public string GetCurrentDayOrder(Device device)
         {
+            if(string.IsNullOrEmpty(device.id))
+                throw new NullReferenceException("device.id is null");
+
             var heaterRoot = _heaterScheduleRoot[device.id];
             return heaterRoot.First().weekFormat ?? "mon,tue,wed,thu,fri,sat,sun";
         }
