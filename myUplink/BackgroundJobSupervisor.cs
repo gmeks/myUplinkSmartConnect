@@ -33,7 +33,7 @@ namespace MyUplinkSmartConnect
             int tmpMinute = random.GetByte(_minimumHourForScheduleStart, 22, BuildDetermenisticRandomSeed(), 2);
 
             _nextScheduleUpdate = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day, tmpHour, tmpMinute, 0);
-            _nextStatusUpdate = DateTime.Now;
+            _nextStatusUpdate = DateTime.UtcNow;
 
             _nextScheduleUpdate = _nextScheduleUpdate.AddDays(-1);
             Log.Logger.Information("Target Schedule change time is {NextScheduleUpdate}", _nextScheduleUpdate.ToLocalTime().ToShortTimeString());
@@ -41,7 +41,7 @@ namespace MyUplinkSmartConnect
 
         void CreateWorkerThread()
         {
-            _lastWorkerAliveCheck = DateTime.Now;
+            _lastWorkerAliveCheck = DateTime.UtcNow;
             _threadWorker = new Thread(Worker);
             _threadWorker.IsBackground = true;
             _threadWorker.Name = "BackgroundJobs";
@@ -50,7 +50,7 @@ namespace MyUplinkSmartConnect
 
         void CreateWorkerHealthCheckThread()
         {
-            _lastWorkerHealthAlive = DateTime.Now;
+            _lastWorkerHealthAlive = DateTime.UtcNow;
             _threadHealthChecker = new Thread(WorkerHealthCheck);
             _threadHealthChecker.IsBackground = true;
             _threadHealthChecker.Name = "BackgroundJobs healthcheck";
@@ -105,8 +105,8 @@ namespace MyUplinkSmartConnect
                 if (_killWorker)
                     break;
 
-                _lastWorkerHealthAlive = DateTime.Now;
-                var lastJobTime = DateTime.Now - _lastWorkerAliveCheck;
+                _lastWorkerHealthAlive = DateTime.UtcNow;
+                var lastJobTime = DateTime.UtcNow - _lastWorkerAliveCheck;
                 if (lastJobTime.TotalMinutes > 20)
                 {
                     Log.Logger.Warning("Worker thread had stopped, restarting it.");
@@ -119,7 +119,7 @@ namespace MyUplinkSmartConnect
         {
             while (!_killWorker)
             {
-                _lastWorkerAliveCheck = DateTime.Now;
+                _lastWorkerAliveCheck = DateTime.UtcNow;
 
                 if (_heaterStatus == null)
                     _heaterStatus = new JobCheckHeaterStatus();
@@ -139,7 +139,7 @@ namespace MyUplinkSmartConnect
 
                 Thread.Sleep(TimeSpan.FromMinutes(1));
 
-                var lastJobTime = DateTime.Now - _lastWorkerHealthAlive;
+                var lastJobTime = DateTime.UtcNow - _lastWorkerHealthAlive;
                 if (!_killWorker && lastJobTime.TotalMinutes > 20)
                 {
                     CreateWorkerHealthCheckThread();
@@ -150,15 +150,15 @@ namespace MyUplinkSmartConnect
 
         async Task WorkerSchedule()
         {
-            var nextScheduleChange = DateTime.Now - _nextScheduleUpdate;
+            var nextScheduleChange = DateTime.UtcNow - _nextScheduleUpdate;
 #if DEBUG
-            if (true)
-            //if (nextScheduleChange.TotalHours >= 24 && DateTime.Now.Hour > _minimumHourForScheduleStart ||  _nextScheduleUpdate > DateTime.Now && DateTime.Now.Hour > _minimumHourForScheduleStart )   
+            //if (true)
+            if (nextScheduleChange.TotalHours >= 24 && DateTime.UtcNow.Hour > _minimumHourForScheduleStart || _nextScheduleUpdate > DateTime.UtcNow && DateTime.UtcNow.Hour > _minimumHourForScheduleStart)
 #else
-            if (nextScheduleChange.TotalHours >= 24 && DateTime.Now.Hour > _minimumHourForScheduleStart ||  _nextScheduleUpdate > DateTime.Now && DateTime.Now.Hour > _minimumHourForScheduleStart )                
+            if (nextScheduleChange.TotalHours >= 24 && DateTime.UtcNow.Hour > _minimumHourForScheduleStart ||  _nextScheduleUpdate > DateTime.UtcNow && DateTime.UtcNow.Hour > _minimumHourForScheduleStart )
 #endif
             {
-                Log.Logger.Debug("Last schedule was {hours} hours ago and above minimum hour for schedule start {minHour}", nextScheduleChange.TotalHours, (DateTime.Now.Hour > _minimumHourForScheduleStart));
+                Log.Logger.Debug("Last schedule was {hours} hours ago and above minimum hour for schedule start {minHour}", nextScheduleChange.TotalHours, (DateTime.UtcNow.Hour > _minimumHourForScheduleStart));
                 try
                 {
                     Settings.Instance.myuplinkApi.ClearCached();
@@ -217,7 +217,7 @@ namespace MyUplinkSmartConnect
                 Log.Logger.Debug("Cannot do status updates heaterstatus is null {_heaterStatus} or API is down {myapi}", (_heaterStatus is null), (Settings.Instance.myuplinkApi is null));
                 return;
             }
-            var nextStatusUpdate = DateTime.Now - _nextStatusUpdate;
+            var nextStatusUpdate = DateTime.UtcNow - _nextStatusUpdate;
             bool updateNow = nextStatusUpdate.TotalMinutes >= (double)Settings.Instance.CheckRemoteStatsIntervalInMinutes;
 
             Log.Logger.Debug("Next status update in {Minutes} should update now {UpdateNow}", nextStatusUpdate.TotalMinutes, updateNow);
@@ -229,7 +229,7 @@ namespace MyUplinkSmartConnect
 
                     if(itemsUpdated != 0)
                     {
-                        _nextStatusUpdate = DateTime.Now;
+                        _nextStatusUpdate = DateTime.UtcNow;
                         CurrentState.SetSuccess(States.HeaterStats);
                     }
                     else

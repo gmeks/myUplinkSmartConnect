@@ -17,8 +17,7 @@ namespace MyUplinkSmartConnect
             if(powerPrice.PriceList.Count >= 48)
             {
                 return powerPrice;
-            }
-            
+            }            
 
             Log.Logger.Debug("Failed to get updated price information, from EU API. Checking nordpool");
 

@@ -10,8 +10,10 @@ WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
+
 COPY ["myUplink/MyUplink-smartconnect.csproj", "myUplink/"]
 RUN dotnet restore "myUplink/MyUplink-smartconnect.csproj"
+
 COPY . .
 WORKDIR "/src/myUplink"
 RUN dotnet build "MyUplink-smartconnect.csproj" -c Release -o /app/build

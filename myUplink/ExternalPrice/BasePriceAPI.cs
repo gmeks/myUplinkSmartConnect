@@ -104,8 +104,8 @@ namespace MyUplinkSmartConnect.ExternalPrice
 
         internal static double Parse(string input)
         {
-            if (input == null || input.Length == 0)
-                return 0;
+            if (string.IsNullOrEmpty(input))
+                return double.MinValue;
 
             input = input.Replace("\"", "");
 

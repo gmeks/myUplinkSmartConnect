@@ -4,6 +4,7 @@ using Serilog.Events;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -24,11 +25,11 @@ namespace MyUplinkSmartConnect
         public PriceWatchService()
         {
             _backgroundJobs = new BackgroundJobSupervisor();
-        }
+        }        
         
         public bool Start(HostControl hostControl)
         {
-            Log.Logger.Information("Starting up service");
+            Log.Logger.Information("Starting up service, detected version is {version}", GetVersion());
 
             EnvVariables env = new EnvVariables();
             if(!string.IsNullOrEmpty(env.GetValue("IsInsideDocker")))
@@ -152,6 +153,19 @@ namespace MyUplinkSmartConnect
                 return false;
 
             return true;
+        }
+
+        static string GetVersion()
+        {
+            try
+            {
+                string version = Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString() ?? "0.0.0.0";
+                return version;
+            }
+            catch
+            {
+                return "";
+            }
         }
     }
 }
