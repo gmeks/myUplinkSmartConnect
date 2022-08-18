@@ -11,31 +11,33 @@ namespace MyUplinkSmartConnect
     public class JobReScheuleheating
     {
         static async Task<iBasePriceInformation?> GetPriceInformation()
-        {            
-            var powerPrice = new EntsoeAPI();
-            _ = await powerPrice.FetchPriceInformation();
-            if(powerPrice.PriceList.Count >= 48)
+        {
+            var priceFetchApiList = new iBasePriceInformation[] { new EntsoeAPI(), new Nordpoolgroup(), new VgApi() };
+
+            foreach(var priceListApi in priceFetchApiList)
             {
-                return powerPrice;
-            }            
+                var status = await priceListApi.GetPriceInformation();
 
-            Log.Logger.Debug("Failed to get updated price information, from EU API. Checking nordpool");
-
-            var nordpoolGroup = new Nordpoolgroup();
-            await nordpoolGroup.GetPriceInformation();
-
-            if (nordpoolGroup.PriceList.Count >= 48)
-            {
-                return nordpoolGroup;
+                if(status && priceListApi.PriceList.Count >= 48)
+                {
+                    Log.Logger.Debug("Using {priceApi} price list", priceListApi.GetType());
+                    return priceListApi;
+                }
             }
 
-            if(nordpoolGroup.PriceList.Count >= 24)
+            Log.Logger.Warning("Failed to get price information for today and tomorrow, will check for todays prices");
+            foreach (var priceListApi in priceFetchApiList)
             {
-                Log.Logger.Warning("Failed to get price information for tomorrow, will only be able to change todays schedule");
-                return nordpoolGroup;
+                var status = await priceListApi.GetPriceInformation();
+
+                if (status && priceListApi.PriceList.Count >= 24)
+                {
+                    Log.Logger.Debug("Using {priceApi} price list for today", priceListApi.GetType());
+                    return priceListApi;
+                }
             }
 
-            Log.Logger.Warning("Failed to get price information from both EU API and nordpool");
+            Log.Logger.Warning("Failed to price list from all known apis, will check schedule later.");
             return null;
         }
 

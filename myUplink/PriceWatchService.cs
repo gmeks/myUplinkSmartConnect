@@ -1,4 +1,5 @@
-﻿using MyUplinkSmartConnect.ExternalPrice;
+﻿using Microsoft.Extensions.Hosting;
+using MyUplinkSmartConnect.ExternalPrice;
 using Serilog;
 using Serilog.Events;
 using System;
@@ -8,12 +9,11 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using Topshelf;
 
 
 namespace MyUplinkSmartConnect
 {
-    internal class PriceWatchService : ServiceControl
+    internal class PriceWatchService : BackgroundService
     {
 #if DEBUG
         const string settingsFile = "appsettings.Development.json";
@@ -25,14 +25,14 @@ namespace MyUplinkSmartConnect
         public PriceWatchService()
         {
             _backgroundJobs = new BackgroundJobSupervisor();
-        }        
-        
-        public bool Start(HostControl hostControl)
+        }
+
+        protected async override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             Log.Logger.Information("Starting up service, detected version is {version}", GetVersion());
 
             EnvVariables env = new EnvVariables();
-            if(!string.IsNullOrEmpty(env.GetValue("IsInsideDocker")))
+            if (!string.IsNullOrEmpty(env.GetValue("IsInsideDocker")))
             {
                 Log.Logger.Information("Reading settings from environmental variables");
             }
@@ -41,7 +41,7 @@ namespace MyUplinkSmartConnect
                 if (!File.Exists(settingsFile))
                 {
                     Log.Logger.Error($"No settings file found {settingsFile}");
-                    return false;
+                    return;
                 }
                 var dict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(File.ReadAllText(settingsFile));
                 Settings.Instance = new SettingsValues();
@@ -49,7 +49,7 @@ namespace MyUplinkSmartConnect
                 if (dict == null)
                 {
                     Log.Logger.Error($"Invalid json");
-                    return false;
+                    return;
                 }
 
                 env = new EnvVariables(dict);
@@ -61,7 +61,7 @@ namespace MyUplinkSmartConnect
 
             if (Settings.Instance.ConsoleLogLevel != LogEventLevel.Information || Settings.Instance.ConsoleLogLevel > Settings.Instance.MQTTLogLevel)
             {
-                if(Settings.Instance.ConsoleLogLevel > Settings.Instance.MQTTLogLevel)
+                if (Settings.Instance.ConsoleLogLevel > Settings.Instance.MQTTLogLevel)
                 {
                     Log.Logger.Information("MQTTLogLevel cannot be more verbose then console, moving Console log to {loglevel}", Settings.Instance.MQTTLogLevel);
                     Settings.Instance.ConsoleLogLevel = Settings.Instance.MQTTLogLevel;
@@ -78,33 +78,33 @@ namespace MyUplinkSmartConnect
                 CheckRemoteStatsIntervalInMinutes = env.GetValueInt(nameof(SettingsValues.CheckRemoteStatsIntervalInMinutes), 1),
                 WaterHeaterMaxPowerInHours = env.GetValueInt(nameof(SettingsValues.WaterHeaterMaxPowerInHours), 6),
                 WaterHeaterMediumPowerInHours = env.GetValueInt(nameof(SettingsValues.WaterHeaterMediumPowerInHours), 4),
-                MediumPowerTargetTemperature = env.GetValueInt(50,nameof(SettingsValues.MediumPowerTargetTemperature),"MediumPowerTargetTemprature"),
-                HighPowerTargetTemperature = env.GetValueInt(70,nameof(SettingsValues.HighPowerTargetTemperature),"HighPowerTargetTemprature"),
+                MediumPowerTargetTemperature = env.GetValueInt(50, nameof(SettingsValues.MediumPowerTargetTemperature), "MediumPowerTargetTemprature"),
+                HighPowerTargetTemperature = env.GetValueInt(70, nameof(SettingsValues.HighPowerTargetTemperature), "HighPowerTargetTemprature"),
                 PowerZone = env.GetValue(nameof(SettingsValues.PowerZone)),
                 MQTTServer = env.GetValue(nameof(SettingsValues.MQTTServer)),
                 MQTTServerPort = env.GetValueInt(nameof(SettingsValues.MQTTServerPort), 1883),
                 MQTTUserName = env.GetValue(nameof(SettingsValues.MQTTUserName)),
                 MQTTPassword = env.GetValue(nameof(SettingsValues.MQTTPassword)),
                 MQTTLogLevel = env.GetValueEnum<LogEventLevel>(LogEventLevel.Warning, nameof(SettingsValues.MQTTLogLevel)),
-                ConsoleLogLevel = env.GetValueEnum<LogEventLevel>(LogEventLevel.Information, nameof(SettingsValues.ConsoleLogLevel), "LogLevel")                
+                ConsoleLogLevel = env.GetValueEnum<LogEventLevel>(LogEventLevel.Information, nameof(SettingsValues.ConsoleLogLevel), "LogLevel")
             };
 
             if (string.IsNullOrEmpty(Settings.Instance.UserName))
             {
                 Log.Logger.Error("UserName setting cannot be null or empty");
-                return false;
+                return;
             }
 
             if (string.IsNullOrEmpty(Settings.Instance.Password))
             {
                 Log.Logger.Error("Password setting cannot be null or empty");
-                return false;
+                return;
             }
 
             if (Settings.Instance.WaterHeaterMaxPowerInHours is 0 and 0)
             {
                 Log.Logger.Error("WaterHeaterMaxPowerInHours and WaterHeaterMaxPowerInHours are both set to 0, aborting");
-                return false;
+                return;
             }
 
             if (Settings.Instance.CheckRemoteStatsIntervalInMinutes <= 0)
@@ -113,7 +113,7 @@ namespace MyUplinkSmartConnect
                 Settings.Instance.CheckRemoteStatsIntervalInMinutes = 1;
             }
 
-            if (!IsValidTempratureSelection(Settings.Instance.MediumPowerTargetTemperature) )
+            if (!IsValidTempratureSelection(Settings.Instance.MediumPowerTargetTemperature))
             {
                 Log.Logger.Error("MediumPowerTargetTemprature is not valid, expect value between 50 and 90, was {HighTemp}", Settings.Instance.MediumPowerTargetTemperature);
                 Settings.Instance.MediumPowerTargetTemperature = 50;
@@ -125,7 +125,7 @@ namespace MyUplinkSmartConnect
                 Settings.Instance.HighPowerTargetTemperature = 70;
             }
 
-            Log.Logger.Information("Reporting to MQTT is: {status}",Settings.Instance.MQTTActive);
+            Log.Logger.Information("Reporting to MQTT is: {status}", Settings.Instance.MQTTActive);
 
             if (string.IsNullOrEmpty(env.GetValue("IsInsideDocker")))
             {
@@ -139,18 +139,15 @@ namespace MyUplinkSmartConnect
                     Log.Logger.Debug($"Failed to update setting file {settingsFile}");
                 }
             }
-            
+
+#if DEBUG
+            var nordPool = new VgApi();
+            await nordPool.GetPriceInformation();
+#endif
+
+
             Settings.Instance.myuplinkApi = new myuplinkApi();
-
-            _backgroundJobs.Start();
-            return true;
-        }       
-
-        public bool Stop(HostControl hostControl)
-        {
-            Log.Logger.Information("MyUplink-smartconnect is stopping");
-            _backgroundJobs.Stop();
-            return true;
+            _backgroundJobs.Start();            
         }
 
         static bool IsValidTempratureSelection(int value)

@@ -12,6 +12,8 @@ namespace MyUplinkSmartConnect.ExternalPrice
 
         void PrintScheudule();
 
+        Task<bool> GetPriceInformation();
+
         List<stPriceInformation> PriceList { get; }
     }
 }

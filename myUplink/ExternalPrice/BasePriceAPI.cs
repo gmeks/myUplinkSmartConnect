@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace MyUplinkSmartConnect.ExternalPrice
 {
-    internal class BasePriceAPI : iBasePriceInformation
+    internal class BasePriceAPI
     {
         internal HttpClient _client;
         internal List<stPriceInformation> _priceList;
@@ -48,6 +48,44 @@ namespace MyUplinkSmartConnect.ExternalPrice
             }
 
             return powerRegionIndex;
+        }
+
+
+        internal string ConvertRegionName(string powerzoneName)
+        {
+            /*
+             * Kr.sand
+            Bergen
+            Molde
+            Tr.heim
+            Tromsø
+             */
+            powerzoneName = powerzoneName.ToLowerInvariant();
+            switch (powerzoneName)
+            {
+
+                case "oslo":
+                    return "NO-1";
+
+                case "kr.sand":
+                case "kristiansand":
+                    return "NO-2";
+
+                case "molde":
+                case "trondheim":
+                case "tr.heim":
+                    return "NO-3";
+
+                case "tromso":
+                    return "NO-4";
+
+                case "bergen":
+                    return "NO-5";
+            }
+
+
+            Log.Logger.Warning("Failed to find tekniskal name of powerzone from {pwrZone}",powerzoneName);
+            return "";
         }
 
         public void PrintScheudule()
@@ -104,7 +142,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
 
         internal static double Parse(string input)
         {
-            if (string.IsNullOrEmpty(input))
+            if (string.IsNullOrEmpty(input) || input == "-")
                 return double.MinValue;
 
             input = input.Replace("\"", "");
@@ -130,7 +168,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
                 return result;
             }
 
-            Log.Logger.Error("Failed to parse double from string {value}", input.ToString());
+            Log.Logger.Debug("Failed to parse double from string:{value}", input.ToString());
             return double.MinValue;
         }
 
@@ -142,6 +180,14 @@ namespace MyUplinkSmartConnect.ExternalPrice
         public object? GetFormat(Type? formatType)
         {
             return "dd.MM.yyyy HH:mm:ss";
+        }
+    }
+
+    class VgApiDateTimeFormat : IFormatProvider
+    {
+        public object? GetFormat(Type? formatType)
+        {
+            return "dd-MM-yyyy HH:mm:ss";
         }
     }
 

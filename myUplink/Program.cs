@@ -3,29 +3,41 @@ using MyUplinkSmartConnect.Models;
 using MyUplinkSmartConnect.MQTT;
 using Serilog;
 using Serilog.Events;
-using System.Net.Http.Headers;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using System.Runtime.InteropServices;
-using System.Text.Json;
-using Topshelf;
 
 namespace MyUplinkSmartConnect
 {
     public class Program
     {
-        public static  void Main(string[] args)
+        public static void Main(string[] args)
         {
             Log.Logger = Settings.CreateLogger(LogEventLevel.Information);
+            MainAsync(args).GetAwaiter().GetResult();
+        }
 
-#if DEBUG
-            if (true)
-#else
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX) || RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-#endif
+
+        private static async Task MainAsync(string[] args)
+        {
+            var service = Host.CreateDefaultBuilder(args)
+                         .ConfigureServices((hostContext, services) =>
+                         {
+                             services.AddHostedService<PriceWatchService>();
+                         });
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                var service = new PriceWatchService();
-                service.Start(null);
+                service.UseWindowsService();                
+                await service.RunConsoleAsync();
+            }
+            else
+            {
+                service.UseSystemd();
+                await service.RunConsoleAsync();
 
-                while(true)
+                /*
+                while (true)
                 {
                     var result = Console.ReadLine();
 
@@ -37,24 +49,14 @@ namespace MyUplinkSmartConnect
                             Log.Logger = Settings.CreateLogger(LogEventLevel.Debug);
                             continue;
                         }
-                        
+
                         break;
                     }
 
                     Thread.Sleep(100);
                 }
+                */
             }
-            else
-            {
-                HostFactory.Run(x =>
-                {
-                    x.Service<PriceWatchService>();
-                    x.EnableServiceRecovery(r => r.RestartService(TimeSpan.FromSeconds(10)));
-                    x.SetServiceName("MyUplink-smartconnect");
-                    x.UseSerilog();
-                    x.StartAutomaticallyDelayed();
-                });
-            }                      
         }
-   }
+    }
 }

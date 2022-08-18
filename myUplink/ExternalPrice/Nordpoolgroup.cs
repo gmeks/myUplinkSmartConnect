@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace MyUplinkSmartConnect.ExternalPrice
 {
-    internal class Nordpoolgroup : BasePriceAPI
+    internal class Nordpoolgroup : BasePriceAPI, iBasePriceInformation
     {
         public Nordpoolgroup()
         {
@@ -93,36 +93,6 @@ namespace MyUplinkSmartConnect.ExternalPrice
             }
         }
 
-        string ConvertRegionName(string nordpoolName)
-        {
-            /*
-             * Kr.sand
-            Bergen
-            Molde
-            Tr.heim
-            Tromsø
-             */
-            nordpoolName = nordpoolName.ToLowerInvariant();
-            switch (nordpoolName)
-            {
-                case "kr.sand":
-                    return "NO-2";
-
-                case "bergen":
-                    return "NO-5";
-
-                case "oslo":
-                    return "NO-1";
-
-                case "tr.heim":
-                    return "NO-3";
-
-                case "tromsø":
-                    return "NO-5";
-            }
-            return "";
-        }
-
         public static Guid ToGuid(long startTime,long endtime)
         {
             byte[] guidData = new byte[16];
@@ -134,12 +104,12 @@ namespace MyUplinkSmartConnect.ExternalPrice
 
         public class Attribute
         {
-            public string Id { get; set; }
-            public string Name { get; set; }
-            public string Role { get; set; }
+            public string? Id { get; set; }
+            public string? Name { get; set; }
+            public string? Role { get; set; }
             public bool HasRoles { get; set; }
-            public List<string> Values { get; set; }
-            public string Value { get; set; }
+            public List<string>? Values { get; set; }
+            public string? Value { get; set; }
         }
 
         public class Column
