@@ -56,8 +56,8 @@ namespace MyUplinkSmartConnect
                 Log.Logger.Information("Reading settings from configuration file");
             }
 
-            Settings.Instance.ConsoleLogLevel = env.GetValueEnum<LogEventLevel>(LogEventLevel.Warning, nameof(SettingsValues.MQTTLogLevel));
-            Settings.Instance.MQTTLogLevel = env.GetValueEnum<LogEventLevel>(LogEventLevel.Information, nameof(SettingsValues.ConsoleLogLevel), "LogLevel");
+            Settings.Instance.MQTTLogLevel = env.GetValueEnum<LogEventLevel>(LogEventLevel.Warning, nameof(SettingsValues.MQTTLogLevel));
+            Settings.Instance.ConsoleLogLevel = env.GetValueEnum<LogEventLevel>(LogEventLevel.Information, nameof(SettingsValues.ConsoleLogLevel), "LogLevel");
 
             if (Settings.Instance.ConsoleLogLevel != LogEventLevel.Information || Settings.Instance.ConsoleLogLevel > Settings.Instance.MQTTLogLevel)
             {
@@ -139,12 +139,6 @@ namespace MyUplinkSmartConnect
                     Log.Logger.Debug($"Failed to update setting file {settingsFile}");
                 }
             }
-
-#if DEBUG
-            var nordPool = new VgApi();
-            await nordPool.GetPriceInformation();
-#endif
-
 
             Settings.Instance.myuplinkApi = new myuplinkApi();
             _backgroundJobs.Start();            
