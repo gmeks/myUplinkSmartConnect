@@ -50,9 +50,16 @@ namespace MyUplinkSmartConnect
 
                     foreach (var devicePoint in devicePointsList)
                     {
-                        var parm = (CurrentPointParameterType)int.Parse(devicePoint.parameterId ?? "");
+                        var parm = (CurrentPointParameterType)int.Parse(devicePoint.parameterId ?? "0");
 
-                        switch(parm)
+                        switch (parm)
+                        {
+                            case CurrentPointParameterType.EnergiStored:
+                                CurrentState.CurrentTankEnergi = devicePoint.value;
+                                break;
+                        }
+
+                        switch (parm)
                         {
                             case CurrentPointParameterType.FillLevel:
                             case CurrentPointParameterType.EnergiStored:

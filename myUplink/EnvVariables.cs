@@ -82,6 +82,24 @@ namespace MyUplinkSmartConnect
             return string.Empty;
         }
 
+        public bool GetValueBool(string keyName, bool defaultValue = false)
+        {
+            var strValue = GetValue(keyName);
+            if (string.IsNullOrWhiteSpace(strValue))
+            {
+                Log.Logger.Debug("Environmental variable {KeyName} using default value of {defaultValue}", keyName, defaultValue);
+                return defaultValue;
+            }
+
+            if (bool.TryParse(strValue, out bool result))
+            {
+                return result;
+            }
+
+            Log.Logger.Error("{KeyName} has invalid value and cannot be read as a bool: {Value}", keyName, strValue);
+            return defaultValue;
+        }
+
         public int GetValueInt(string keyName, int defaultValue = 0)
         {
             var strValue = GetValue(keyName);

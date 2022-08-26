@@ -17,6 +17,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
         }
         public async Task<bool> GetPriceInformation()
         {
+            CurrentState.PriceList.Clear();
             var powerRegionIndex = GetPowerRegionIndex();
 
             //TomorrowsPrice
@@ -34,15 +35,15 @@ namespace MyUplinkSmartConnect.ExternalPrice
 
                         if (regionName.Equals(NorwayPowerZones[powerRegionIndex], StringComparison.OrdinalIgnoreCase))
                         {
-                            var price = new stPriceInformation();
+                            var price = new ElectricityPriceInformation();
                             price.Id = ToGuid(item.StartTime.ToFileTime(), item.EndTime.ToFileTime());
                             price.Start = item.StartTime;
                             price.End = item.EndTime;
                             price.Price = Parse(column.Value);
 
-                            if (!_priceList.Contains(price) && price.Price != double.MinValue)
+                            if (!CurrentState.PriceList.Contains(price) && price.Price != double.MinValue)
                             {
-                                _priceList.Add(price);
+                                CurrentState.PriceList.Add(price);
                             }
                         }
                     }
@@ -70,15 +71,15 @@ namespace MyUplinkSmartConnect.ExternalPrice
 
                         if (regionName.Equals(NorwayPowerZones[powerRegionIndex], StringComparison.OrdinalIgnoreCase))
                         {
-                            var price = new stPriceInformation();
+                            var price = new ElectricityPriceInformation();
                             price.Id = ToGuid(item.StartTime.ToFileTime(), item.EndTime.ToFileTime());
                             price.Start = item.StartTime;
                             price.End = item.EndTime;
                             price.Price = Parse(column.Value);
 
-                            if(!_priceList.Contains(price) && price.Price != double.MinValue)
+                            if(!CurrentState.PriceList.Contains(price) && price.Price != double.MinValue)
                             {
-                                _priceList.Add(price);
+                                CurrentState.PriceList.Add(price);
                             }
                         }
                     }

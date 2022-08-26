@@ -10,10 +10,6 @@ namespace MyUplinkSmartConnect.ExternalPrice
     {
         void CreateSortedList(DateTime filterDate, int desiredMaxpower, int mediumPower);
 
-        void PrintScheudule();
-
-        Task<bool> GetPriceInformation();
-
-        List<stPriceInformation> PriceList { get; }
+        Task<bool> GetPriceInformation();     
     }
 }

@@ -32,6 +32,8 @@ namespace MyUplinkSmartConnect
 
         public int HighPowerTargetTemperature{ get; set; }
 
+        public bool EnergiBasedCostSaving { get; set; }
+
         public string? PowerZone { get; set; }
 
         public string? MQTTServer { get; set; }

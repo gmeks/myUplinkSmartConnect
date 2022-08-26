@@ -12,14 +12,12 @@ namespace MyUplinkSmartConnect.ExternalPrice
     internal class BasePriceAPI
     {
         internal HttpClient _client;
-        internal List<stPriceInformation> _priceList;
         internal static IList<string> NorwayPowerZones = new string[] { "NO-1", "NO-2", "NO-3", "NO-4", "NO-5" }.ToList();
 
 
         public BasePriceAPI()
         {
             _client = new HttpClient();
-            _priceList = new List<stPriceInformation>();
         }
 
         internal int GetPowerRegionIndex()
@@ -88,18 +86,10 @@ namespace MyUplinkSmartConnect.ExternalPrice
             return "";
         }
 
-        public void PrintScheudule()
-        {
-            foreach (var price in _priceList)
-            {
-                Console.WriteLine($"{price.Start.Day}) Start: {price.Start.ToShortTimeString()} | {price.End.ToShortTimeString()} - {price.DesiredPower} - {price.Price}");
-            }
-        }
-
         public void CreateSortedList(DateTime filterDate, int desiredMaxpower, int mediumPower)
         {
-            var sortedList = new List<stPriceInformation>(24);
-            foreach (stPriceInformation price in _priceList)
+            var sortedList = new List<ElectricityPriceInformation>(24);
+            foreach (ElectricityPriceInformation price in CurrentState.PriceList)
             {
                 if (price.Start.Date != filterDate.Date)
                     continue;
@@ -109,8 +99,8 @@ namespace MyUplinkSmartConnect.ExternalPrice
 
             sortedList.Sort(new SortByLowestPrice());
 
-            IEnumerable<stPriceInformation> maxPowerHours = Array.Empty<stPriceInformation>();
-            IEnumerable<stPriceInformation> mediumPowerHours = Array.Empty<stPriceInformation>();
+            IEnumerable<ElectricityPriceInformation> maxPowerHours = Array.Empty<ElectricityPriceInformation>();
+            IEnumerable<ElectricityPriceInformation> mediumPowerHours = Array.Empty<ElectricityPriceInformation>();
             if (desiredMaxpower != 0)
                 maxPowerHours = sortedList.Take(desiredMaxpower);
 
@@ -121,21 +111,21 @@ namespace MyUplinkSmartConnect.ExternalPrice
             {
                 if (maxPowerHours.Contains(sortedList[i]))
                 {
-                    sortedList[i].DesiredPower = WaterHeaterDesiredPower.Watt2000;
+                    sortedList[i].RecommendedHeatingPower = WaterHeaterDesiredPower.Watt2000;
                 }
                 else if (mediumPowerHours.Contains(sortedList[i]))
                 {
-                    sortedList[i].DesiredPower = WaterHeaterDesiredPower.Watt700;
+                    sortedList[i].RecommendedHeatingPower = WaterHeaterDesiredPower.Watt700;
                 }
             }
 
-            _priceList.Sort(new SortByStartDate());
-            foreach (var price in _priceList)
+            CurrentState.PriceList.Sort(new SortByStartDate());
+            foreach (var price in CurrentState.PriceList)
             {
                 var updatedPrice = sortedList.FirstOrDefault(x => x.Id == price.Id);
                 if (updatedPrice != null)
                 {
-                    price.DesiredPower = updatedPrice.DesiredPower;
+                    price.RecommendedHeatingPower = updatedPrice.RecommendedHeatingPower;
                 }
             }
         }
@@ -172,7 +162,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
             return double.MinValue;
         }
 
-        public List<stPriceInformation> PriceList { get { return _priceList; } }
+        public List<ElectricityPriceInformation> PriceList { get { return CurrentState.PriceList; } }
     }
 
     class ApiDateTimeFormat : IFormatProvider
@@ -191,9 +181,9 @@ namespace MyUplinkSmartConnect.ExternalPrice
         }
     }
 
-    class SortByLowestPrice : IComparer<stPriceInformation>
+    class SortByLowestPrice : IComparer<ElectricityPriceInformation>
     {
-        public int Compare(stPriceInformation? x, stPriceInformation? y)
+        public int Compare(ElectricityPriceInformation? x, ElectricityPriceInformation? y)
         {
             if (x == null && y == null)
                 return 0;
@@ -214,9 +204,9 @@ namespace MyUplinkSmartConnect.ExternalPrice
         }
     }
 
-    class SortByStartDate : IComparer<stPriceInformation>
+    class SortByStartDate : IComparer<ElectricityPriceInformation>
     {
-        public int Compare(stPriceInformation? x, stPriceInformation? y)
+        public int Compare(ElectricityPriceInformation? x, ElectricityPriceInformation? y)
         {
             if (x == null)
                 return 1;

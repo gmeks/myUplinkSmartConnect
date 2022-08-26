@@ -15,13 +15,13 @@ namespace MyUplinkSmartConnect.ExternalPrice
         public VgApi()
         {
             _client = new HttpClient();
-            _priceList = new List<stPriceInformation>();
         }
 
         public async Task<bool> GetPriceInformation()
         {
             try
             {
+                CurrentState.PriceList.Clear();
                 var today = await GetVgPriceInformation("https://redutv-api.vg.no/power-data/v1/nordpool/today");
                 var tomorrow = await GetVgPriceInformation("https://redutv-api.vg.no/power-data/v1/nordpool/day-ahead/latest");
 
@@ -59,15 +59,15 @@ namespace MyUplinkSmartConnect.ExternalPrice
                 {
                     var range = GetDateTime(rootToday.priceByHour.date, rootToday.priceByHour.hours[i]);
 
-                    var price = new stPriceInformation();
+                    var price = new ElectricityPriceInformation();
                     price.Id = ToGuid(range.start.ToFileTime(), range.end.ToFileTime());
                     price.Start = range.start;
                     price.End = range.end;
                     price.Price = hourPrices[i];
 
-                    if (!_priceList.Contains(price) && price.Price != double.MinValue)
+                    if (!CurrentState.PriceList.Contains(price) && price.Price != double.MinValue)
                     {
-                        _priceList.Add(price);
+                        CurrentState.PriceList.Add(price);
                     }
                 }
 

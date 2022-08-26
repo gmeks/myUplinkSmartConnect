@@ -1,4 +1,5 @@
-﻿using Serilog;
+﻿using MyUplinkSmartConnect.ExternalPrice;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -71,5 +72,9 @@ namespace MyUplinkSmartConnect
             _lastStatePublish = DateTime.Now;
             Settings.Instance.MQTTSender.SendUpdate(Models.CurrentPointParameterType.ServiceStatus, _currentFailed, true).Wait();
         }
+
+        public static List<ElectricityPriceInformation> PriceList { get; set; } = new List<ElectricityPriceInformation>();
+
+        public static double CurrentTankEnergi { get; set; }
     }
 }

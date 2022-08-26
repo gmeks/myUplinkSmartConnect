@@ -2,15 +2,15 @@
 
 namespace MyUplinkSmartConnect.ExternalPrice
 {
-    public class stPriceInformation : IEquatable<stPriceInformation>
+    public class ElectricityPriceInformation : IEquatable<ElectricityPriceInformation>
     {
-        public stPriceInformation()
+        public ElectricityPriceInformation()
         {
             Id = Guid.NewGuid();
             Price = 0;
             Start = DateTime.MinValue;
             End = DateTime.MinValue;
-            DesiredPower = WaterHeaterDesiredPower.None;
+            RecommendedHeatingPower = WaterHeaterDesiredPower.None;
         }
 
         public Guid Id { get; set; }
@@ -21,11 +21,11 @@ namespace MyUplinkSmartConnect.ExternalPrice
 
         public DateTime End { get; set; }
 
-        public bool Equals(stPriceInformation? other)
+        public bool Equals(ElectricityPriceInformation? other)
         {
             return Id.Equals(other?.Id);
         }
 
-        public WaterHeaterDesiredPower DesiredPower { get; set; }
+        public WaterHeaterDesiredPower RecommendedHeatingPower { get; set; }
     }
 }

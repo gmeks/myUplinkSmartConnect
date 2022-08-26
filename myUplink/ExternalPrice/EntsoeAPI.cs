@@ -18,7 +18,6 @@ namespace MyUplinkSmartConnect.ExternalPrice
         public EntsoeAPI()
         {
             _client = new HttpClient();
-            _priceList = new List<stPriceInformation>();
         }       
 
         public async Task<bool> GetPriceInformation()
@@ -29,6 +28,8 @@ namespace MyUplinkSmartConnect.ExternalPrice
 
             try
             {
+                CurrentState.PriceList.Clear();
+
                 var powerRegionIndex = GetPowerRegionIndex();
 
                 string url = $"https://transparency.entsoe.eu/api?documentType=A44&in_Domain=10Y{NorwayPowerZones[powerRegionIndex]}--------T&out_Domain=10Y{NorwayPowerZones[powerRegionIndex]}--------T&periodStart={startDateFormat}&periodEnd={endDateFormat}&securityToken=5cd1c4f6-2172-4453-a8bb-c9467fa0fabc";
@@ -79,7 +80,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
                             }
                             else if (actualData.Name == "Point")
                             {
-                                var price = new stPriceInformation();
+                                var price = new ElectricityPriceInformation();
 
                                 foreach (XmlNode timeIntervalNode in actualData.ChildNodes)
                                 {
@@ -101,7 +102,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
                                 }
 
                                 if (price.Price != double.MinValue)
-                                    _priceList.Add(price);
+                                    CurrentState.PriceList.Add(price);
                             }
                         }
                     }

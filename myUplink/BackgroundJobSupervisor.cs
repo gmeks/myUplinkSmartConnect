@@ -152,8 +152,8 @@ namespace MyUplinkSmartConnect
         {
             var nextScheduleChange = DateTime.UtcNow - _nextScheduleUpdate;
 #if DEBUG
-            //if (true)
-            if (nextScheduleChange.TotalHours >= 24 && DateTime.UtcNow.Hour > _minimumHourForScheduleStart || _nextScheduleUpdate > DateTime.UtcNow && DateTime.UtcNow.Hour > _minimumHourForScheduleStart)
+            if (true)
+            //if (nextScheduleChange.TotalHours >= 24 && DateTime.UtcNow.Hour > _minimumHourForScheduleStart || _nextScheduleUpdate > DateTime.UtcNow && DateTime.UtcNow.Hour > _minimumHourForScheduleStart)
 #else
             if (nextScheduleChange.TotalHours >= 24 && DateTime.UtcNow.Hour > _minimumHourForScheduleStart ||  _nextScheduleUpdate > DateTime.UtcNow && DateTime.UtcNow.Hour > _minimumHourForScheduleStart )
 #endif

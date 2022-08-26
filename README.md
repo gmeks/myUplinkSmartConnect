@@ -1,6 +1,6 @@
 **MyUplink Schedule changer.**
 
-This program connect to the myuplink.com and adjust the schedule of [Høiax CONNECTED](https://www.hoiax.no/om-hoiax/articles/hoiax-connected-smart-varmtvannsbereder-med-skylosning) hot water heaters, and adjust the schedule so that it uses electricity when the price is low.
+This program connect to the myuplink.com and adjust the schedule of [Høiax CONNECTED](https://www.hoiax.no/om-hoiax/articles/hoiax-connected-smart-varmtvannsbereder-med-skylosning) hot water heaters, and adjust the schedule so that it uses electricity when the price is lowest. This is done by fetching price information on a pr hour basic, for today and tomorrow and building the schedule
 It also allows you to periodicity publish current values from the heater via mqtt to your home automation of choice.
 
 ![Screenshot](schedule_screenshot.png)

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Hosting;
+using MyUplinkSmartConnect.CostSavings;
 using MyUplinkSmartConnect.ExternalPrice;
 using Serilog;
 using Serilog.Events;
@@ -75,6 +76,7 @@ namespace MyUplinkSmartConnect
             {
                 UserName = env.GetValue(nameof(SettingsValues.UserName)),
                 Password = env.GetValue(nameof(SettingsValues.Password)),
+                EnergiBasedCostSaving = env.GetValueBool(nameof(SettingsValues.EnergiBasedCostSaving), false),
                 CheckRemoteStatsIntervalInMinutes = env.GetValueInt(nameof(SettingsValues.CheckRemoteStatsIntervalInMinutes), 1),
                 WaterHeaterMaxPowerInHours = env.GetValueInt(nameof(SettingsValues.WaterHeaterMaxPowerInHours), 6),
                 WaterHeaterMediumPowerInHours = env.GetValueInt(nameof(SettingsValues.WaterHeaterMediumPowerInHours), 4),
@@ -141,7 +143,7 @@ namespace MyUplinkSmartConnect
             }
 
             Settings.Instance.myuplinkApi = new myuplinkApi();
-            _backgroundJobs.Start();            
+            _backgroundJobs.Start();
         }
 
         static bool IsValidTempratureSelection(int value)

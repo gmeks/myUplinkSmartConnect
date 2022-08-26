@@ -1,4 +1,6 @@
-﻿using MyUplinkSmartConnect.ExternalPrice;
+﻿using MyUplinkSmartConnect.CostSavings;
+using MyUplinkSmartConnect.CostSavingsRules;
+using MyUplinkSmartConnect.ExternalPrice;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -18,7 +20,7 @@ namespace MyUplinkSmartConnect
             {
                 var status = await priceListApi.GetPriceInformation();
 
-                if(status && priceListApi.PriceList.Count >= 48)
+                if(status && CurrentState.PriceList.Count >= 48)
                 {
                     Log.Logger.Debug("Using {priceApi} price list", priceListApi.GetType());
                     return priceListApi;
@@ -30,7 +32,7 @@ namespace MyUplinkSmartConnect
             {
                 var status = await priceListApi.GetPriceInformation();
 
-                if (status && priceListApi.PriceList.Count >= 24)
+                if (status && CurrentState.PriceList.Count >= 24)
                 {
                     Log.Logger.Debug("Using {priceApi} price list for today", priceListApi.GetType());
                     return priceListApi;
@@ -47,7 +49,7 @@ namespace MyUplinkSmartConnect
             if (priceInformation == null)
                 return false;
 
-            bool hasTomorrowElectricityPrice = (priceInformation.PriceList.Count >= 48);
+            bool hasTomorrowElectricityPrice = (CurrentState.PriceList.Count >= 48);
             var cleanDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
 
             priceInformation.CreateSortedList(cleanDate, Settings.Instance.WaterHeaterMaxPowerInHours, Settings.Instance.WaterHeaterMediumPowerInHours);
@@ -57,10 +59,6 @@ namespace MyUplinkSmartConnect
                 priceInformation.CreateSortedList(cleanDate.AddDays(1), Settings.Instance.WaterHeaterMaxPowerInHours, Settings.Instance.WaterHeaterMediumPowerInHours);
             }
             
-#if DEBUG
-            priceInformation.PrintScheudule();
-#endif
-
             var group = await Settings.Instance.myuplinkApi.GetDevices();
             foreach (var device in group)
             {
@@ -72,7 +70,18 @@ namespace MyUplinkSmartConnect
 
                 foreach (var tmpdevice in device.devices)
                 {
-                    var costSaving = new ApplyCostSavingRules();
+                    ICostSavingRules costSaving;
+                    if(Settings.Instance.EnergiBasedCostSaving)
+                    {
+                        costSaving = new EnergiBasedRules();
+                        Log.Logger.Debug("Using energi based rules for building heating schedules");
+                    }
+                    else
+                    {
+                        costSaving = new SimplePriceBasedRules();
+                        Log.Logger.Debug("Using simple price based rules for building heating schedules");
+                    }
+
                     costSaving.WaterHeaterSchedule = await Settings.Instance.myuplinkApi.GetWheeklySchedules(tmpdevice);
                     costSaving.WaterHeaterModes = await Settings.Instance.myuplinkApi.GetCurrentModes(tmpdevice);
                     var weekdayOrder = Settings.Instance.myuplinkApi.GetCurrentDayOrder(tmpdevice);
@@ -88,9 +97,10 @@ namespace MyUplinkSmartConnect
                         }
                     }                    
 
-                    if (hasTomorrowElectricityPrice && !costSaving.VerifyHeaterSchedule(priceInformation.PriceList, weekdayOrder, cleanDate, cleanDate.AddDays(1))  || 
-                        !hasTomorrowElectricityPrice && !costSaving.VerifyHeaterSchedule(priceInformation.PriceList, weekdayOrder, cleanDate))
+                    if (hasTomorrowElectricityPrice && !costSaving.VerifyHeaterSchedule(weekdayOrder, cleanDate, cleanDate.AddDays(1))  || 
+                        !hasTomorrowElectricityPrice && !costSaving.VerifyHeaterSchedule(weekdayOrder, cleanDate))
                     {
+                        costSaving.LogSchedule();
                         var status = await Settings.Instance.myuplinkApi.SetWheeklySchedules(tmpdevice, costSaving.WaterHeaterSchedule);
 
                         if (!status)
