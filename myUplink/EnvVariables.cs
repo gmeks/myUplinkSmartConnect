@@ -37,7 +37,7 @@ namespace MyUplinkSmartConnect
             }
         }
 
-        public string GetValue(string keyName)
+        public string GetValue(string keyName,string defaultValue = "")
         {
             keyName = keyName.ToLower();
             if (_machine.ContainsKey(keyName))
@@ -47,7 +47,7 @@ namespace MyUplinkSmartConnect
             }
             
             Log.Logger.Debug("Failed to find environmental variable {KeyName}",keyName);
-            return string.Empty;
+            return defaultValue;
         }
 
         public TEnum GetValueEnum<TEnum>(TEnum defaultValue, params string[] keyName) where TEnum : struct

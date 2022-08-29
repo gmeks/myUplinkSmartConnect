@@ -2,13 +2,9 @@
 
 This program connect to the myuplink.com and adjust the schedule of [Høiax CONNECTED](https://www.hoiax.no/om-hoiax/articles/hoiax-connected-smart-varmtvannsbereder-med-skylosning) hot water heaters, and adjust the schedule so that it uses electricity when the price is lowest. This is done by fetching price information on a pr hour basic, for today and tomorrow and building the schedule
 It also allows you to periodicity publish current values from the heater via mqtt to your home automation of choice.
+When changing the schedule it gets the price information for your region from [transparency.entsoe.eu](https://transparency.entsoe.eu) or other 3d parti API.
 
 ![Screenshot](schedule_screenshot.png)
-
-**How does program work:**
----
-
-It contacts a EU API [transparency.entsoe.eu](https://transparency.entsoe.eu) and gets the electricity price pr hour for your region. It will then set the schedule for when to increase the water temprature.
 
 **Legal**
 ---
@@ -30,8 +26,6 @@ Deploy via docker:
 ---
 
 - Full integration with home assistant as a integration? ( This depends a bit on having someone know the homeassistant part, to help build a homeassistant integration that can connect to the docker container over MTQQ)
-- Support a more targeted heating mode, where you set desired energi in the tank for spesific hours, and it calculates the cheapest way to reach this goal.
-
 
 *How far this is taken depends alot of to what degree others use it*
 
@@ -41,10 +35,17 @@ Deploy via docker:
 - UserName - Your username to myuplink.com ( Sadly the public facing APi, does not allow for reschedules..)
 - Password - Your password for myuplink.com
 - ConsoleLogLevel - Sets the logs shown in the console window (Default Information), posible values Verbose,Debug,Information,Warning,Error,Fatal
+
+**Heating schedule based settings**
+---
+
+- ChangeSchedule - Change schedule automaticly based on defined rules (Default on.)
+- EnergiBasedCostSaving - Energi based rules instead of pure price based ( More below ).
 - WaterHeaterMaxPowerInHours - This is the number of hours pr day the water heater is running full power.
 - WaterHeaterMediumPowerInHours - This the number of hours pr day the water heater is running at half power, but with a lower "target temperature"
 - MediumPowerTargetTemperature - Target temperature in medium mode, default 50c
 - HighPowerTargetTemperature - Target temperature in high mode, default 70c
+- EnergiBasedPeakTimes - When using Energi based rules, this sets the target where the water should be at HighPowerTargetTemperature.
 
 **Optional mqtt Configuration, used to connect to smarthouse solution like homeassistant**
 ---
@@ -68,6 +69,11 @@ This works for my famility, with 1 adult male and a wife. Both taking showers th
 
 **FAQ**
 ---
+
+Q) What are the different scheduling rules
+
+> Simple price based ( Default) - This rule is very simple we use the WaterHeaterMaxPowerInHours/WaterHeaterMediumPowerInHours and run the heater in the cheapest hours.
+> Energi based - In this mode, we attemt to use WaterHeaterMaxPowerInHours/WaterHeaterMediumPowerInHours to make sure we reach a target energi at targeted times.
 
 Q) What are modes and how are they used?
 

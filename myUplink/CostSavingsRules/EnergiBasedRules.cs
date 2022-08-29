@@ -4,6 +4,7 @@ using MyUplinkSmartConnect.Models;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,14 +17,22 @@ namespace MyUplinkSmartConnect.CostSavings
         const double DesiredMaximalEnergi = 14.0d;
 
         List<WaterHeaterState> _tankHeatingSchedule = new List<WaterHeaterState>();
+        List<PeakTimeSchedule> _peakTimeSchedule = new List<PeakTimeSchedule>();
 
         class WaterHeaterState : ElectricityPriceInformation
         {
             public double ExpectedEnergiLevel { get; set; }
 
             public WaterHeaterDesiredPower TargetHeatingPower { get; set; }
-        }     
-            
+        }
+
+        class PeakTimeSchedule
+        {
+            public int Hour { get; set; }
+
+            public IEnumerable<DayOfWeek> DayOfWeek { get; set; } = Array.Empty<DayOfWeek>();
+        }
+
 
         public void LogSchedule()
         {
@@ -122,7 +131,7 @@ namespace MyUplinkSmartConnect.CostSavings
 
         void ReCalculateHeatingTimes()
         {
-            var maxiumPreHeat = 4; //todo calculate how early we can start heating before a target time. We leak 1kw pr hour. So that likely means we cannot preheat more then 4 hours
+            const int MaximumPreHeatInHours = 4;
 
             ReCalculateTankExpectedEnergiLevels();
 
@@ -130,34 +139,28 @@ namespace MyUplinkSmartConnect.CostSavings
             {
                 if (IsPeakWaterUsage(_tankHeatingSchedule[i].Start))
                 {
-                    var neededPowerChange = DesiredMaximalEnergi - _tankHeatingSchedule[i].ExpectedEnergiLevel;
+                    var neededEnergiInTank = DesiredMaximalEnergi - _tankHeatingSchedule[i].ExpectedEnergiLevel;
                     int lastChangeIndex = i;
 
-                    // This can likely be improved.
-                    // Method 1) using any timeslot that has "cheap" electricity to build up energi.
+                    int changesDone = 0;
 
-                    while (neededPowerChange >= 1)
+                    while(lastChangeIndex != 0)
                     {
-                        if (_tankHeatingSchedule[lastChangeIndex].RecommendedHeatingPower == WaterHeaterDesiredPower.None)
+                        if(_tankHeatingSchedule[lastChangeIndex].RecommendedHeatingPower != WaterHeaterDesiredPower.None)
                         {
-                            neededPowerChange += 1; // We are leaking heat at this point
-                        }
-                        else //if (_tankHeatingSchedule[i].RecommendedHeatingPower == WaterHeaterDesiredPower.Watt700 || _tankHeatingSchedule[i].RecommendedHeatingPower == WaterHeaterDesiredPower.Watt1300)
-                        {
-                            neededPowerChange -= 2;
+                            neededEnergiInTank -= 2.0d;
                             _tankHeatingSchedule[lastChangeIndex].TargetHeatingPower = WaterHeaterDesiredPower.Watt2000;
+                            changesDone++;
                         }
-                        
-                        if (neededPowerChange > maxiumPreHeat) // Its not posible to change the scheudule
+
+                        if (neededEnergiInTank <= 0)
                             break;
 
-                        if (neededPowerChange < 1) // We have found the needed changes to schedule.
+                        var hoursChecked = i - lastChangeIndex;
+                        if (hoursChecked > MaximumPreHeatInHours)
                             break;
 
-                        if (lastChangeIndex == 0) // We cannot go back in time.
-                            break;
-
-                        lastChangeIndex--;
+                        lastChangeIndex--;                        
                     }
 
                     ReCalculateTankExpectedEnergiLevels();
@@ -180,21 +183,11 @@ namespace MyUplinkSmartConnect.CostSavings
             }
         }
 
-        bool IsPeakWaterUsage(DateTime start)
-        {
-            if (start.Hour == 6 || start.Hour == 21)
-                return true;
-
-            return false;
-        }
-
         double CalculateEnergiChangeTank(WaterHeaterState last)
         {
             const double EnergiChangePrHour2Kwh = 2;
             const double EnergiChangePrHour07Kwh = 0.7;
-
             double newEnergiLevel;
-
             switch (last.TargetHeatingPower)
             {
                 case WaterHeaterDesiredPower.Watt2000:
@@ -233,6 +226,78 @@ namespace MyUplinkSmartConnect.CostSavings
             return newEnergiLevel;
         }
 
+        bool IsPeakWaterUsage(DateTime start)
+        {
+            if (_peakTimeSchedule.Count == 0)
+            {
+                ParsePeakTimeSettings();
+            }
+
+            foreach (var peak in _peakTimeSchedule)
+            {
+                if (!peak.DayOfWeek.Contains(start.DayOfWeek))
+                    continue;
+
+                if (peak.Hour == start.Hour)
+                    return true;
+            }
+
+            return false;
+        }
+
+        void ParsePeakTimeSettings()
+        {
+            var csvText = Settings.Instance.EnergiBasedPeakTimes?.Split(',') ?? Array.Empty<string>();
+
+            if (csvText == null || csvText.Length == 0)
+            {
+                Log.Logger.Warning($"EnergiBasedPeakTimes is not configured, this is required for energibased rules");
+                return;
+            }
+
+            foreach (var csv in csvText)
+            {
+                if (string.IsNullOrEmpty(csv))
+                    continue;
+
+                //weekday6
+                //weekend23
+                string? strNumber = null;
+                string? strWeekday = null;
+
+                for (int i = (csv.Length - 1); i > 0; i--)
+                {
+                    if (!char.IsDigit(csv[i]))
+                    {
+                        strNumber = csv.Substring(i + 1);
+                        strWeekday = csv.Substring(0, i + 1).ToLowerInvariant();
+                        break;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(strNumber) && !string.IsNullOrEmpty(strWeekday))
+                {
+                    var priority = new PeakTimeSchedule();
+                    priority.Hour = Convert.ToInt32(strNumber);
+
+                    if (strWeekday == "weekday")
+                    {
+                        priority.DayOfWeek = new DayOfWeek[] { DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday };
+                    }
+                    else if (strWeekday == "weekend")
+                    {
+                        priority.DayOfWeek = new DayOfWeek[] { DayOfWeek.Saturday, DayOfWeek.Sunday };
+                    }
+                    else
+                    {
+                        priority.DayOfWeek = new DayOfWeek[] { Enum.Parse<DayOfWeek>(strWeekday) };
+                    }
+
+                    _peakTimeSchedule.Add(priority);
+                }
+            }
+        }
+
         void CreateSchedule()
         {
             foreach (var price in CurrentState.PriceList)
@@ -246,7 +311,7 @@ namespace MyUplinkSmartConnect.CostSavings
             {
                 if (_tankHeatingSchedule[i].RecommendedHeatingPower == WaterHeaterDesiredPower.Watt2000 || _tankHeatingSchedule[i].RecommendedHeatingPower == WaterHeaterDesiredPower.Watt700 || _tankHeatingSchedule[i].RecommendedHeatingPower == WaterHeaterDesiredPower.Watt1300)
                 {
-                    _tankHeatingSchedule[i].TargetHeatingPower = WaterHeaterDesiredPower.Watt700;                    
+                    _tankHeatingSchedule[i].TargetHeatingPower = WaterHeaterDesiredPower.Watt700;
                 }
             }
         }

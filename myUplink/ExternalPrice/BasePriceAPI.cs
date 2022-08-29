@@ -49,7 +49,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
         }
 
 
-        internal string ConvertRegionName(string powerzoneName)
+        internal string ConvertRegionName(string powerzoneName,bool logFailedLookups = true)
         {
             /*
              * Kr.sand
@@ -74,6 +74,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
                 case "tr.heim":
                     return "NO-3";
 
+                case "tromsø":
                 case "tromso":
                     return "NO-4";
 
@@ -81,8 +82,11 @@ namespace MyUplinkSmartConnect.ExternalPrice
                     return "NO-5";
             }
 
-
-            Log.Logger.Warning("Failed to find tekniskal name of powerzone from {pwrZone}",powerzoneName);
+            if(logFailedLookups)
+            {
+                Log.Logger.Warning("Failed to find tekniskal name of powerzone from {pwrZone}", powerzoneName);
+            }
+            
             return "";
         }
 

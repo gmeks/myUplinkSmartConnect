@@ -76,13 +76,17 @@ namespace MyUplinkSmartConnect
             {
                 UserName = env.GetValue(nameof(SettingsValues.UserName)),
                 Password = env.GetValue(nameof(SettingsValues.Password)),
-                EnergiBasedCostSaving = env.GetValueBool(nameof(SettingsValues.EnergiBasedCostSaving), false),
+
+                ChangeSchedule = env.GetValueBool(nameof(SettingsValues.ChangeSchedule), true),
+                EnergiBasedCostSaving = env.GetValueBool(nameof(SettingsValues.EnergiBasedCostSaving), false),                
                 CheckRemoteStatsIntervalInMinutes = env.GetValueInt(nameof(SettingsValues.CheckRemoteStatsIntervalInMinutes), 1),
                 WaterHeaterMaxPowerInHours = env.GetValueInt(nameof(SettingsValues.WaterHeaterMaxPowerInHours), 6),
                 WaterHeaterMediumPowerInHours = env.GetValueInt(nameof(SettingsValues.WaterHeaterMediumPowerInHours), 4),
                 MediumPowerTargetTemperature = env.GetValueInt(50, nameof(SettingsValues.MediumPowerTargetTemperature), "MediumPowerTargetTemprature"),
                 HighPowerTargetTemperature = env.GetValueInt(70, nameof(SettingsValues.HighPowerTargetTemperature), "HighPowerTargetTemprature"),
                 PowerZone = env.GetValue(nameof(SettingsValues.PowerZone)),
+                EnergiBasedPeakTimes = env.GetValue(nameof(SettingsValues.EnergiBasedPeakTimes), "weekday6,weekday21,weekday22,weekend11,weekend23"),
+
                 MQTTServer = env.GetValue(nameof(SettingsValues.MQTTServer)),
                 MQTTServerPort = env.GetValueInt(nameof(SettingsValues.MQTTServerPort), 1883),
                 MQTTUserName = env.GetValue(nameof(SettingsValues.MQTTUserName)),
@@ -128,6 +132,18 @@ namespace MyUplinkSmartConnect
             }
 
             Log.Logger.Information("Reporting to MQTT is: {status}", Settings.Instance.MQTTActive);
+
+            if(!Settings.Instance.ChangeSchedule)
+            {
+                Log.Logger.Information("Automatic adjusting of schedule is disabled", Settings.Instance.MQTTActive);
+            }
+            else
+            {
+                if (Settings.Instance.EnergiBasedCostSaving)
+                    Log.Logger.Information("Automatic adjusting of schedule  will follow energi based rules", Settings.Instance.MQTTActive);
+                else
+                    Log.Logger.Information("Automatic adjusting of schedule  will follow price rules", Settings.Instance.MQTTActive);
+            }
 
             if (string.IsNullOrEmpty(env.GetValue("IsInsideDocker")))
             {

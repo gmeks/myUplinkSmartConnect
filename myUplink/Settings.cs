@@ -24,6 +24,8 @@ namespace MyUplinkSmartConnect
 
         public int CheckRemoteStatsIntervalInMinutes { get; set; } = 1;
 
+        public bool ChangeSchedule { get; set; } = true;
+
         public int WaterHeaterMaxPowerInHours { get; set; }
 
         public int WaterHeaterMediumPowerInHours { get; set; }
@@ -35,6 +37,8 @@ namespace MyUplinkSmartConnect
         public bool EnergiBasedCostSaving { get; set; }
 
         public string? PowerZone { get; set; }
+
+        public string EnergiBasedPeakTimes { get; set; } = "weekday6,weekday21,weekday23,weekend11,weekend23";
 
         public string? MQTTServer { get; set; }
 

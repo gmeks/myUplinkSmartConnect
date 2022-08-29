@@ -130,7 +130,10 @@ namespace MyUplinkSmartConnect
                     continue;
                 }
 
-                await WorkerSchedule();
+                if(Settings.Instance.ChangeSchedule)
+                {
+                    await WorkerSchedule();
+                }                
 
                 if(Settings.Instance.MQTTActive)
                 {
