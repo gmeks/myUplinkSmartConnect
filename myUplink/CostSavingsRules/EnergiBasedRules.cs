@@ -16,14 +16,14 @@ namespace MyUplinkSmartConnect.CostSavings
         const double DesiredMinmalEnergi = 10.0d;
         const double DesiredMaximalEnergi = 14.0d;
 
-        List<WaterHeaterState> _tankHeatingSchedule = new List<WaterHeaterState>();
-        List<PeakTimeSchedule> _peakTimeSchedule = new List<PeakTimeSchedule>();
+        readonly List<WaterHeaterState> _tankHeatingSchedule = new List<WaterHeaterState>();
+        readonly List<PeakTimeSchedule> _peakTimeSchedule = new List<PeakTimeSchedule>();
 
         class WaterHeaterState : ElectricityPriceInformation
         {
             public double ExpectedEnergiLevel { get; set; }
 
-            public WaterHeaterDesiredPower TargetHeatingPower { get; set; }
+            public WaterHeaterDesiredPower HeatingModeBasedOnPrice { get; set; }
         }
 
         class PeakTimeSchedule
@@ -38,95 +38,32 @@ namespace MyUplinkSmartConnect.CostSavings
         {
             foreach (var price in _tankHeatingSchedule)
             {
-                Log.Logger.Debug($"{price.Start.Day}) Start: {price.Start.ToShortTimeString()} | {price.End.ToShortTimeString()} - {price.TargetHeatingPower}|{price.RecommendedHeatingPower} - {price.Price} - {price.ExpectedEnergiLevel}");
-#if DEBUG
-                Console.WriteLine($"{price.Start.Day}) Start: {price.Start.ToShortTimeString()} | {price.End.ToShortTimeString()} - {price.TargetHeatingPower}|{price.RecommendedHeatingPower} - {price.Price} - {price.ExpectedEnergiLevel}");
-#endif
+                Log.Logger.Debug($"{price.Start.Day}) Start: {price.Start.ToShortTimeString()} | {price.End.ToShortTimeString()} - {price.TargetHeatingPower}|{price.HeatingModeBasedOnPrice} - {price.Price} - {price.ExpectedEnergiLevel}");
             }
         }
 
-        public bool VerifyHeaterSchedule(string weekFormat, params DateTime[] datesToSchuedule)
+        public void LogToCSV()
         {
-            WaterHeaterSchedule.Clear();
-            CreateSchedule();
+            var csv = new StringBuilder();
+            csv.AppendLine("Day;Start;End;Target heating;Price based recommendation;Price;Expected energilevel");
+
+            foreach (var price in _tankHeatingSchedule)
+            {
+                Console.WriteLine($"{price.Start.Day}) Start: {price.Start.ToShortTimeString()} | {price.End.ToShortTimeString()} - {price.TargetHeatingPower}|{price.HeatingModeBasedOnPrice} - {price.Price} - {price.ExpectedEnergiLevel}");
+                csv.AppendLine($"{price.Start.Day};{price.Start.ToShortTimeString()};{price.End.ToShortTimeString()};{price.TargetHeatingPower};{price.HeatingModeBasedOnPrice};{price.Price};{price.ExpectedEnergiLevel}");
+            }
+
+            File.WriteAllText("c:\\temp\\1.csv", csv.ToString());
+        }
+
+        public bool GenerateSchedule(string weekFormat, params DateTime[] datesToSchuedule)
+        {
+            CreateScheduleEmty();
             ReCalculateHeatingTimes();
 
-            var daysInWeek = GetWeekDayOrder(weekFormat);
-            var requiredHours = datesToSchuedule.Length * 24;
-
-            if (CurrentState.PriceList.Count < requiredHours)
-            {
-                Log.Logger.Warning("Cannot build waterheater schedule, the price list only contains {priceListCount}, but we are attempting to schedule {RequiredHours}", CurrentState.PriceList.Count, requiredHours);
-                return false;
-            }
-
-            foreach (var day in daysInWeek)
-            {
-                bool foundDayInTargetSchedules = false;
-                HeaterWeeklyEvent? sch = null;
-
-                foreach (var targetSchedule in datesToSchuedule)
-                {
-                    if (targetSchedule.DayOfWeek != day)
-                        continue;
-
-                    int addedPriceEvents = 0;
-                    var currentPowerLevel = WaterHeaterDesiredPower.Watt2000;
-
-                    foreach (var price in _tankHeatingSchedule)
-                    {
-                        if (price.Start.Date != targetSchedule.Date)
-                            continue;
-
-                        if (price.TargetHeatingPower != currentPowerLevel || sch == null)
-                        {
-                            if (sch != null)
-                                WaterHeaterSchedule.Add(sch);
-
-                            sch = new HeaterWeeklyEvent();
-                            sch.startDay = targetSchedule.DayOfWeek.ToString();
-                            sch.startTime = price.Start.ToString("HH:mm:ss");
-                            sch.modeId = GetModeFromWaterHeaterDesiredPower(price.TargetHeatingPower);
-                            currentPowerLevel = price.TargetHeatingPower;
-                            addedPriceEvents++;
-                        }
-                    }
-
-                    if (sch != null)
-                    {
-                        WaterHeaterSchedule.Add(sch);
-                        addedPriceEvents++;
-                    }
-
-                    if (addedPriceEvents > 0)
-                        foundDayInTargetSchedules = true;
-                }
-
-                if (!foundDayInTargetSchedules)
-                {
-                    sch = new HeaterWeeklyEvent();
-                    sch.startDay = day.ToString();
-                    sch.startTime = "00:00:00";
-                    sch.modeId = GetModeFromWaterHeaterDesiredPower(WaterHeaterDesiredPower.Watt2000);
-                    WaterHeaterSchedule.Add(sch);
-
-
-                    sch = new HeaterWeeklyEvent();
-                    sch.startDay = day.ToString();
-                    sch.startTime = "06:00:00";
-                    sch.modeId = GetModeFromWaterHeaterDesiredPower(WaterHeaterDesiredPower.None);
-                    WaterHeaterSchedule.Add(sch);
-
-
-                    sch = new HeaterWeeklyEvent();
-                    sch.startDay = day.ToString();
-                    sch.startTime = "12:00:00";
-                    sch.modeId = GetModeFromWaterHeaterDesiredPower(WaterHeaterDesiredPower.Watt700);
-                    WaterHeaterSchedule.Add(sch);
-                }
-            }
-
-            return false;
+            var scheduleList = JsonUtils.CloneTo<List<ElectricityPriceInformation>>(_tankHeatingSchedule);
+            var status = GenerateRemoteSchedule(weekFormat, scheduleList, datesToSchuedule);
+            return status;
         }
 
         void ReCalculateHeatingTimes()
@@ -146,7 +83,7 @@ namespace MyUplinkSmartConnect.CostSavings
 
                     while(lastChangeIndex != 0)
                     {
-                        if(_tankHeatingSchedule[lastChangeIndex].RecommendedHeatingPower != WaterHeaterDesiredPower.None)
+                        if(_tankHeatingSchedule[lastChangeIndex].HeatingModeBasedOnPrice != WaterHeaterDesiredPower.None)
                         {
                             neededEnergiInTank -= 2.0d;
                             _tankHeatingSchedule[lastChangeIndex].TargetHeatingPower = WaterHeaterDesiredPower.Watt2000;
@@ -298,7 +235,7 @@ namespace MyUplinkSmartConnect.CostSavings
             }
         }
 
-        void CreateSchedule()
+        void CreateScheduleEmty()
         {
             foreach (var price in CurrentState.PriceList)
             {
@@ -309,7 +246,9 @@ namespace MyUplinkSmartConnect.CostSavings
             // Firt we just use all recommended heating windows, to keep the tank at minimal desired level.
             for (int i = 0; i < _tankHeatingSchedule.Count; i++)
             {
-                if (_tankHeatingSchedule[i].RecommendedHeatingPower == WaterHeaterDesiredPower.Watt2000 || _tankHeatingSchedule[i].RecommendedHeatingPower == WaterHeaterDesiredPower.Watt700 || _tankHeatingSchedule[i].RecommendedHeatingPower == WaterHeaterDesiredPower.Watt1300)
+                _tankHeatingSchedule[i].HeatingModeBasedOnPrice = _tankHeatingSchedule[i].TargetHeatingPower;
+
+                if(_tankHeatingSchedule[i].TargetHeatingPower != WaterHeaterDesiredPower.None && _tankHeatingSchedule[i].TargetHeatingPower != WaterHeaterDesiredPower.Watt700)
                 {
                     _tankHeatingSchedule[i].TargetHeatingPower = WaterHeaterDesiredPower.Watt700;
                 }

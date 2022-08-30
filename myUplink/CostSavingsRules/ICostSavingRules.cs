@@ -15,8 +15,10 @@ namespace MyUplinkSmartConnect.CostSavingsRules
 
         List<HeaterWeeklyEvent> WaterHeaterSchedule { get; set; } 
 
-        bool VerifyHeaterSchedule(string weekFormat, params DateTime[] datesToSchuedule);
+        bool GenerateSchedule(string weekFormat, params DateTime[] datesToSchuedule);
 
         void LogSchedule();
+
+        void LogToCSV();
     }
 }

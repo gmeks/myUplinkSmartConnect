@@ -115,11 +115,11 @@ namespace MyUplinkSmartConnect.ExternalPrice
             {
                 if (maxPowerHours.Contains(sortedList[i]))
                 {
-                    sortedList[i].RecommendedHeatingPower = WaterHeaterDesiredPower.Watt2000;
+                    sortedList[i].TargetHeatingPower = WaterHeaterDesiredPower.Watt2000;
                 }
                 else if (mediumPowerHours.Contains(sortedList[i]))
                 {
-                    sortedList[i].RecommendedHeatingPower = WaterHeaterDesiredPower.Watt700;
+                    sortedList[i].TargetHeatingPower = WaterHeaterDesiredPower.Watt700;
                 }
             }
 
@@ -129,7 +129,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
                 var updatedPrice = sortedList.FirstOrDefault(x => x.Id == price.Id);
                 if (updatedPrice != null)
                 {
-                    price.RecommendedHeatingPower = updatedPrice.RecommendedHeatingPower;
+                    price.TargetHeatingPower = updatedPrice.TargetHeatingPower;
                 }
             }
         }

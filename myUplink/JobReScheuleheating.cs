@@ -97,10 +97,14 @@ namespace MyUplinkSmartConnect
                         }
                     }                    
 
-                    if (hasTomorrowElectricityPrice && !costSaving.VerifyHeaterSchedule(weekdayOrder, cleanDate, cleanDate.AddDays(1))  || 
-                        !hasTomorrowElectricityPrice && !costSaving.VerifyHeaterSchedule(weekdayOrder, cleanDate))
-                    {
+                    if (hasTomorrowElectricityPrice && costSaving.GenerateSchedule(weekdayOrder, cleanDate, cleanDate.AddDays(1))  || 
+                        !hasTomorrowElectricityPrice && costSaving.GenerateSchedule(weekdayOrder, cleanDate))
+                    {                        
+#if DEBUG
+                        costSaving.LogToCSV();
+#endif
                         costSaving.LogSchedule();
+
                         var status = await Settings.Instance.myuplinkApi.SetWheeklySchedules(tmpdevice, costSaving.WaterHeaterSchedule);
 
                         if (!status)
