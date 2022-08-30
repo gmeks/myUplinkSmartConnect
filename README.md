@@ -1,4 +1,4 @@
-**MyUplink Schedule changer.**
+# MyUplink Schedule changer
 
 This program connect to the myuplink.com and adjust the schedule of [Høiax CONNECTED](https://www.hoiax.no/om-hoiax/articles/hoiax-connected-smart-varmtvannsbereder-med-skylosning) hot water heaters, and adjust the schedule so that it uses electricity when the price is lowest. This is done by fetching price information on a pr hour basic, for today and tomorrow and building the schedule
 It also allows you to periodicity publish current values from the heater via mqtt to your home automation of choice.
@@ -6,13 +6,22 @@ When changing the schedule it gets the price information for your region from [t
 
 ![Screenshot](schedule_screenshot.png)
 
-**Legal**
----
+### Schedule building rules
+
+#### Old method
+Water heater will heat water when its bellow a certain temprature, without considering price. Considering alot of showing and cooking happens around the same time, this means heating water at peak electricity price.
+
+#### Price based rules (Default)
+This schedule builder simply uses cost, and will schedule heating the water (Consider charting a batteri) when the prices are low.  Using this method you might end up heating up the water many hours away from using it.
+
+#### Energi based rules
+This schedule builder is provided configured peak times, and will attemt to use cheapest posible electricity to heat the tank to reach a target energi level in the tank.
+
+## Legal
 
 This is a 3d party program made to work against [myuplink](https://myuplink.com), and not afflilated with them in any way.
 
-**How to use**
----
+## How to use
 
 1) Download the program.
 2) Configure the application.json
@@ -22,22 +31,19 @@ This is a 3d party program made to work against [myuplink](https://myuplink.com)
 Deploy via docker:
 <https://hub.docker.com/r/erlingsaeterdal/myuplinksmartconnect>
 
-**Future plan**
----
+## Future plan
 
 - Full integration with home assistant as a integration? ( This depends a bit on having someone know the homeassistant part, to help build a homeassistant integration that can connect to the docker container over MTQQ)
 
 *How far this is taken depends alot of to what degree others use it*
 
-**Configuration explained:**
----
+## Configuration explained:
 
 - UserName - Your username to myuplink.com ( Sadly the public facing APi, does not allow for reschedules..)
 - Password - Your password for myuplink.com
 - ConsoleLogLevel - Sets the logs shown in the console window (Default Information), posible values Verbose,Debug,Information,Warning,Error,Fatal
 
-**Heating schedule based settings**
----
+## Heating schedule based settings
 
 - ChangeSchedule - Change schedule automaticly based on defined rules (Default on.)
 - EnergiBasedCostSaving - Energi based rules instead of pure price based ( More below ).
@@ -47,8 +53,7 @@ Deploy via docker:
 - HighPowerTargetTemperature - Target temperature in high mode, default 70c
 - EnergiBasedPeakTimes - When using Energi based rules, this sets the target where the water should be at HighPowerTargetTemperature.
 
-**Optional mqtt Configuration, used to connect to smarthouse solution like homeassistant**
----
+## Optional mqtt Configuration, used to connect to smarthouse solution like homeassistant
 
 - MQTTServer - IP address or FQDN of mqtt, this is optional.
 - MQTTServerPort - The port of the mqtt server, this is optional.
@@ -56,8 +61,7 @@ Deploy via docker:
 - MQTTPassword - If the mqtt requires username and passord.
 - MQTTLogLevel - Sets the logs shown in the console window (Default Warning), posible values Verbose,Debug,Information,Warning,Error,Fatal
 
-**Recommended configuration.**
----
+## Recommended configuration.
 
 This works for my famility, with 1 adult male and a wife. Both taking showers that last 10+ min pr day.
 
@@ -67,8 +71,7 @@ This works for my famility, with 1 adult male and a wife. Both taking showers th
  *Heater should be in schedule mode.*
 *If your wondering how many hours pr day the water heater is potensialy on, please combine the 2 above numbers.*
 
-**FAQ**
----
+## FAQ
 
 Q) What are the different scheduling rules
 
@@ -90,8 +93,7 @@ Q) When does the application change the schedule?
 Q) Can i force it to update the schedule?
 > Yes, if you restart the service/docker after the target schedule change time ( But before midnight), it will force a schedule update.
 
-**Setup Homeassistant sensor, in configuration.yml**
----
+## Setup Homeassistant sensor, in configuration.yml
 
 18760NE2240322014631 needs to be replaced with the ID of your hotwater heater, simplest way to find out is to just read the console output of this application*
 

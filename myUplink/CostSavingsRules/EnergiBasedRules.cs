@@ -78,7 +78,7 @@ namespace MyUplinkSmartConnect.CostSavings
                         if (price.Start.Date != targetSchedule.Date)
                             continue;
 
-                        if (price.RecommendedHeatingPower != currentPowerLevel || sch == null)
+                        if (price.TargetHeatingPower != currentPowerLevel || sch == null)
                         {
                             if (sch != null)
                                 WaterHeaterSchedule.Add(sch);

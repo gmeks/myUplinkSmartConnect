@@ -9,13 +9,14 @@ namespace MyUplinkSmartConnect
 {
     public class EnvVariables
     {
-        public Dictionary<string, string> _machine;
+        readonly Dictionary<string, string> _machine;
+
         public EnvVariables()
         {
             _machine = new Dictionary<string, string>();
-            GetVariables(ref _machine, EnvironmentVariableTarget.Process);
-            GetVariables(ref _machine, EnvironmentVariableTarget.User);
-            GetVariables(ref _machine, EnvironmentVariableTarget.Machine);
+            GetVariables(EnvironmentVariableTarget.Process);
+            GetVariables(EnvironmentVariableTarget.User);
+            GetVariables(EnvironmentVariableTarget.Machine);
         }
 
         public EnvVariables(Dictionary<string,object> tmpList)
@@ -24,22 +25,14 @@ namespace MyUplinkSmartConnect
 
             foreach(var item in tmpList)
             {
-                var value = tmpList[item.Key]?.ToString() ?? "";
-
-                if(value == null)
-                {
-                    _machine.Add(item.Key.ToLower(), "");
-                }
-                else
-                {
-                    _machine.Add(item.Key.ToLower(), value);
-                }                
+                string? value = tmpList[item.Key]?.ToString();
+                AddSettingsValue(item.Key, value);
             }
         }
 
         public string GetValue(string keyName,string defaultValue = "")
         {
-            keyName = keyName.ToLower();
+            keyName = keyName.ToLowerInvariant();
             if (_machine.ContainsKey(keyName))
             {
                 Log.Logger.Debug("Environmental variable {KeyName} - {KeyValue}",keyName,_machine[keyName]);
@@ -132,19 +125,40 @@ namespace MyUplinkSmartConnect
             return defaultValue;
         }
 
-        void GetVariables(ref Dictionary<string, string> dic, EnvironmentVariableTarget target)
+        void GetVariables(EnvironmentVariableTarget target)
         {
             var envs = Environment.GetEnvironmentVariables(target);
             foreach (System.Collections.DictionaryEntry item in envs)
             {
-                var keyName = item.Key?.ToString()?.ToLower();
-                if (string.IsNullOrEmpty(keyName) || dic.ContainsKey(keyName))
-                    continue;
+                var keyName = item.Key?.ToString();
+                var value = item.Value?.ToString();
 
-                string value = item.Value?.ToString() ?? "";
-                if(!string.IsNullOrEmpty(value))
-                    dic.Add(keyName, value);
+                AddSettingsValue(keyName, value);
             }
+        }
+
+        void AddSettingsValue(string? keyName,string? value)
+        {            
+            if(string.IsNullOrEmpty(keyName))
+            {
+                Log.Logger.Debug("Cannot add setting with no keyvalue");
+                return;
+            }
+
+            var tmpKeyName = keyName.ToLowerInvariant();
+            if (_machine.ContainsKey(tmpKeyName))
+            {
+                Log.Logger.Debug("Will not add duplicate key values");
+                return;
+            }
+
+            if (string.IsNullOrEmpty(value))
+            {
+                Log.Logger.Debug("{Key} was setting did not have a value, and will be ignored",keyName);
+                return;
+            }
+
+            _machine.Add(tmpKeyName, value);
         }
     }
 }
