@@ -1,4 +1,5 @@
-﻿using MyUplinkSmartConnect.Models;
+﻿using MyUplinkSmartConnect.ExternalPrice;
+using MyUplinkSmartConnect.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +16,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
 
         List<HeaterWeeklyEvent> WaterHeaterSchedule { get; set; } 
 
-        bool GenerateSchedule(string weekFormat, params DateTime[] datesToSchuedule);
+        bool GenerateSchedule(string weekFormat,bool runLegionellaHeating, params DateTime[] datesToSchuedule);
 
         void LogSchedule();
 

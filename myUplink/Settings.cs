@@ -59,6 +59,18 @@ namespace MyUplinkSmartConnect
         public MQTTSender MQTTSender { get; set; } = new MQTTSender();
 
         [JsonIgnore]
+        public bool RequireUseOfM2ForLegionellaProgram
+        {
+            get
+            {
+                if(HighPowerTargetTemperature < 75)
+                    return true;
+
+                return false;
+            }
+        }
+
+        [JsonIgnore]
         public bool MQTTActive
         {
             get

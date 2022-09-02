@@ -40,12 +40,12 @@ namespace MyUplinkSmartConnect.CostSavings
             File.WriteAllText("c:\\temp\\1.csv", csv.ToString());
         }
 
-        public bool GenerateSchedule(string weekFormat, params DateTime[] datesToSchuedule)
+        public bool GenerateSchedule(string weekFormat, bool runLegionellaHeating, params DateTime[] datesToSchuedule)
         {
             // Turns out there is a maximum number of "events" so we have to wipe out all other days.
             WaterHeaterSchedule.Clear();
 
-            return GenerateRemoteSchedule(weekFormat, CurrentState.PriceList, datesToSchuedule); ;
+            return GenerateRemoteSchedule(weekFormat,runLegionellaHeating, CurrentState.PriceList, datesToSchuedule); ;
         }  
     }
 }

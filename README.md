@@ -51,7 +51,7 @@ Deploy via docker:
 - WaterHeaterMediumPowerInHours - This the number of hours pr day the water heater is running at half power, but with a lower "target temperature"
 - MediumPowerTargetTemperature - Target temperature in medium mode, default 50c
 - HighPowerTargetTemperature - Target temperature in high mode, default 70c
-- EnergiBasedPeakTimes - When using Energi based rules, this sets the target where the water should be at HighPowerTargetTemperature.
+- EnergiBasedPeakTimes - When using Energi based rules, this sets the target where the water should be at HighPowerTargetTemperature. Valid values are: name of day ( example: monday)
 
 ## Optional mqtt Configuration, used to connect to smarthouse solution like homeassistant
 
@@ -65,8 +65,18 @@ Deploy via docker:
 
 This works for my famility, with 1 adult male and a wife. Both taking showers that last 10+ min pr day.
 
+### Price based rules
+
 - WaterHeaterMaxPowerInHours = 5
 - WaterHeaterMediumPowerInHours = 10
+
+### Energi based rules
+
+- EnergiBasedCostSaving=true
+- EnergiBasedPeakTimes=weekday6,weekday21,weekday23,weekend11,weekend23
+- WaterHeaterMaxPowerInHours=3
+- WaterHeaterMediumPowerInHours=11
+- HighPowerTargetTemprature=60
 
  *Heater should be in schedule mode.*
 *If your wondering how many hours pr day the water heater is potensialy on, please combine the 2 above numbers.*
@@ -89,6 +99,9 @@ Q) What are modes and how are they used?
 Q) When does the application change the schedule?
 
 > The application will change the schedule at a set thats different for each user. You will see you time in the logs ( [16:47:05 INF] Target Schedule change time is 15:17  ) We spread out the load of when to change the schedule, simply because having all heaters >attemting to do it at the same is bad practice and might overload the remote apis.
+
+Q) When the heater is set to start heating at XX:YY it starts an hour earlier/later then desired.
+> There is a hidden Timezone setting on myuplink.com -> System Menu -> Settings -> Timezone offset
 
 Q) Can i force it to update the schedule?
 > Yes, if you restart the service/docker after the target schedule change time ( But before midnight), it will force a schedule update.

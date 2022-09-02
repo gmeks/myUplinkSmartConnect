@@ -13,11 +13,19 @@ namespace MyUplinkSmartConnect.CostSavings
 {
     internal class EnergiBasedRules : RulesBase, ICostSavingRules
     {
-        const double DesiredMinmalEnergi = 10.0d;
-        const double DesiredMaximalEnergi = 14.0d;
+        const double energiLeakPrHour = 1d;
+        const int TankVolume = 187; // fixme, tank valume should not be hardcoded.
+        double _desiredMinmalTankEnergi;
+        double _desiredMaximalTankEnergi;
 
         readonly List<WaterHeaterState> _tankHeatingSchedule = new List<WaterHeaterState>();
         readonly List<PeakTimeSchedule> _peakTimeSchedule = new List<PeakTimeSchedule>();
+
+        public EnergiBasedRules()
+        {
+            _desiredMinmalTankEnergi = EnergiInTank(TankVolume, Settings.Instance.MediumPowerTargetTemperature);
+            _desiredMaximalTankEnergi = EnergiInTank(TankVolume, Settings.Instance.HighPowerTargetTemperature);
+        }
 
         class WaterHeaterState : ElectricityPriceInformation
         {
@@ -56,13 +64,13 @@ namespace MyUplinkSmartConnect.CostSavings
             File.WriteAllText("c:\\temp\\1.csv", csv.ToString());
         }
 
-        public bool GenerateSchedule(string weekFormat, params DateTime[] datesToSchuedule)
+        public bool GenerateSchedule(string weekFormat, bool runLegionellaHeating, params DateTime[] datesToSchuedule)
         {
             CreateScheduleEmty();
             ReCalculateHeatingTimes();
 
             var scheduleList = JsonUtils.CloneTo<List<ElectricityPriceInformation>>(_tankHeatingSchedule);
-            var status = GenerateRemoteSchedule(weekFormat, scheduleList, datesToSchuedule);
+            var status = GenerateRemoteSchedule(weekFormat, runLegionellaHeating, scheduleList, datesToSchuedule);
             return status;
         }
 
@@ -76,10 +84,9 @@ namespace MyUplinkSmartConnect.CostSavings
             {
                 if (IsPeakWaterUsage(_tankHeatingSchedule[i].Start))
                 {
-                    var neededEnergiInTank = DesiredMaximalEnergi - _tankHeatingSchedule[i].ExpectedEnergiLevel;
+                    var neededEnergiInTank = _desiredMaximalTankEnergi - _tankHeatingSchedule[i].ExpectedEnergiLevel;
                     int lastChangeIndex = i;
-
-                    int changesDone = 0;
+                    //int changesDone = 0;
 
                     while(lastChangeIndex != 0)
                     {
@@ -87,7 +94,7 @@ namespace MyUplinkSmartConnect.CostSavings
                         {
                             neededEnergiInTank -= 2.0d;
                             _tankHeatingSchedule[lastChangeIndex].TargetHeatingPower = WaterHeaterDesiredPower.Watt2000;
-                            changesDone++;
+                            //changesDone++;
                         }
 
                         if (neededEnergiInTank <= 0)
@@ -111,7 +118,7 @@ namespace MyUplinkSmartConnect.CostSavings
             {
                 if (i == 0)
                 {
-                    _tankHeatingSchedule[i].ExpectedEnergiLevel = DesiredMinmalEnergi;
+                    _tankHeatingSchedule[i].ExpectedEnergiLevel = _desiredMinmalTankEnergi;
                 }
                 else
                 {
@@ -123,12 +130,12 @@ namespace MyUplinkSmartConnect.CostSavings
         double CalculateEnergiChangeTank(WaterHeaterState last)
         {
             const double EnergiChangePrHour2Kwh = 2;
-            const double EnergiChangePrHour07Kwh = 0.7;
+            
             double newEnergiLevel;
             switch (last.TargetHeatingPower)
             {
                 case WaterHeaterDesiredPower.Watt2000:
-                    if (last.ExpectedEnergiLevel < DesiredMaximalEnergi)
+                    if (last.ExpectedEnergiLevel < _desiredMaximalTankEnergi)
                     {
                         // We added up 1 hour of full powa.
                         newEnergiLevel = last.ExpectedEnergiLevel + EnergiChangePrHour2Kwh;
@@ -139,22 +146,15 @@ namespace MyUplinkSmartConnect.CostSavings
                     }
                     break;
 
+                case WaterHeaterDesiredPower.Watt1300:
                 case WaterHeaterDesiredPower.Watt700:
-                    if (last.ExpectedEnergiLevel < DesiredMinmalEnergi)
-                    {
-                        // We added up 1 hour of full powa.
-                        newEnergiLevel = last.ExpectedEnergiLevel + EnergiChangePrHour07Kwh;
-                    }
-                    else
-                    {
-                        newEnergiLevel = last.ExpectedEnergiLevel; // We likly did not heat the water, but kept the same energilevel
-                    }
+                    newEnergiLevel = _desiredMinmalTankEnergi; // We assume that we reach the target level.
                     break;
 
                 default:
                 case WaterHeaterDesiredPower.None:
-                    if (last.ExpectedEnergiLevel > DesiredMinmalEnergi)
-                        newEnergiLevel = last.ExpectedEnergiLevel - 1; // Energileak of 1 kw pr hour with high tempratures.
+                    if (last.ExpectedEnergiLevel > _desiredMinmalTankEnergi)
+                        newEnergiLevel = last.ExpectedEnergiLevel - energiLeakPrHour; // Energileak of 1 kw pr hour with high tempratures.
                     else
                         newEnergiLevel = last.ExpectedEnergiLevel;
                     break;
@@ -243,16 +243,28 @@ namespace MyUplinkSmartConnect.CostSavings
                 _tankHeatingSchedule.Add(newPrice);
             }
 
-            // Firt we just use all recommended heating windows, to keep the tank at minimal desired level.
+            // First we just use all recommended heating windows, to keep the tank at minimal desired level.
             for (int i = 0; i < _tankHeatingSchedule.Count; i++)
             {
                 _tankHeatingSchedule[i].HeatingModeBasedOnPrice = _tankHeatingSchedule[i].TargetHeatingPower;
 
-                if(_tankHeatingSchedule[i].TargetHeatingPower != WaterHeaterDesiredPower.None && _tankHeatingSchedule[i].TargetHeatingPower != WaterHeaterDesiredPower.Watt700)
+                if(_tankHeatingSchedule[i].TargetHeatingPower != WaterHeaterDesiredPower.None && _tankHeatingSchedule[i].TargetHeatingPower != WaterHeaterDesiredPower.Watt1300)
                 {
-                    _tankHeatingSchedule[i].TargetHeatingPower = WaterHeaterDesiredPower.Watt700;
+                    _tankHeatingSchedule[i].TargetHeatingPower = WaterHeaterDesiredPower.Watt1300;
                 }
             }
+        }
+
+        static double RequiredKillotWattForChange(int tankVolume,int startTemprature,int targetTemptrature)
+        {
+            //https://www.electrical4u.net/energy-calculation/water-heater-calculator-time-required-to-heat-water/
+            return 4.2 * tankVolume  * (targetTemptrature - startTemprature) / 3600;
+        }
+
+        static double EnergiInTank(int tankVolume, int temprature)
+        {
+            //https://www.electrical4u.net/energy-calculation/water-heater-calculator-time-required-to-heat-water/
+            return 4.2 * tankVolume * temprature / 3600;
         }
     }
 }

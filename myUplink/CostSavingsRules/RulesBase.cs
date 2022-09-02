@@ -36,6 +36,16 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                     isGood = VerifyWaterHeaterMode(mode, WaterHeaterDesiredPower.None, Settings.Instance.MediumPowerTargetTemperature);
                 }
 
+                if (Settings.Instance.EnergiBasedCostSaving && mode.name.StartsWith("M3"))
+                {
+                    isGood = VerifyWaterHeaterMode(mode, WaterHeaterDesiredPower.Watt1300, Settings.Instance.MediumPowerTargetTemperature);
+                }
+
+                if (Settings.Instance.RequireUseOfM2ForLegionellaProgram && mode.name.StartsWith("M2"))
+                {
+                    isGood = VerifyWaterHeaterMode(mode, WaterHeaterDesiredPower.Watt2000, 75);
+                }
+
                 if (!isGood)
                     allModesGood = false;
             }
@@ -47,7 +57,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
 
         public List<HeaterWeeklyEvent> WaterHeaterSchedule { get; set; } = new List<HeaterWeeklyEvent>();
 
-        internal bool GenerateRemoteSchedule(string weekFormat,IReadOnlyList<ElectricityPriceInformation> schedule, params DateTime[] datesToSchuedule)
+        internal bool GenerateRemoteSchedule(string weekFormat,bool runLegionellaProgram,IReadOnlyList<ElectricityPriceInformation> schedule, params DateTime[] datesToSchuedule)
         {
             WaterHeaterSchedule.Clear();
 
@@ -126,6 +136,17 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                 }
             }
 
+#if !DEBUG
+            if(runLegionellaProgram)
+            {
+                CreateLegionellaHeating(datesToSchuedule);
+            }
+#else
+            if (runLegionellaProgram)
+            {
+                CreateLegionellaHeating(datesToSchuedule);
+            }
+#endif
             return true;
         }
 
@@ -191,6 +212,158 @@ namespace MyUplinkSmartConnect.CostSavingsRules
             }
 
             throw new Exception("Failed to find ");
+        }
+
+        bool CreateLegionellaHeating(params DateTime[] datesToSchuedule)
+        {
+            Log.Logger.Debug("Will attemt to find best posible moment to heat water above 75c, to prevent legionella");
+            var requiredHeatingMode = -1;
+            var heatingModeHigh = -1;
+            var heatingModeMedium = -1;
+
+            var timeSlotList = new List<TimeSlot>();
+
+            foreach (var mode in WaterHeaterModes)
+            {
+                if (string.IsNullOrEmpty(mode.name))
+                    continue;
+
+                if (Settings.Instance.RequireUseOfM2ForLegionellaProgram && mode.name.StartsWith("M2"))
+                {
+                    requiredHeatingMode = mode.modeId;
+                    continue;
+                }
+                if (!Settings.Instance.RequireUseOfM2ForLegionellaProgram && mode.name.StartsWith("M6"))
+                {
+                    requiredHeatingMode = mode.modeId;
+                    heatingModeHigh = mode.modeId;
+                    continue;
+                }
+                if (Settings.Instance.EnergiBasedCostSaving && mode.name.StartsWith("M3") || !Settings.Instance.EnergiBasedCostSaving && mode.name.StartsWith("M5"))
+                {
+                    heatingModeMedium = mode.modeId;
+                    continue;
+                }
+            }
+
+            const int requiredContinuousHours = 3;
+            if (!Settings.Instance.RequireUseOfM2ForLegionellaProgram)
+            {
+                for (int i = 0; i < WaterHeaterSchedule.Count; i++)   // First we check there is already scheduled a heating that will cover legionella heating.
+                {
+                    if (WaterHeaterSchedule[i].modeId != requiredHeatingMode)
+                        continue;
+
+                    if (!ContainsDay(WaterHeaterSchedule[i].Day, datesToSchuedule))
+                        continue;
+
+                    var timeSlot = GetScheduleTimes(i);
+                    if (timeSlot.Duration.TotalHours >= requiredContinuousHours)
+                    {
+                        timeSlotList.Add(timeSlot);
+                        Log.Logger.Information("There is already a heating schedules that should heat the water to 75c, this should prevent legionella and reset the timer");
+                    }
+                }
+            }
+            else
+            {
+                // We check if its posible to change M6 program to M2
+
+                for (int i = 0; i < WaterHeaterSchedule.Count; i++) 
+                {
+                    if (WaterHeaterSchedule[i].modeId != heatingModeHigh)
+                        continue;
+
+                    if (!ContainsDay(WaterHeaterSchedule[i].Day, datesToSchuedule))
+                        continue;
+
+                    var timeSlot = GetScheduleTimes(i);
+                    if (timeSlot.Duration.TotalHours >= requiredContinuousHours)
+                    {
+                        Log.Logger.Information("There is already a heating schedules thats 3 hour long, we change to to heat water to 75c, this should prevent legionella and reset the timer");
+                        timeSlotList.Add(timeSlot);
+                    }
+                }
+            }
+
+
+            if(timeSlotList.Count == 0) // We did not find a good window to heat up, so we find a window based purly on price.
+            {
+                for (int i = 1; i < (WaterHeaterSchedule.Count - 1); i++)
+                {
+                    if (WaterHeaterSchedule[i].modeId != heatingModeMedium)
+                        continue;
+
+                    if (!ContainsDay(WaterHeaterSchedule[i].Day, datesToSchuedule))
+                        continue;
+
+                    var timeSlot = GetScheduleTimes(i);
+                    if (timeSlot.Duration.TotalHours >= requiredContinuousHours)
+                    {
+                        Log.Logger.Information("There is already a heating schedules thats 3 hour long, we change to to heat water to 75c, this should prevent legionella and reset the timer");
+                        timeSlotList.Add(timeSlot); 
+                    }
+                }
+            }
+
+            var sortedTimeSlotList = timeSlotList.OrderBy(x => x.Price).ToList();
+            if(sortedTimeSlotList.Count != 0)
+            {
+                WaterHeaterSchedule[sortedTimeSlotList[0].TimeSlotIndex].modeId = requiredHeatingMode;
+            }
+
+            Log.Logger.Debug("Failed to find schedule to change for legionella program to run, will allow water heater to do it on its own.");
+            return false;
+        }
+
+        TimeSlot GetScheduleTimes(int index)
+        {
+            var timeslot = new TimeSlot();
+            string strDate = DateTime.Now.ToLongDateString();
+
+            var startTime = DateTime.Parse($"{strDate} {WaterHeaterSchedule[index].startTime}");
+            DateTime endTime;
+
+            if ((index + 1) < WaterHeaterSchedule.Count)
+                endTime = DateTime.Parse($"{strDate} {WaterHeaterSchedule[index + 1].startTime}");
+            else
+                endTime = DateTime.Parse($"{strDate} 23:59:00"); // There is no timeslot, so we assume it goes to end of the day.
+
+            timeslot.Duration = endTime - startTime;
+            timeslot.TimeSlotIndex = index;
+
+            if (CurrentState.PriceList != null)
+            {
+                foreach(var priceItem in CurrentState.PriceList)
+                {
+                    if(priceItem.Start.InRange(startTime,endTime))
+                    {
+                        timeslot.Price += priceItem.Price;
+                    }
+                }
+            }
+
+            return timeslot;
+        }
+
+        class TimeSlot
+        {
+            public TimeSpan Duration { get; set; }
+
+            public double Price { get; set; }
+
+            public int TimeSlotIndex = -1;
+        }
+
+        static bool ContainsDay(DayOfWeek day, DateTime[] datesToSchuedule)
+        {
+            foreach(var date in datesToSchuedule)
+            {
+                if (date.DayOfWeek == day)
+                    return true;
+            }
+
+            return false;
         }
 
         internal static bool VerifyWaterHeaterMode(WaterHeaterMode mode, WaterHeaterDesiredPower desiredPower, int targetTemprature)

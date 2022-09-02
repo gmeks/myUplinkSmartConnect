@@ -17,6 +17,8 @@ namespace MyUplinkSmartConnect.Models
         EnergiStored = 302, // Estimated energi stored in tank
         EstimatedPower = 400, // Estimated electricity usage to heat water now.
         EnergyTotal = 303, // Electricity used in total.
+        LegionellaPreventionLast = 509,
+        LegionellaPreventionNext=514,
     }
 
     internal class CurrentValues

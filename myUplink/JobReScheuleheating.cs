@@ -1,6 +1,7 @@
 ﻿using MyUplinkSmartConnect.CostSavings;
 using MyUplinkSmartConnect.CostSavingsRules;
 using MyUplinkSmartConnect.ExternalPrice;
+using MyUplinkSmartConnect.Models;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -70,6 +71,8 @@ namespace MyUplinkSmartConnect
 
                 foreach (var tmpdevice in device.devices)
                 {
+                    var legionella = await ShouldRunLegionellaProgram(tmpdevice);
+
                     ICostSavingRules costSaving;
                     if(Settings.Instance.EnergiBasedCostSaving)
                     {
@@ -84,6 +87,7 @@ namespace MyUplinkSmartConnect
 
                     costSaving.WaterHeaterSchedule = await Settings.Instance.myuplinkApi.GetWheeklySchedules(tmpdevice);
                     costSaving.WaterHeaterModes = await Settings.Instance.myuplinkApi.GetCurrentModes(tmpdevice);
+
                     var weekdayOrder = Settings.Instance.myuplinkApi.GetCurrentDayOrder(tmpdevice);
 
                     if (!costSaving.VerifyWaterHeaterModes())
@@ -97,8 +101,8 @@ namespace MyUplinkSmartConnect
                         }
                     }                    
 
-                    if (hasTomorrowElectricityPrice && costSaving.GenerateSchedule(weekdayOrder, cleanDate, cleanDate.AddDays(1))  || 
-                        !hasTomorrowElectricityPrice && costSaving.GenerateSchedule(weekdayOrder, cleanDate))
+                    if (hasTomorrowElectricityPrice && costSaving.GenerateSchedule(weekdayOrder, legionella, cleanDate, cleanDate.AddDays(1))  || 
+                        !hasTomorrowElectricityPrice && costSaving.GenerateSchedule(weekdayOrder, legionella, cleanDate))
                     {                        
 #if DEBUG
                         costSaving.LogToCSV();
@@ -126,6 +130,28 @@ namespace MyUplinkSmartConnect
                             return hasTomorrowElectricityPrice; // If we did not get tomorrows prices we return false so we can try the schedule again.
                         }
                     }
+                }
+            }
+            return false;
+        }
+
+
+        async static Task<bool> ShouldRunLegionellaProgram(Device device)
+        {
+            const int NextRunHoursBeforSchedule = 60;
+
+            var parameters = await Settings.Instance.myuplinkApi.GetDevicePoints(device, CurrentPointParameterType.LegionellaPreventionNext);
+
+            if (!parameters.Any())
+                return false;
+
+            foreach (var para in parameters)
+            {
+                var parm = (CurrentPointParameterType)int.Parse(para.parameterId ?? "0");
+                switch (parm)
+                {
+                    case CurrentPointParameterType.LegionellaPreventionNext:
+                        return (para.value <= NextRunHoursBeforSchedule);
                 }
             }
             return false;

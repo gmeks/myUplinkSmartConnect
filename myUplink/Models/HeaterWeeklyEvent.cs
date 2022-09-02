@@ -26,7 +26,6 @@ namespace MyUplinkSmartConnect.Models
                 if(string.IsNullOrEmpty(startDay))
                     throw new NullReferenceException("startDay");
 
-
                 return Enum.Parse<DayOfWeek>(startDay);
             }
         }
