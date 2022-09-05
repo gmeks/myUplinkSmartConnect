@@ -19,6 +19,12 @@ namespace MyUplinkSmartConnect.Models
         public Guid phantom_id { get; set; }
 
         [JsonIgnore]
+        public DateTime Date
+        {
+            get;set;
+        }
+
+        [JsonIgnore]
         public DayOfWeek Day
         {
             get

@@ -3,7 +3,9 @@ using MyUplinkSmartConnect.Models;
 using Serilog;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -97,6 +99,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                             sch.startDay = targetSchedule.DayOfWeek.ToString();
                             sch.startTime = price.Start.ToString("HH:mm:ss");
                             sch.modeId = GetModeFromWaterHeaterDesiredPower(price.TargetHeatingPower);
+                            sch.Date = targetSchedule;
                             currentPowerLevel = price.TargetHeatingPower;
                             addedPriceEvents++;
                         }
@@ -142,10 +145,13 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                 CreateLegionellaHeating(datesToSchuedule);
             }
 #else
+            
             if (runLegionellaProgram)
             {
                 CreateLegionellaHeating(datesToSchuedule);
             }
+            
+            //CreateLegionellaHeating(datesToSchuedule);
 #endif
             return true;
         }
@@ -217,7 +223,8 @@ namespace MyUplinkSmartConnect.CostSavingsRules
         bool CreateLegionellaHeating(params DateTime[] datesToSchuedule)
         {
             Log.Logger.Debug("Will attemt to find best posible moment to heat water above 75c, to prevent legionella");
-            var requiredHeatingMode = -1;
+
+            var heatingModeLegionnella = -1;
             var heatingModeHigh = -1;
             var heatingModeMedium = -1;
 
@@ -230,16 +237,21 @@ namespace MyUplinkSmartConnect.CostSavingsRules
 
                 if (Settings.Instance.RequireUseOfM2ForLegionellaProgram && mode.name.StartsWith("M2"))
                 {
-                    requiredHeatingMode = mode.modeId;
+                    heatingModeLegionnella = mode.modeId;
                     continue;
                 }
-                if (!Settings.Instance.RequireUseOfM2ForLegionellaProgram && mode.name.StartsWith("M6"))
+                else if (!Settings.Instance.RequireUseOfM2ForLegionellaProgram && mode.name.StartsWith("M6"))
                 {
-                    requiredHeatingMode = mode.modeId;
+                    heatingModeLegionnella = mode.modeId;
                     heatingModeHigh = mode.modeId;
                     continue;
                 }
-                if (Settings.Instance.EnergiBasedCostSaving && mode.name.StartsWith("M3") || !Settings.Instance.EnergiBasedCostSaving && mode.name.StartsWith("M5"))
+                else if (mode.name.StartsWith("M6"))
+                {
+                    heatingModeHigh= mode.modeId;
+                    continue;
+                }
+                else if (Settings.Instance.EnergiBasedCostSaving && mode.name.StartsWith("M3") || !Settings.Instance.EnergiBasedCostSaving && mode.name.StartsWith("M5"))
                 {
                     heatingModeMedium = mode.modeId;
                     continue;
@@ -247,48 +259,48 @@ namespace MyUplinkSmartConnect.CostSavingsRules
             }
 
             const int requiredContinuousHours = 3;
-            if (!Settings.Instance.RequireUseOfM2ForLegionellaProgram)
+            for (int i = 0; i < WaterHeaterSchedule.Count; i++)
             {
-                for (int i = 0; i < WaterHeaterSchedule.Count; i++)   // First we check there is already scheduled a heating that will cover legionella heating.
+                if (WaterHeaterSchedule[i].modeId != heatingModeHigh)
+                    continue;
+
+                if (!ContainsDay(WaterHeaterSchedule[i].Day, datesToSchuedule))
+                    continue;
+
+                // First we check there is already scheduled a heating that will cover legionella heating
+                // If needed we change the heating so it above 75c.
+
+                var timeSlot = GetScheduleTimes(i);
+                if (timeSlot.Duration.TotalHours == 0)
+                    continue; // Most likely this is the past, so it cannto be used.
+
+                if (timeSlot.Duration.TotalHours >= requiredContinuousHours)
                 {
-                    if (WaterHeaterSchedule[i].modeId != requiredHeatingMode)
-                        continue;
+                    timeSlot.Price = 0; // This is perfect, we already need this heating, using it will add 0 ekstra cost.
 
-                    if (!ContainsDay(WaterHeaterSchedule[i].Day, datesToSchuedule))
-                        continue;
-
-                    var timeSlot = GetScheduleTimes(i);
-                    if (timeSlot.Duration.TotalHours >= requiredContinuousHours)
-                    {
-                        timeSlotList.Add(timeSlot);
-                        Log.Logger.Information("There is already a heating schedules that should heat the water to 75c, this should prevent legionella and reset the timer");
-                    }
+                    timeSlotList.Add(timeSlot);
+                    Log.Logger.Information("There is already a heating schedules that should heat the water to 75c, this should prevent legionella and reset the timer");
                 }
-            }
-            else
-            {
-                // We check if its posible to change M6 program to M2
-
-                for (int i = 0; i < WaterHeaterSchedule.Count; i++) 
+                else
                 {
-                    if (WaterHeaterSchedule[i].modeId != heatingModeHigh)
-                        continue;
+                    // Now we check the price if we extend the heating window.
+                    var extendedInHours = (requiredContinuousHours - Convert.ToInt32(timeSlot.Duration.TotalHours));
+                    timeSlot.ExtendedTimeSlot = extendedInHours * -1;
 
-                    if (!ContainsDay(WaterHeaterSchedule[i].Day, datesToSchuedule))
-                        continue;
+                    var result = GetDateTimeFromHourString(WaterHeaterSchedule[i].startTime, WaterHeaterSchedule[i + 1].startTime, WaterHeaterSchedule[i].Date);
+                    result.starTime = result.starTime.AddHours(timeSlot.ExtendedTimeSlot);
+                    timeSlot.Price = CalculatePriceTotal(result.starTime, result.endTime);
+                    timeSlot.Price = (timeSlot.Price / requiredContinuousHours) * extendedInHours;
 
-                    var timeSlot = GetScheduleTimes(i);
-                    if (timeSlot.Duration.TotalHours >= requiredContinuousHours)
-                    {
-                        Log.Logger.Information("There is already a heating schedules thats 3 hour long, we change to to heat water to 75c, this should prevent legionella and reset the timer");
-                        timeSlotList.Add(timeSlot);
-                    }
-                }
+                    timeSlotList.Add(timeSlot);
+
+                    Log.Logger.Information("There is already a heating schedules that should heat the water to 75c, with extending this by {hours} ", extendedInHours);
+                }                
             }
 
-
-            if(timeSlotList.Count == 0) // We did not find a good window to heat up, so we find a window based purly on price.
+            if (true)
             {
+                // We did not find a good window to heat up, so we find a window based purly on price. This is the worse case.
                 for (int i = 1; i < (WaterHeaterSchedule.Count - 1); i++)
                 {
                     if (WaterHeaterSchedule[i].modeId != heatingModeMedium)
@@ -309,7 +321,15 @@ namespace MyUplinkSmartConnect.CostSavingsRules
             var sortedTimeSlotList = timeSlotList.OrderBy(x => x.Price).ToList();
             if(sortedTimeSlotList.Count != 0)
             {
-                WaterHeaterSchedule[sortedTimeSlotList[0].TimeSlotIndex].modeId = requiredHeatingMode;
+                WaterHeaterSchedule[sortedTimeSlotList[0].TimeSlotIndex].modeId = heatingModeLegionnella;
+
+                if(sortedTimeSlotList[0].ExtendedTimeSlot != 0)
+                {
+                    var time = GetDateTimeFromHourString(WaterHeaterSchedule[sortedTimeSlotList[0].TimeSlotIndex].startTime, WaterHeaterSchedule[sortedTimeSlotList[0].TimeSlotIndex + 1].startTime, WaterHeaterSchedule[sortedTimeSlotList[0].TimeSlotIndex].Date);
+                    time.starTime = time.starTime.AddHours(sortedTimeSlotList[0].ExtendedTimeSlot);
+
+                    WaterHeaterSchedule[sortedTimeSlotList[0].TimeSlotIndex].startTime = time.starTime.ToString("HH:mm:ss");
+                }
             }
 
             Log.Logger.Debug("Failed to find schedule to change for legionella program to run, will allow water heater to do it on its own.");
@@ -319,31 +339,56 @@ namespace MyUplinkSmartConnect.CostSavingsRules
         TimeSlot GetScheduleTimes(int index)
         {
             var timeslot = new TimeSlot();
-            string strDate = DateTime.Now.ToLongDateString();
+            (DateTime starTime, DateTime endTime) result = GetDateTimeFromHourString(WaterHeaterSchedule[index].startTime, WaterHeaterSchedule[index + 1].startTime, WaterHeaterSchedule[index].Date);
 
-            var startTime = DateTime.Parse($"{strDate} {WaterHeaterSchedule[index].startTime}");
-            DateTime endTime;
-
-            if ((index + 1) < WaterHeaterSchedule.Count)
-                endTime = DateTime.Parse($"{strDate} {WaterHeaterSchedule[index + 1].startTime}");
-            else
-                endTime = DateTime.Parse($"{strDate} 23:59:00"); // There is no timeslot, so we assume it goes to end of the day.
-
-            timeslot.Duration = endTime - startTime;
+            timeslot.Duration = result.endTime - result.starTime;
             timeslot.TimeSlotIndex = index;
 
+            if (result.starTime <= DateTime.Now || timeslot.Duration.TotalHours < 0 || timeslot.Duration.TotalHours > 6)
+            {
+                // We cannot use a timeslot thats in the past. Or it has some other weird value....
+                // the reason we get weird values, is because we dont have dates for days outside the 2 days we are actualy scheduling.
+                timeslot.Duration = new TimeSpan();
+                return timeslot;
+            }                
+   
+            timeslot.Price = CalculatePriceTotal(result.starTime, result.endTime);
+            return timeslot;
+        }
+
+        (DateTime starTime,DateTime endTime) GetDateTimeFromHourString(string? strStart,string? strEnd,DateTime date)
+        {
+            string strDate;
+            if (date == DateTime.MinValue)
+            {
+                if(strEnd == "00:00")
+                    strDate = DateTime.Now.AddDays(1).ToLongDateString();
+                else
+                    strDate = DateTime.Now.ToLongDateString();
+            }                
+            else
+                strDate = date.ToLongDateString();
+
+            var startTime = DateTime.Parse($"{strDate} {strStart}");
+            var endTime = DateTime.Parse($"{strDate} {strEnd}");
+
+            return (startTime, endTime);
+        }
+
+        double CalculatePriceTotal(DateTime startTime,DateTime endTime)
+        {
+            double price = 0;
             if (CurrentState.PriceList != null)
             {
-                foreach(var priceItem in CurrentState.PriceList)
+                foreach (var priceItem in CurrentState.PriceList)
                 {
-                    if(priceItem.Start.InRange(startTime,endTime))
+                    if (priceItem.Start.InRange(startTime, endTime))
                     {
-                        timeslot.Price += priceItem.Price;
+                        price += priceItem.Price;
                     }
                 }
             }
-
-            return timeslot;
+            return price;
         }
 
         class TimeSlot
@@ -352,7 +397,9 @@ namespace MyUplinkSmartConnect.CostSavingsRules
 
             public double Price { get; set; }
 
-            public int TimeSlotIndex = -1;
+            public int ExtendedTimeSlot { get; set; } = 0;// negative value for how far the starttime was extended
+
+            public int TimeSlotIndex { get; set; } = -1;
         }
 
         static bool ContainsDay(DayOfWeek day, DateTime[] datesToSchuedule)

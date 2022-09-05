@@ -138,12 +138,16 @@ namespace MyUplinkSmartConnect
 
         async static Task<bool> ShouldRunLegionellaProgram(Device device)
         {
-            const int NextRunHoursBeforSchedule = 60;
+            Log.Logger.Debug("Should try to find schedule for legionella program");
 
+            const int NextRunHoursBeforSchedule = 60;            
             var parameters = await Settings.Instance.myuplinkApi.GetDevicePoints(device, CurrentPointParameterType.LegionellaPreventionNext);
 
             if (!parameters.Any())
+            {
+                Log.Logger.Debug("No information returned from remote api");
                 return false;
+            }                
 
             foreach (var para in parameters)
             {
@@ -151,9 +155,14 @@ namespace MyUplinkSmartConnect
                 switch (parm)
                 {
                     case CurrentPointParameterType.LegionellaPreventionNext:
-                        return (para.value <= NextRunHoursBeforSchedule);
+                        var shouldRun = (para.value <= NextRunHoursBeforSchedule);
+
+                        Log.Logger.Debug("Next legionella program required to run in {h} hours, returning status: {status}", para.value, shouldRun);
+                        return shouldRun;
                 }
             }
+
+            Log.Logger.Debug("Could not find matching parameter for CurrentPointParameterType.LegionellaPreventionNext");
             return false;
         }
     }
