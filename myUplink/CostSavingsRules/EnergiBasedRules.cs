@@ -227,12 +227,23 @@ namespace MyUplinkSmartConnect.CostSavings
                     }
                     else
                     {
-                        priority.DayOfWeek = new DayOfWeek[] { Enum.Parse<DayOfWeek>(strWeekday) };
+                        priority.DayOfWeek = ParseWeekday(strWeekday);
                     }
 
                     _peakTimeSchedule.Add(priority);
                 }
             }
+        }
+
+        static DayOfWeek[] ParseWeekday(string weekday)
+        {
+            if(Enum.TryParse<DayOfWeek>(weekday,true,out DayOfWeek result))
+            {
+                return new DayOfWeek[] { result };
+            }
+
+            Log.Logger.Warning($"Attemting to read value from EnergiBasedPeakTimes, {weekday} is not a valid day name or (weekend/weekday)", weekday);
+            return Array.Empty<DayOfWeek>();
         }
 
         void CreateScheduleEmty()

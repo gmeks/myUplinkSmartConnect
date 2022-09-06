@@ -78,6 +78,8 @@ This works for my famility, with 1 adult male and a wife. Both taking showers th
 - WaterHeaterMediumPowerInHours=11
 - HighPowerTargetTemprature=60
 
+EnergiBasedPeakTimes takes a commma seperated list of weekdays with clock at the end. Example pr monday21 or weekday21.
+
  *Heater should be in schedule mode.*
 *If your wondering how many hours pr day the water heater is potensialy on, please combine the 2 above numbers.*
 
