@@ -13,51 +13,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
 {
     internal class RulesBase
     {
-        IList<DayOfWeek> _daysInWeek = Array.Empty<DayOfWeek>();
-
-        public bool VerifyWaterHeaterModes()
-        {
-            bool allModesGood = true;
-
-            foreach (var mode in WaterHeaterModes)
-            {
-                if (string.IsNullOrEmpty(mode.name))
-                    throw new NullReferenceException("mode.name cannot be null");
-
-                bool isGood = true;
-                if (mode.name.StartsWith("M6"))
-                {
-                    isGood = VerifyWaterHeaterMode(mode, WaterHeaterDesiredPower.Watt2000, Settings.Instance.HighPowerTargetTemperature);
-                }
-
-                if (mode.name.StartsWith("M5"))
-                {
-                    isGood = VerifyWaterHeaterMode(mode, WaterHeaterDesiredPower.Watt700, Settings.Instance.MediumPowerTargetTemperature);
-                }
-
-                if (mode.name.StartsWith("M4"))
-                {
-                    isGood = VerifyWaterHeaterMode(mode, WaterHeaterDesiredPower.None, Settings.Instance.MediumPowerTargetTemperature);
-                }
-
-                if (Settings.Instance.EnergiBasedCostSaving && mode.name.StartsWith("M3"))
-                {
-                    isGood = VerifyWaterHeaterMode(mode, WaterHeaterDesiredPower.Watt1300, Settings.Instance.MediumPowerTargetTemperature);
-                }
-
-                if (Settings.Instance.RequireUseOfM2ForLegionellaProgram && mode.name.StartsWith("M2"))
-                {
-                    isGood = VerifyWaterHeaterMode(mode, WaterHeaterDesiredPower.Watt2000, 75);
-                }
-
-                if (!isGood)
-                    allModesGood = false;
-            }
-
-            return allModesGood;
-        }
-
-        public List<WaterHeaterMode> WaterHeaterModes { get; set; } = new List<WaterHeaterMode>();
+        IList<DayOfWeek> _daysInWeek = Array.Empty<DayOfWeek>();       
 
         public List<HeaterWeeklyEvent> WaterHeaterSchedule { get; set; } = new List<HeaterWeeklyEvent>();
 
@@ -82,11 +38,11 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                 if (IsDayInsideScheduleWindow(datesToSchuedule, day))
                 {
                     int addedPriceEvents = 0;
-                    var currentPowerLevel = WaterHeaterDesiredPower.Watt2000;
+                    var currentPowerLevel = HeatingMode.Unkown;
 
                     foreach (var price in schedule)
                     {
-                        if (price.TargetHeatingPower != currentPowerLevel || sch == null)
+                        if (price.HeatingMode != currentPowerLevel || sch == null)
                         {
                             if (sch != null)
                                 WaterHeaterSchedule.Add(sch);
@@ -94,9 +50,9 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                             sch = new HeaterWeeklyEvent();
                             sch.startDay = day.ToString();
                             sch.startTime = price.Start.ToString("HH:mm:ss");
-                            sch.modeId = GetModeFromWaterHeaterDesiredPower(price.TargetHeatingPower);
+                            sch.modeId = CurrentState.ModeLookup.GetHeatingModeId(price.HeatingMode);
                             sch.Date = GetDateOfDay(day);
-                            currentPowerLevel = price.TargetHeatingPower;
+                            currentPowerLevel = price.HeatingMode;
                             addedPriceEvents++;
                         }
                     }
@@ -116,7 +72,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                     sch = new HeaterWeeklyEvent();
                     sch.startDay = day.ToString();
                     sch.startTime = "00:00:00";
-                    sch.modeId = GetModeFromWaterHeaterDesiredPower(WaterHeaterDesiredPower.Watt2000);
+                    sch.modeId = CurrentState.ModeLookup.GetHeatingModeId(HeatingMode.HighestTemperature);
                     sch.Date = GetDateOfDay(day);
                     WaterHeaterSchedule.Add(sch);
 
@@ -124,7 +80,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                     sch = new HeaterWeeklyEvent();
                     sch.startDay = day.ToString();
                     sch.startTime = "06:00:00";
-                    sch.modeId = GetModeFromWaterHeaterDesiredPower(WaterHeaterDesiredPower.None);
+                    sch.modeId = CurrentState.ModeLookup.GetHeatingModeId(HeatingMode.HeathingDisabled);
                     sch.Date = GetDateOfDay(day);
                     WaterHeaterSchedule.Add(sch);
 
@@ -132,7 +88,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                     sch = new HeaterWeeklyEvent();
                     sch.startDay = day.ToString();
                     sch.startTime = "12:00:00";
-                    sch.modeId = GetModeFromWaterHeaterDesiredPower(WaterHeaterDesiredPower.Watt700);
+                    sch.modeId = CurrentState.ModeLookup.GetHeatingModeId(HeatingMode.MediumTemperature);
                     sch.Date = GetDateOfDay(day);
                     WaterHeaterSchedule.Add(sch);
                 }
@@ -154,7 +110,6 @@ namespace MyUplinkSmartConnect.CostSavingsRules
 #endif
             return true;
         }
-
 
         internal IEnumerable<DayOfWeek> GetWeekDayOrder(string input)
         {
@@ -197,29 +152,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
             return weekOrder;
         }
 
-        internal int GetModeFromWaterHeaterDesiredPower(WaterHeaterDesiredPower power)
-        {
-            for (int i = WaterHeaterModes.Count - 1; i > 0; i--) // Some might call this a micro optimization, those people would be correct. But also since we place our modes in the end, why not start checking there.
-            {
-                var item = WaterHeaterModes[i];
-                if (item.settings == null)
-                    throw new NullReferenceException("item.settings cannot be null");
-
-                foreach (var settings in item.settings)
-                {
-                    if (settings.settingId == WaterheaterSettingsMode.TargetHeaterWatt)
-                    {
-                        var tmp = settings.HelperDesiredHeatingPower;
-                        if (tmp == power)
-                            return item.modeId;
-                    }
-                }
-            }
-
-            throw new Exception($"Failed to find mode to match power {power}");
-        }
-
-        internal bool IsDayInsideScheduleWindow(ReadOnlySpan<DateTime> datesToSchuedule, DayOfWeek day)
+         internal bool IsDayInsideScheduleWindow(ReadOnlySpan<DateTime> datesToSchuedule, DayOfWeek day)
         {
             foreach (var targetSchedule in datesToSchuedule)
             {
@@ -242,6 +175,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                 if (_daysInWeek[i] == now.DayOfWeek)
                 {
                     indexOfToday = i;
+                    break;
                 }
             }
 
@@ -262,45 +196,13 @@ namespace MyUplinkSmartConnect.CostSavingsRules
         bool CreateLegionellaHeating(params DateTime[] datesToSchuedule)
         {
             Log.Logger.Debug("Will attemt to find best posible moment to heat water above 75c, to prevent legionella");
-
-            var heatingModeLegionnella = -1;
-            var heatingModeHigh = -1;
-            var heatingModeMedium = -1;
-
             var timeSlotList = new List<TimeSlot>();
 
-            foreach (var mode in WaterHeaterModes)
-            {
-                if (string.IsNullOrEmpty(mode.name))
-                    continue;
-
-                if (Settings.Instance.RequireUseOfM2ForLegionellaProgram && mode.name.StartsWith("M2"))
-                {
-                    heatingModeLegionnella = mode.modeId;
-                    continue;
-                }
-                else if (!Settings.Instance.RequireUseOfM2ForLegionellaProgram && mode.name.StartsWith("M6"))
-                {
-                    heatingModeLegionnella = mode.modeId;
-                    heatingModeHigh = mode.modeId;
-                    continue;
-                }
-                else if (mode.name.StartsWith("M6"))
-                {
-                    heatingModeHigh= mode.modeId;
-                    continue;
-                }
-                else if (Settings.Instance.EnergiBasedCostSaving && mode.name.StartsWith("M3") || !Settings.Instance.EnergiBasedCostSaving && mode.name.StartsWith("M5"))
-                {
-                    heatingModeMedium = mode.modeId;
-                    continue;
-                }
-            }
 
             const int requiredContinuousHours = 3;
             for (int i = 0; i < WaterHeaterSchedule.Count; i++)
             {
-                if (WaterHeaterSchedule[i].modeId != heatingModeHigh)
+                if (WaterHeaterSchedule[i].modeId != CurrentState.ModeLookup.GetHeatingModeId(HeatingMode.HighestTemperature))
                     continue;
 
                 if (!IsDayInsideScheduleWindow(datesToSchuedule, WaterHeaterSchedule[i].Day))
@@ -342,7 +244,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                 // We did not find a good window to heat up, so we find a window based purly on price. This is the worse case.
                 for (int i = 1; i < (WaterHeaterSchedule.Count - 1); i++)
                 {
-                    if (WaterHeaterSchedule[i].modeId != heatingModeMedium)
+                    if (WaterHeaterSchedule[i].modeId != CurrentState.ModeLookup.GetHeatingModeId(HeatingMode.MediumTemperature))
                         continue;
 
                     if (!IsDayInsideScheduleWindow(datesToSchuedule, WaterHeaterSchedule[i].Day))
@@ -360,7 +262,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
             var sortedTimeSlotList = timeSlotList.OrderBy(x => x.Price).ToList();
             if(sortedTimeSlotList.Count != 0)
             {
-                WaterHeaterSchedule[sortedTimeSlotList[0].TimeSlotIndex].modeId = heatingModeLegionnella;
+                WaterHeaterSchedule[sortedTimeSlotList[0].TimeSlotIndex].modeId = CurrentState.ModeLookup.GetHeatingModeId(HeatingMode.HeatingLegionenna);
 
                 if(sortedTimeSlotList[0].ExtendedTimeSlot != 0)
                 {
@@ -439,40 +341,6 @@ namespace MyUplinkSmartConnect.CostSavingsRules
             public int ExtendedTimeSlot { get; set; } = 0;// negative value for how far the starttime was extended
 
             public int TimeSlotIndex { get; set; } = -1;
-        }
-
-        internal static bool VerifyWaterHeaterMode(WaterHeaterMode mode, WaterHeaterDesiredPower desiredPower, int targetTemprature)
-        {
-            if (mode.settings == null)
-                throw new NullReferenceException("mode.settings cannot be null");
-
-            bool isGood = true;
-            foreach (var setting in mode.settings)
-            {
-                switch (setting.settingId)
-                {
-                    case WaterheaterSettingsMode.TargetHeaterWatt:
-                        if (setting.HelperDesiredHeatingPower != desiredPower)
-                        {
-                            isGood = false;
-                            setting.value = (int)desiredPower;
-                            Log.Logger.Warning("Water heater desired power level is incorrect for {modename} , changing from {settingHelperDesiredHeatingPower} to {desiredPower}", mode.name, setting.HelperDesiredHeatingPower, desiredPower);
-                        }
-                        break;
-
-                    case WaterheaterSettingsMode.TargetTempratureSetpoint:
-                        if (setting.value != targetTemprature)
-                        {
-                            isGood = false;
-                            Log.Logger.Warning("Water heater target temperature is incorrect ({settingValue}) for {modename} , changing to {targetTemprature}", setting.value, mode.name, targetTemprature);
-
-                            setting.value = targetTemprature;
-                        }
-                        break;
-                }
-            }
-
-            return isGood;
-        }
+        }        
     }
 }

@@ -85,14 +85,15 @@ namespace MyUplinkSmartConnect
                         Log.Logger.Debug("Using simple price based rules for building heating schedules");
                     }
 
+                    var heaterModes = await Settings.Instance.myuplinkApi.GetCurrentModes(tmpdevice);
                     costSaving.WaterHeaterSchedule = await Settings.Instance.myuplinkApi.GetWheeklySchedules(tmpdevice);
-                    costSaving.WaterHeaterModes = await Settings.Instance.myuplinkApi.GetCurrentModes(tmpdevice);
+
 
                     var weekdayOrder = Settings.Instance.myuplinkApi.GetCurrentDayOrder(tmpdevice);
 
-                    if (!costSaving.VerifyWaterHeaterModes())
+                    if (!CurrentState.ModeLookup.ReCheckModes(heaterModes))
                     {
-                        var status = await Settings.Instance.myuplinkApi.SetCurrentModes(tmpdevice, costSaving.WaterHeaterModes);
+                        var status = await Settings.Instance.myuplinkApi.SetCurrentModes(tmpdevice, CurrentState.ModeLookup.WaterHeaterModes);
 
                         if (!status)
                         {

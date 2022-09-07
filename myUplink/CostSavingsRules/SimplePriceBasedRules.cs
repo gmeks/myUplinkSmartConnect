@@ -22,7 +22,7 @@ namespace MyUplinkSmartConnect.CostSavings
         {
             foreach (var price in CurrentState.PriceList)
             {
-                Log.Logger.Debug($"{price.Start.Day}) Start: {price.Start.ToShortTimeString()} | {price.End.ToShortTimeString()} - {price.TargetHeatingPower} - {price.Price}");
+                Log.Logger.Debug($"{price.Start.Day}) Start: {price.Start.ToShortTimeString()} | {price.End.ToShortTimeString()} - {price.HeatingMode} - {price.Price}");
             }
         }
 
@@ -33,8 +33,8 @@ namespace MyUplinkSmartConnect.CostSavings
 
             foreach (var price in CurrentState.PriceList)
             {
-                Console.WriteLine($"{price.Start.Day}) Start: {price.Start.ToShortTimeString()} | {price.End.ToShortTimeString()} - {price.TargetHeatingPower} - {price.Price}");
-                csv.AppendLine($"{price.Start.Day};{price.Start.ToShortTimeString()};{price.End.ToShortTimeString()};{price.TargetHeatingPower};{price.Price}");
+                Console.WriteLine($"{price.Start.Day}) Start: {price.Start.ToShortTimeString()} | {price.End.ToShortTimeString()} - {price.HeatingMode} - {price.Price}");
+                csv.AppendLine($"{price.Start.Day};{price.Start.ToShortTimeString()};{price.End.ToShortTimeString()};{price.HeatingMode};{price.Price}");
             }
 
             File.WriteAllText("c:\\temp\\1.csv", csv.ToString());

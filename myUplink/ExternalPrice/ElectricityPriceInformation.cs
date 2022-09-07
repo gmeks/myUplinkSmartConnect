@@ -10,7 +10,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
             Price = 0;
             Start = DateTime.MinValue;
             End = DateTime.MinValue;
-            TargetHeatingPower = WaterHeaterDesiredPower.None;
+            HeatingMode =  HeatingMode.HeathingDisabled;
         }
 
         public Guid Id { get; set; }
@@ -26,6 +26,6 @@ namespace MyUplinkSmartConnect.ExternalPrice
             return Id.Equals(other?.Id);
         }
 
-        public WaterHeaterDesiredPower TargetHeatingPower { get; set; }
+        public HeatingMode HeatingMode { get; set; }
     }
 }

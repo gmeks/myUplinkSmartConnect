@@ -31,7 +31,7 @@ namespace MyUplinkSmartConnect.CostSavings
         {
             public double ExpectedEnergiLevel { get; set; }
 
-            public WaterHeaterDesiredPower HeatingModeBasedOnPrice { get; set; }
+            public HeatingMode HeatingModeBasedOnPrice { get; set; }
         }
 
         class PeakTimeSchedule
@@ -46,7 +46,7 @@ namespace MyUplinkSmartConnect.CostSavings
         {
             foreach (var price in _tankHeatingSchedule)
             {
-                Log.Logger.Debug($"{price.Start.Day}) Start: {price.Start.ToShortTimeString()} | {price.End.ToShortTimeString()} - {price.TargetHeatingPower}|{price.HeatingModeBasedOnPrice} - {price.Price} - {price.ExpectedEnergiLevel}");
+                Log.Logger.Debug($"{price.Start.Day}) Start: {price.Start.ToShortTimeString()} | {price.End.ToShortTimeString()} - {price.HeatingMode}|{price.HeatingModeBasedOnPrice} - {price.Price} - {price.ExpectedEnergiLevel}");
             }
         }
 
@@ -57,8 +57,8 @@ namespace MyUplinkSmartConnect.CostSavings
 
             foreach (var price in _tankHeatingSchedule)
             {
-                Console.WriteLine($"{price.Start.Day}) Start: {price.Start.ToShortTimeString()} | {price.End.ToShortTimeString()} - {price.TargetHeatingPower}|{price.HeatingModeBasedOnPrice} - {price.Price} - {price.ExpectedEnergiLevel}");
-                csv.AppendLine($"{price.Start.Day};{price.Start.ToShortTimeString()};{price.End.ToShortTimeString()};{price.TargetHeatingPower};{price.HeatingModeBasedOnPrice};{price.Price};{price.ExpectedEnergiLevel}");
+                Console.WriteLine($"{price.Start.Day}) Start: {price.Start.ToShortTimeString()} | {price.End.ToShortTimeString()} - {price.HeatingMode}|{price.HeatingModeBasedOnPrice} - {price.Price} - {price.ExpectedEnergiLevel}");
+                csv.AppendLine($"{price.Start.Day};{price.Start.ToShortTimeString()};{price.End.ToShortTimeString()};{price.HeatingMode};{price.HeatingModeBasedOnPrice};{price.Price};{price.ExpectedEnergiLevel}");
             }
 
             try
@@ -99,10 +99,10 @@ namespace MyUplinkSmartConnect.CostSavings
 
                     while(lastChangeIndex != 0)
                     {
-                        if(_tankHeatingSchedule[lastChangeIndex].HeatingModeBasedOnPrice != WaterHeaterDesiredPower.None)
+                        if(_tankHeatingSchedule[lastChangeIndex].HeatingMode !=  HeatingMode.HeathingDisabled)
                         {
                             neededEnergiInTank -= 2.0d;
-                            _tankHeatingSchedule[lastChangeIndex].TargetHeatingPower = WaterHeaterDesiredPower.Watt2000;
+                            _tankHeatingSchedule[lastChangeIndex].HeatingMode = HeatingMode.HighestTemperature;
                             //changesDone++;
                         }
 
@@ -141,9 +141,10 @@ namespace MyUplinkSmartConnect.CostSavings
             const double EnergiChangePrHour2Kwh = 2;
             
             double newEnergiLevel;
-            switch (last.TargetHeatingPower)
+            switch (last.HeatingMode)
             {
-                case WaterHeaterDesiredPower.Watt2000:
+                case HeatingMode.HeatingLegionenna:
+                case HeatingMode.HighestTemperature:
                     if (last.ExpectedEnergiLevel < _desiredMaximalTankEnergi)
                     {
                         // We added up 1 hour of full powa.
@@ -155,13 +156,13 @@ namespace MyUplinkSmartConnect.CostSavings
                     }
                     break;
 
-                case WaterHeaterDesiredPower.Watt1300:
-                case WaterHeaterDesiredPower.Watt700:
+                case HeatingMode.MediumTemprature1300watt:
+                case HeatingMode.MediumTemperature:
                     newEnergiLevel = _desiredMinmalTankEnergi; // We assume that we reach the target level.
                     break;
 
                 default:
-                case WaterHeaterDesiredPower.None:
+                case HeatingMode.HeathingDisabled:
                     if (last.ExpectedEnergiLevel > _desiredMinmalTankEnergi)
                         newEnergiLevel = last.ExpectedEnergiLevel - energiLeakPrHour; // Energileak of 1 kw pr hour with high tempratures.
                     else
@@ -266,11 +267,11 @@ namespace MyUplinkSmartConnect.CostSavings
             // First we just use all recommended heating windows, to keep the tank at minimal desired level.
             for (int i = 0; i < _tankHeatingSchedule.Count; i++)
             {
-                _tankHeatingSchedule[i].HeatingModeBasedOnPrice = _tankHeatingSchedule[i].TargetHeatingPower;
+                _tankHeatingSchedule[i].HeatingModeBasedOnPrice = _tankHeatingSchedule[i].HeatingMode;
 
-                if(_tankHeatingSchedule[i].TargetHeatingPower != WaterHeaterDesiredPower.None && _tankHeatingSchedule[i].TargetHeatingPower != WaterHeaterDesiredPower.Watt1300)
+                if(_tankHeatingSchedule[i].HeatingMode !=  HeatingMode.HeathingDisabled && _tankHeatingSchedule[i].HeatingMode !=  HeatingMode.MediumTemperature)
                 {
-                    _tankHeatingSchedule[i].TargetHeatingPower = WaterHeaterDesiredPower.Watt1300;
+                    _tankHeatingSchedule[i].HeatingMode = HeatingMode.MediumTemperature;
                 }
             }
         }

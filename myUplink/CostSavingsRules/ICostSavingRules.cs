@@ -10,10 +10,6 @@ namespace MyUplinkSmartConnect.CostSavingsRules
 {
     interface ICostSavingRules
     {
-        public bool VerifyWaterHeaterModes();        
-
-        List<WaterHeaterMode> WaterHeaterModes { get; set; } 
-
         List<HeaterWeeklyEvent> WaterHeaterSchedule { get; set; } 
 
         bool GenerateSchedule(string weekFormat,bool runLegionellaHeating, params DateTime[] datesToSchuedule);

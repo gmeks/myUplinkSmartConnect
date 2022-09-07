@@ -1,4 +1,5 @@
 ﻿using MyUplinkSmartConnect.ExternalPrice;
+using MyUplinkSmartConnect.Models;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -76,5 +77,7 @@ namespace MyUplinkSmartConnect
         public static List<ElectricityPriceInformation> PriceList { get; set; } = new List<ElectricityPriceInformation>();
 
         public static double CurrentTankEnergi { get; set; }
-    }
+
+        public static WaterHeaterModeLookup ModeLookup { get; set; } = new WaterHeaterModeLookup(Array.Empty<WaterHeaterMode>());
+}
 }

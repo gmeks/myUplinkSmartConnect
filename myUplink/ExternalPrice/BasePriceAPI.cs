@@ -37,15 +37,16 @@ namespace MyUplinkSmartConnect.ExternalPrice
 
             if (powerRegionIndex == -1)
             {
-                powerRegionIndex = NorwayPowerZones.IndexOf("NO-2");
-                
-                Log.Logger.Warning("Using default power zone NO-2");
+                const string DefaultRegion = "NO-2";
+
+                powerRegionIndex = NorwayPowerZones.IndexOf(DefaultRegion);
+                Settings.Instance.PowerZone = DefaultRegion;
+
+                Log.Logger.Warning("Using default power zone " + DefaultRegion);
                 Log.Logger.Warning("Valid zones are:");
 
                 foreach(var zone in NorwayPowerZones)
                     Log.Logger.Warning(zone);
-
-                Settings.Instance.PowerZone = NorwayPowerZones[powerRegionIndex];
             }
 
             return powerRegionIndex;
@@ -118,11 +119,11 @@ namespace MyUplinkSmartConnect.ExternalPrice
             {
                 if (maxPowerHours.Contains(sortedList[i]))
                 {
-                    sortedList[i].TargetHeatingPower = WaterHeaterDesiredPower.Watt2000;
+                    sortedList[i].HeatingMode =  HeatingMode.HighestTemperature;
                 }
                 else if (mediumPowerHours.Contains(sortedList[i]))
                 {
-                    sortedList[i].TargetHeatingPower = WaterHeaterDesiredPower.Watt700;
+                    sortedList[i].HeatingMode =  HeatingMode.MediumTemperature;
                 }
             }
 
@@ -132,7 +133,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
                 var updatedPrice = sortedList.FirstOrDefault(x => x.Id == price.Id);
                 if (updatedPrice != null)
                 {
-                    price.TargetHeatingPower = updatedPrice.TargetHeatingPower;
+                    price.HeatingMode = updatedPrice.HeatingMode;
                 }
             }
         }
