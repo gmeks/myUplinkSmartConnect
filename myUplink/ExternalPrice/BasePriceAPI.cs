@@ -38,11 +38,14 @@ namespace MyUplinkSmartConnect.ExternalPrice
             if (powerRegionIndex == -1)
             {
                 powerRegionIndex = NorwayPowerZones.IndexOf("NO-2");
+                
                 Log.Logger.Warning("Using default power zone NO-2");
                 Log.Logger.Warning("Valid zones are:");
 
                 foreach(var zone in NorwayPowerZones)
                     Log.Logger.Warning(zone);
+
+                Settings.Instance.PowerZone = NorwayPowerZones[powerRegionIndex];
             }
 
             return powerRegionIndex;

@@ -13,6 +13,8 @@ namespace MyUplinkSmartConnect.CostSavingsRules
 {
     internal class RulesBase
     {
+        IList<DayOfWeek> _daysInWeek = Array.Empty<DayOfWeek>();
+
         public bool VerifyWaterHeaterModes()
         {
             bool allModesGood = true;
@@ -62,8 +64,8 @@ namespace MyUplinkSmartConnect.CostSavingsRules
         internal bool GenerateRemoteSchedule(string weekFormat,bool runLegionellaProgram,IReadOnlyList<ElectricityPriceInformation> schedule, params DateTime[] datesToSchuedule)
         {
             WaterHeaterSchedule.Clear();
+            _daysInWeek = GetWeekDayOrder(weekFormat).ToList();
 
-            var daysInWeek = GetWeekDayOrder(weekFormat);
             var requiredHours = datesToSchuedule.Length * 24;
 
             if (CurrentState.PriceList.Count < requiredHours)
@@ -72,34 +74,28 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                 return false;
             }
 
-            foreach (var day in daysInWeek)
+            foreach (var day in _daysInWeek)
             {
                 bool foundDayInTargetSchedules = false;
                 HeaterWeeklyEvent? sch = null;
 
-                foreach (var targetSchedule in datesToSchuedule)
+                if (IsDayInsideScheduleWindow(datesToSchuedule, day))
                 {
-                    if (targetSchedule.DayOfWeek != day)
-                        continue;
-
                     int addedPriceEvents = 0;
                     var currentPowerLevel = WaterHeaterDesiredPower.Watt2000;
 
                     foreach (var price in schedule)
                     {
-                        if (price.Start.Date != targetSchedule.Date)
-                            continue;
-
                         if (price.TargetHeatingPower != currentPowerLevel || sch == null)
                         {
                             if (sch != null)
                                 WaterHeaterSchedule.Add(sch);
 
                             sch = new HeaterWeeklyEvent();
-                            sch.startDay = targetSchedule.DayOfWeek.ToString();
+                            sch.startDay = day.ToString();
                             sch.startTime = price.Start.ToString("HH:mm:ss");
                             sch.modeId = GetModeFromWaterHeaterDesiredPower(price.TargetHeatingPower);
-                            sch.Date = targetSchedule;
+                            sch.Date = GetDateOfDay(day);
                             currentPowerLevel = price.TargetHeatingPower;
                             addedPriceEvents++;
                         }
@@ -114,13 +110,14 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                     if (addedPriceEvents > 0)
                         foundDayInTargetSchedules = true;
                 }
-
+                
                 if (!foundDayInTargetSchedules)
                 {
                     sch = new HeaterWeeklyEvent();
                     sch.startDay = day.ToString();
                     sch.startTime = "00:00:00";
                     sch.modeId = GetModeFromWaterHeaterDesiredPower(WaterHeaterDesiredPower.Watt2000);
+                    sch.Date = GetDateOfDay(day);
                     WaterHeaterSchedule.Add(sch);
 
 
@@ -128,6 +125,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                     sch.startDay = day.ToString();
                     sch.startTime = "06:00:00";
                     sch.modeId = GetModeFromWaterHeaterDesiredPower(WaterHeaterDesiredPower.None);
+                    sch.Date = GetDateOfDay(day);
                     WaterHeaterSchedule.Add(sch);
 
 
@@ -135,6 +133,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                     sch.startDay = day.ToString();
                     sch.startTime = "12:00:00";
                     sch.modeId = GetModeFromWaterHeaterDesiredPower(WaterHeaterDesiredPower.Watt700);
+                    sch.Date = GetDateOfDay(day);
                     WaterHeaterSchedule.Add(sch);
                 }
             }
@@ -217,7 +216,47 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                 }
             }
 
-            throw new Exception("Failed to find ");
+            throw new Exception($"Failed to find mode to match power {power}");
+        }
+
+        internal bool IsDayInsideScheduleWindow(ReadOnlySpan<DateTime> datesToSchuedule, DayOfWeek day)
+        {
+            foreach (var targetSchedule in datesToSchuedule)
+            {
+                if (targetSchedule.DayOfWeek == day)
+                    return true;
+            }
+
+            return false;
+        }
+
+        internal DateTime GetDateOfDay(DayOfWeek day)
+        {
+            // Gets the DateTime from the day. This is done by calculating it from week order and todays index in that list.
+
+            var now = DateTime.Now;
+
+            int indexOfToday = -1;
+            for (int i = 0; i < _daysInWeek.Count(); i++)
+            {
+                if (_daysInWeek[i] == now.DayOfWeek)
+                {
+                    indexOfToday = i;
+                }
+            }
+
+
+            for (int i = 0; i < _daysInWeek.Count();i++)
+            {
+                if (_daysInWeek[i] == day)
+                {
+                    int realativeDay = i - indexOfToday;
+
+                    var relativeDate = now.AddDays(realativeDay);
+                    return relativeDate;
+                }
+            }
+            return DateTime.MinValue;
         }
 
         bool CreateLegionellaHeating(params DateTime[] datesToSchuedule)
@@ -264,7 +303,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                 if (WaterHeaterSchedule[i].modeId != heatingModeHigh)
                     continue;
 
-                if (!ContainsDay(WaterHeaterSchedule[i].Day, datesToSchuedule))
+                if (!IsDayInsideScheduleWindow(datesToSchuedule, WaterHeaterSchedule[i].Day))
                     continue;
 
                 // First we check there is already scheduled a heating that will cover legionella heating
@@ -306,7 +345,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                     if (WaterHeaterSchedule[i].modeId != heatingModeMedium)
                         continue;
 
-                    if (!ContainsDay(WaterHeaterSchedule[i].Day, datesToSchuedule))
+                    if (!IsDayInsideScheduleWindow(datesToSchuedule, WaterHeaterSchedule[i].Day))
                         continue;
 
                     var timeSlot = GetScheduleTimes(i);
@@ -400,17 +439,6 @@ namespace MyUplinkSmartConnect.CostSavingsRules
             public int ExtendedTimeSlot { get; set; } = 0;// negative value for how far the starttime was extended
 
             public int TimeSlotIndex { get; set; } = -1;
-        }
-
-        static bool ContainsDay(DayOfWeek day, DateTime[] datesToSchuedule)
-        {
-            foreach(var date in datesToSchuedule)
-            {
-                if (date.DayOfWeek == day)
-                    return true;
-            }
-
-            return false;
         }
 
         internal static bool VerifyWaterHeaterMode(WaterHeaterMode mode, WaterHeaterDesiredPower desiredPower, int targetTemprature)

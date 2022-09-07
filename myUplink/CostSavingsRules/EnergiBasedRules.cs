@@ -61,20 +61,27 @@ namespace MyUplinkSmartConnect.CostSavings
                 csv.AppendLine($"{price.Start.Day};{price.Start.ToShortTimeString()};{price.End.ToShortTimeString()};{price.TargetHeatingPower};{price.HeatingModeBasedOnPrice};{price.Price};{price.ExpectedEnergiLevel}");
             }
 
-            File.WriteAllText("c:\\temp\\1.csv", csv.ToString());
+            try
+            {
+                File.WriteAllText("c:\\temp\\1.csv", csv.ToString());
+            }
+            catch
+            {
+
+            }            
         }
 
         public bool GenerateSchedule(string weekFormat, bool runLegionellaHeating, params DateTime[] datesToSchuedule)
         {
             CreateScheduleEmty();
-            ReCalculateHeatingTimes();
+            FindPeakHeatingRequirements(datesToSchuedule);
 
             var scheduleList = JsonUtils.CloneTo<List<ElectricityPriceInformation>>(_tankHeatingSchedule);
             var status = GenerateRemoteSchedule(weekFormat, runLegionellaHeating, scheduleList, datesToSchuedule);
             return status;
         }
 
-        void ReCalculateHeatingTimes()
+        void FindPeakHeatingRequirements(DateTime[] datesToSchuedule)
         {
             const int MaximumPreHeatInHours = 4;
 
@@ -82,8 +89,10 @@ namespace MyUplinkSmartConnect.CostSavings
 
             for (int i = (_tankHeatingSchedule.Count - 1); i > 0; i--)
             {
-                if (IsPeakWaterUsage(_tankHeatingSchedule[i].Start))
+                if (IsDefinedPeakUsageTime(_tankHeatingSchedule[i].Start) && IsDayInsideScheduleWindow(datesToSchuedule, _tankHeatingSchedule[i].Start.DayOfWeek))
                 {
+                    Log.Logger.Debug("{Start} is a peak time", _tankHeatingSchedule[i].Start);
+
                     var neededEnergiInTank = _desiredMaximalTankEnergi - _tankHeatingSchedule[i].ExpectedEnergiLevel;
                     int lastChangeIndex = i;
                     //int changesDone = 0;
@@ -163,7 +172,7 @@ namespace MyUplinkSmartConnect.CostSavings
             return newEnergiLevel;
         }
 
-        bool IsPeakWaterUsage(DateTime start)
+        bool IsDefinedPeakUsageTime(DateTime start)
         {
             if (_peakTimeSchedule.Count == 0)
             {
