@@ -112,59 +112,53 @@ Q) Can i force it to update the schedule?
 
 18760NE2240322014631 needs to be replaced with the ID of your hotwater heater, simplest way to find out is to just read the console output of this application*
 
->      sensor:
->        - platform: mqtt
->          state_topic: "heater/18760NE2240322014631/TargetTemprature"
->          unique_id: "WaterHeaterTargetTemperature"
->          name: "Target temprature"
->          unit_of_measurement: "°C"
->          
->        - platform: mqtt
->          state_topic: "heater/18760NE2240322014631/CurrentTemprature"
->          unique_id: "WaterHeaterCurrentTemperature"
->          name: "Current temprature"
->          unit_of_measurement: "°C"
->          
->        - platform: mqtt
->          state_topic: "heater/18760NE2240322014631/EstimatedPower"
->          unique_id: "WaterHeaterEstimatedPower"    
->          name: "Current Watt"
->          device_class: power    
->          state_class: measurement    
->          unit_of_measurement : W   
->         
->       - platform: mqtt
->         state_topic: "heater/18760NE2240322014631/EnergyTotal"
->         unique_id: "WaterHeaterEnergyTotal"
->         name: "Energy Total"    
->         device_class: power
->         state_class: total_increasing
->         unit_of_measurement : kWh    
->         
->       - platform: mqtt
->         state_topic: "heater/18760NE2240322014631/EnergiStored"
->         unique_id: "WaterHeaterEnergiStored"
->         name: "Energi in tank"
->         device_class: power
->         unit_of_measurement : kWh        
->         
->       - platform: mqtt
->         state_topic: "heater/18760NE2240322014631/FillLevel"
->         name: "Tank fill level"
->         unique_id: "WaterHeaterFillLevel"    
->         unit_of_measurement: '%'
-> 
->       - platform: mqtt
->         state_topic: "heater/18760NE2240322014631/LastScheduleChangeInHours"
->         name: "Last schedule change"
->         unique_id: "LastScheduleChange"
-> 
->       - platform: mqtt
->         state_topic: "heater/LogEntry"
->         name: "MyUplinkSmartConnectLogs"
->         unique_id: "MyUplinkSmartConnectLogs"
-> 
->       - platform: mqtt
->         state_topic: "heater/ServiceStatus"
->         name: "MyUplinkSmartConnect status"
->         unique_id: "MyUplinkSmartConnectStatus"
+>      mqtt:
+>       sensor:
+>         - name: "Waterheater current temprature"
+>           state_topic: "heater/18760NE2240322014631/CurrentTemprature"
+>           unique_id: "Waterheater.CurrentTemprature"
+>           state_class: measurement    
+>           unit_of_measurement: "°C"
+>     
+>         - name: "Waterheater current Watt"
+>           state_topic: "heater/18760NE2240322014631/EstimatedPower"
+>           unique_id: "Waterheater.EstimatedPower"
+>           device_class: power    
+>           state_class: measurement    
+>           unit_of_measurement : W     
+>       
+>         - name: "Target temprature"
+>           state_topic: "heater/18760NE2240322014631/TargetTemprature"
+>           unique_id: "Waterheater.TargetTemprature"
+>           unit_of_measurement: "°C"
+>     
+>         - name: "Energy Total(Waterheater)"
+>           state_topic: "heater/18760NE2240322014631/EnergyTotal"
+>           unique_id: "Waterheater.EnergyTotal"   
+>           device_class: energy
+>           state_class: total_increasing
+>           unit_of_measurement : kWh    
+>     
+>         - name: "Energi in tank"
+>           state_topic: "heater/18760NE2240322014631/EnergiStored"
+>           unique_id: "Waterheater.EnergiStored"
+>           device_class: power
+>           unit_of_measurement : kWh    
+>     
+>         - name: "Tank fill level"
+>           state_topic: "heater/18760NE2240322014631/FillLevel"
+>           unique_id: "Waterheater.FillLevel"    
+>           unit_of_measurement: '%'
+>     
+>         - name: "Last schedule change"
+>           state_topic: "heater/18760NE2240322014631/LastScheduleChangeInHours"
+>           unique_id: "Waterheater.LastScheduleChange" 
+>           unit_of_measurement: "Hours ago"
+
+>         - name: "MyUplinkSmartConnectLogs"
+>           state_topic: "heater/LogEntry"
+>           unique_id: "MyUplinkSmartConnectLogs" 
+
+>         - name: "MyUplinkSmartConnect status"
+>           state_topic: "heater/ServiceStatus"
+>           unique_id: "MyUplinkSmartConnectStatus" 
