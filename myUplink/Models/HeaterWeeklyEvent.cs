@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Diagnostics;
+using System.Text.Json.Serialization;
 
 namespace MyUplinkSmartConnect.Models
 {
@@ -8,6 +9,17 @@ namespace MyUplinkSmartConnect.Models
         {
             enabled = true;
             phantom_id = Guid.NewGuid();
+        }
+
+        public HeaterWeeklyEvent(DateTime start,int heatingModeId)
+        {
+            enabled = true;
+            phantom_id = Guid.NewGuid();
+
+            startDay = start.DayOfWeek.ToString();
+            startTime = start.ToString("HH:mm:ss");
+            modeId = heatingModeId;
+            Date = start;
         }
 
         public bool enabled { get; set; }

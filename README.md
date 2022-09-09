@@ -154,11 +154,11 @@ Q) Can i force it to update the schedule?
 >           state_topic: "heater/18760NE2240322014631/LastScheduleChangeInHours"
 >           unique_id: "Waterheater.LastScheduleChange" 
 >           unit_of_measurement: "Hours ago"
-
+>
 >         - name: "MyUplinkSmartConnectLogs"
 >           state_topic: "heater/LogEntry"
 >           unique_id: "MyUplinkSmartConnectLogs" 
-
+>
 >         - name: "MyUplinkSmartConnect status"
 >           state_topic: "heater/ServiceStatus"
 >           unique_id: "MyUplinkSmartConnectStatus" 

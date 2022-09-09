@@ -91,7 +91,7 @@ namespace MyUplinkSmartConnect.CostSavings
             {
                 if (IsDefinedPeakUsageTime(_tankHeatingSchedule[i].Start) && IsDayInsideScheduleWindow(datesToSchuedule, _tankHeatingSchedule[i].Start.DayOfWeek))
                 {
-                    Log.Logger.Debug("{Start} is a peak time", _tankHeatingSchedule[i].Start);
+                    Log.Logger.Debug("Peak time at {time} on day {day}", _tankHeatingSchedule[i].Start.ToLongTimeString(), _tankHeatingSchedule[i].Start.DayOfWeek);
 
                     var neededEnergiInTank = _desiredMaximalTankEnergi - _tankHeatingSchedule[i].ExpectedEnergiLevel;
                     int lastChangeIndex = i;
@@ -103,6 +103,7 @@ namespace MyUplinkSmartConnect.CostSavings
                         {
                             neededEnergiInTank -= 2.0d;
                             _tankHeatingSchedule[lastChangeIndex].HeatingMode = HeatingMode.HighestTemperature;
+                            Log.Logger.Debug("Changing heating at {startheating} to reach target heating at {targetheating}", _tankHeatingSchedule[lastChangeIndex].Start, _tankHeatingSchedule[i].Start);
                             //changesDone++;
                         }
 
@@ -269,7 +270,7 @@ namespace MyUplinkSmartConnect.CostSavings
             {
                 _tankHeatingSchedule[i].HeatingModeBasedOnPrice = _tankHeatingSchedule[i].HeatingMode;
 
-                if(_tankHeatingSchedule[i].HeatingMode !=  HeatingMode.HeathingDisabled && _tankHeatingSchedule[i].HeatingMode !=  HeatingMode.MediumTemperature)
+                if(_tankHeatingSchedule[i].HeatingMode !=  HeatingMode.HeathingDisabled)
                 {
                     _tankHeatingSchedule[i].HeatingMode = HeatingMode.MediumTemperature;
                 }

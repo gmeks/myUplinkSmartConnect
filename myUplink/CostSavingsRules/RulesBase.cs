@@ -32,8 +32,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
 
             foreach (var day in _daysInWeek)
             {
-                bool foundDayInTargetSchedules = false;
-                HeaterWeeklyEvent? sch = null;
+                bool foundDayInTargetSchedules = false;                
 
                 if (IsDayInsideScheduleWindow(datesToSchuedule, day))
                 {
@@ -42,25 +41,12 @@ namespace MyUplinkSmartConnect.CostSavingsRules
 
                     foreach (var price in schedule)
                     {
-                        if (price.HeatingMode != currentPowerLevel || sch == null)
+                        if (price.HeatingMode != currentPowerLevel)
                         {
-                            if (sch != null)
-                                WaterHeaterSchedule.Add(sch);
-
-                            sch = new HeaterWeeklyEvent();
-                            sch.startDay = day.ToString();
-                            sch.startTime = price.Start.ToString("HH:mm:ss");
-                            sch.modeId = CurrentState.ModeLookup.GetHeatingModeId(price.HeatingMode);
-                            sch.Date = GetDateOfDay(day);
                             currentPowerLevel = price.HeatingMode;
+                            WaterHeaterSchedule.Add(new HeaterWeeklyEvent(price.Start, CurrentState.ModeLookup.GetHeatingModeId(price.HeatingMode)));
                             addedPriceEvents++;
                         }
-                    }
-
-                    if (sch != null)
-                    {
-                        WaterHeaterSchedule.Add(sch);
-                        addedPriceEvents++;
                     }
 
                     if (addedPriceEvents > 0)
@@ -68,29 +54,10 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                 }
                 
                 if (!foundDayInTargetSchedules)
-                {
-                    sch = new HeaterWeeklyEvent();
-                    sch.startDay = day.ToString();
-                    sch.startTime = "00:00:00";
-                    sch.modeId = CurrentState.ModeLookup.GetHeatingModeId(HeatingMode.HighestTemperature);
-                    sch.Date = GetDateOfDay(day);
-                    WaterHeaterSchedule.Add(sch);
-
-
-                    sch = new HeaterWeeklyEvent();
-                    sch.startDay = day.ToString();
-                    sch.startTime = "06:00:00";
-                    sch.modeId = CurrentState.ModeLookup.GetHeatingModeId(HeatingMode.HeathingDisabled);
-                    sch.Date = GetDateOfDay(day);
-                    WaterHeaterSchedule.Add(sch);
-
-
-                    sch = new HeaterWeeklyEvent();
-                    sch.startDay = day.ToString();
-                    sch.startTime = "12:00:00";
-                    sch.modeId = CurrentState.ModeLookup.GetHeatingModeId(HeatingMode.MediumTemperature);
-                    sch.Date = GetDateOfDay(day);
-                    WaterHeaterSchedule.Add(sch);
+                {                   
+                    WaterHeaterSchedule.Add(new HeaterWeeklyEvent(GetDateOfDay(day), CurrentState.ModeLookup.GetHeatingModeId(HeatingMode.HighestTemperature)));
+                    WaterHeaterSchedule.Add(new HeaterWeeklyEvent(GetDateOfDay(day).AddHours(6), CurrentState.ModeLookup.GetHeatingModeId(HeatingMode.HeathingDisabled)));
+                    WaterHeaterSchedule.Add(new HeaterWeeklyEvent(GetDateOfDay(day).AddHours(12), CurrentState.ModeLookup.GetHeatingModeId(HeatingMode.MediumTemperature)));
                 }
             }
 
@@ -152,7 +119,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
             return weekOrder;
         }
 
-         internal bool IsDayInsideScheduleWindow(ReadOnlySpan<DateTime> datesToSchuedule, DayOfWeek day)
+        internal bool IsDayInsideScheduleWindow(ReadOnlySpan<DateTime> datesToSchuedule, DayOfWeek day)
         {
             foreach (var targetSchedule in datesToSchuedule)
             {
@@ -167,7 +134,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
         {
             // Gets the DateTime from the day. This is done by calculating it from week order and todays index in that list.
 
-            var now = DateTime.Now;
+            var now = DateTime.Now.Date;
 
             int indexOfToday = -1;
             for (int i = 0; i < _daysInWeek.Count(); i++)
