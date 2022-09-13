@@ -11,7 +11,7 @@ namespace MyUplinkSmartConnect.Models
             phantom_id = Guid.NewGuid();
         }
 
-        public HeaterWeeklyEvent(DateTime start,int heatingModeId)
+        public HeaterWeeklyEvent(DateTime start,int heatingModeId,bool hasPriceInformation)
         {
             enabled = true;
             phantom_id = Guid.NewGuid();
@@ -20,6 +20,7 @@ namespace MyUplinkSmartConnect.Models
             startTime = start.ToString("HH:mm:ss");
             modeId = heatingModeId;
             Date = start;
+            HasPriceInformation = hasPriceInformation;
         }
 
         public bool enabled { get; set; }
@@ -29,6 +30,9 @@ namespace MyUplinkSmartConnect.Models
         public string? stopDay { get; set; }
         public string? stopTime { get; set; }
         public Guid phantom_id { get; set; }
+
+        [JsonIgnore]
+        public bool HasPriceInformation { get; set; }
 
         [JsonIgnore]
         public DateTime Date

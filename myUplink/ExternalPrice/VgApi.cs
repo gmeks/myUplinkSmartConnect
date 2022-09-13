@@ -59,7 +59,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
                 {
                     var range = GetDateTime(rootToday.priceByHour.date, rootToday.priceByHour.hours[i]);
 
-                    var price = new ElectricityPriceInformation();
+                    var price = new ElectricityPriceInformation();                    
                     price.Id = ToGuid(range.start.ToFileTime(), range.end.ToFileTime());
                     price.Start = range.start;
                     price.End = range.end;

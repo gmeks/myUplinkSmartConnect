@@ -13,10 +13,12 @@ namespace MyUplinkSmartConnect.CostSavings
 {
     internal class EnergiBasedRules : RulesBase, ICostSavingRules
     {
-        const double energiLeakPrHour = 1d;
-        const int TankVolume = 187; // fixme, tank valume should not be hardcoded.
+        const int MaximumPreHeatInHours = 6;
+        const int TankVolume = 187;                     // fixme, tank valume should not be hardcoded.
+        const double EnergiLeakPercentage = 0.05;       // Leaks about 5% pr hour?
+
         double _desiredMinmalTankEnergi;
-        double _desiredMaximalTankEnergi;
+        double _desiredMaximalTankEnergi;        
 
         readonly List<WaterHeaterState> _tankHeatingSchedule = new List<WaterHeaterState>();
         readonly List<PeakTimeSchedule> _peakTimeSchedule = new List<PeakTimeSchedule>();
@@ -44,9 +46,12 @@ namespace MyUplinkSmartConnect.CostSavings
 
         public void LogSchedule()
         {
-            foreach (var price in _tankHeatingSchedule)
+            foreach (var sch in WaterHeaterSchedule)
             {
-                Log.Logger.Debug($"{price.Start.Day}) Start: {price.Start.ToShortTimeString()} | {price.End.ToShortTimeString()} - {price.HeatingMode}|{price.HeatingModeBasedOnPrice} - {price.Price} - {price.ExpectedEnergiLevel}");
+                if (!sch.HasPriceInformation)
+                    continue;
+
+                Log.Logger.Debug(GenerateLogLineSchedule(sch));
             }
         }
 
@@ -55,10 +60,15 @@ namespace MyUplinkSmartConnect.CostSavings
             var csv = new StringBuilder();
             csv.AppendLine("Day;Start;End;Target heating;Price based recommendation;Price;Expected energilevel");
 
-            foreach (var price in _tankHeatingSchedule)
+            foreach (var price in WaterHeaterSchedule)
             {
-                Console.WriteLine($"{price.Start.Day}) Start: {price.Start.ToShortTimeString()} | {price.End.ToShortTimeString()} - {price.HeatingMode}|{price.HeatingModeBasedOnPrice} - {price.Price} - {price.ExpectedEnergiLevel}");
-                csv.AppendLine($"{price.Start.Day};{price.Start.ToShortTimeString()};{price.End.ToShortTimeString()};{price.HeatingMode};{price.HeatingModeBasedOnPrice};{price.Price};{price.ExpectedEnergiLevel}");
+                if (!price.HasPriceInformation)
+                    continue;
+
+                var logLine = GenerateLogLineSchedule(price,true);
+
+                Console.WriteLine(logLine);
+                csv.AppendLine(logLine);
             }
 
             try
@@ -68,7 +78,7 @@ namespace MyUplinkSmartConnect.CostSavings
             catch
             {
 
-            }            
+            }
         }
 
         public bool GenerateSchedule(string weekFormat, bool runLegionellaHeating, params DateTime[] datesToSchuedule)
@@ -76,15 +86,70 @@ namespace MyUplinkSmartConnect.CostSavings
             CreateScheduleEmty();
             FindPeakHeatingRequirements(datesToSchuedule);
 
-            var scheduleList = JsonUtils.CloneTo<List<ElectricityPriceInformation>>(_tankHeatingSchedule);
-            var status = GenerateRemoteSchedule(weekFormat, runLegionellaHeating, scheduleList, datesToSchuedule);
+            var status = GenerateRemoteSchedule(weekFormat, runLegionellaHeating, _tankHeatingSchedule, datesToSchuedule);
             return status;
+        }
+
+        string GenerateLogLineSchedule(HeaterWeeklyEvent schEvent, bool CSVFormat = false)
+        {
+            var logLine = new StringBuilder();
+            var heatingMode = CurrentState.ModeLookup.GetHeatingModeFromId(schEvent.modeId);
+            var energiPriceList = GetPriceFromSchedule(schEvent.Date);
+
+            var heatingModes = new StringBuilder();
+            var priceLists = new StringBuilder();
+            var expectedEnergiLevels = new StringBuilder();
+            double potensialMaximumCost = 0d;
+            bool isFirstRow = true;
+
+            foreach (var item in energiPriceList)
+            {
+
+                if (isFirstRow)
+                    isFirstRow = false;
+                else
+                {
+                    heatingModes.Append(",");
+                    priceLists.Append(",");
+                    expectedEnergiLevels.Append(",");
+                }
+
+                heatingModes.Append(item.HeatingMode);
+                priceLists.Append(item.Price.ToString("0.00"));
+                expectedEnergiLevels.Append(item.ExpectedEnergiLevel.ToString("0.00"));
+
+                potensialMaximumCost += item.GetMaximumCost();
+            }
+
+
+            if (CSVFormat)
+            {
+                logLine.Append($"{schEvent.Date.Day};{schEvent.Date.ToShortTimeString()};{heatingMode};{heatingModes};{priceLists};{expectedEnergiLevels};{potensialMaximumCost.ToString("0.00")}"); // ToString("C");
+            }
+            else
+            {
+                logLine.Append($"{schEvent.Date.Day} {schEvent.Date.ToShortTimeString()} ) - {heatingMode}|{heatingModes} - {priceLists} - {expectedEnergiLevels} - {potensialMaximumCost.ToString("0.00")}");
+            }
+            return logLine.ToString();
+        }
+
+        IList<WaterHeaterState> GetPriceFromSchedule(DateTime start)
+        {
+            var linkedPriceInformation = new List<WaterHeaterState>();
+
+            foreach (var price in _tankHeatingSchedule)
+            {
+                if (start.InRange(price.Start, price.End))
+                {
+                    linkedPriceInformation.Add(price);
+                }
+            }
+
+            return linkedPriceInformation;
         }
 
         void FindPeakHeatingRequirements(DateTime[] datesToSchuedule)
         {
-            const int MaximumPreHeatInHours = 4;
-
             ReCalculateTankExpectedEnergiLevels();
 
             for (int i = (_tankHeatingSchedule.Count - 1); i > 0; i--)
@@ -139,8 +204,6 @@ namespace MyUplinkSmartConnect.CostSavings
 
         double CalculateEnergiChangeTank(WaterHeaterState last)
         {
-            const double EnergiChangePrHour2Kwh = 2;
-            
             double newEnergiLevel;
             switch (last.HeatingMode)
             {
@@ -148,8 +211,10 @@ namespace MyUplinkSmartConnect.CostSavings
                 case HeatingMode.HighestTemperature:
                     if (last.ExpectedEnergiLevel < _desiredMaximalTankEnergi)
                     {
+                        var heatingMode = CurrentState.ModeLookup.GetHeatingPower(last.HeatingMode);
+                        var energiChange = CurrentState.ModeLookup.GetHeatingPowerInKwh(heatingMode);
                         // We added up 1 hour of full powa.
-                        newEnergiLevel = last.ExpectedEnergiLevel + EnergiChangePrHour2Kwh;
+                        newEnergiLevel = last.ExpectedEnergiLevel + energiChange;
                     }
                     else
                     {
@@ -165,7 +230,7 @@ namespace MyUplinkSmartConnect.CostSavings
                 default:
                 case HeatingMode.HeathingDisabled:
                     if (last.ExpectedEnergiLevel > _desiredMinmalTankEnergi)
-                        newEnergiLevel = last.ExpectedEnergiLevel - energiLeakPrHour; // Energileak of 1 kw pr hour with high tempratures.
+                        newEnergiLevel = last.ExpectedEnergiLevel - (last.ExpectedEnergiLevel * EnergiLeakPercentage); // Energileak of 1 kw pr hour with high tempratures.
                     else
                         newEnergiLevel = last.ExpectedEnergiLevel;
                     break;
@@ -261,7 +326,7 @@ namespace MyUplinkSmartConnect.CostSavings
         {
             foreach (var price in CurrentState.PriceList)
             {
-                var newPrice = JsonUtils.CloneTo<WaterHeaterState>(price);
+                var newPrice = JsonUtils.CloneTo<WaterHeaterState>(price);                
                 _tankHeatingSchedule.Add(newPrice);
             }
 

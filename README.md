@@ -12,10 +12,10 @@ When changing the schedule it gets the price information for your region from [t
 Water heater will heat water when its bellow a certain temprature, without considering price. Considering alot of showing and cooking happens around the same time, this means heating water at peak electricity price.
 
 #### Price based rules (Default)
-This schedule builder simply uses cost, and will schedule heating the water (Consider charting a batteri) when the prices are low.  Using this method you might end up heating up the water many hours away from using it.
+This schedule builder simply uses cost, and will schedule heating the water (Consider charging a batteri) when the prices are low.  The main issue with this method is that water heaters loose a fair bit of heat over time, and having realy hot water at 02:00 may not be productive. The heat thats lost in the water, basicly gets added to the house as heat ( Simular cost effect as regualar electric heater)
 
 #### Energi based rules
-This schedule builder is provided configured peak times, and will attemt to use cheapest posible electricity to heat the tank to reach a target energi level in the tank.
+This schedule builder is provided configured peak times, and will attemt to use cheapest posible electricity to heat the tank to reach a target energi level in the tank. This will use less electricity then Price based rules, but may use it at bit higher price.
 
 ## Legal
 
@@ -109,6 +109,9 @@ Q) Can i force it to update the schedule?
 > Yes, if you restart the service/docker after the target schedule change time ( But before midnight), it will force a schedule update.
 
 ## Setup Homeassistant sensor, in configuration.yml
+
+Please note from my personal experimentation most of the values that the heater is reporting is best case just guessing. You can trust how much energi its using or has used.
+
 
 18760NE2240322014631 needs to be replaced with the ID of your hotwater heater, simplest way to find out is to just read the console output of this application*
 

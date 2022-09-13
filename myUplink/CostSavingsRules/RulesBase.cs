@@ -44,7 +44,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                         if (price.HeatingMode != currentPowerLevel)
                         {
                             currentPowerLevel = price.HeatingMode;
-                            WaterHeaterSchedule.Add(new HeaterWeeklyEvent(price.Start, CurrentState.ModeLookup.GetHeatingModeId(price.HeatingMode)));
+                            WaterHeaterSchedule.Add(new HeaterWeeklyEvent(price.Start, CurrentState.ModeLookup.GetHeatingModeId(price.HeatingMode), hasPriceInformation: true));
                             addedPriceEvents++;
                         }
                     }
@@ -55,9 +55,9 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                 
                 if (!foundDayInTargetSchedules)
                 {                   
-                    WaterHeaterSchedule.Add(new HeaterWeeklyEvent(GetDateOfDay(day), CurrentState.ModeLookup.GetHeatingModeId(HeatingMode.HighestTemperature)));
-                    WaterHeaterSchedule.Add(new HeaterWeeklyEvent(GetDateOfDay(day).AddHours(6), CurrentState.ModeLookup.GetHeatingModeId(HeatingMode.HeathingDisabled)));
-                    WaterHeaterSchedule.Add(new HeaterWeeklyEvent(GetDateOfDay(day).AddHours(12), CurrentState.ModeLookup.GetHeatingModeId(HeatingMode.MediumTemperature)));
+                    WaterHeaterSchedule.Add(new HeaterWeeklyEvent(GetDateOfDay(day), CurrentState.ModeLookup.GetHeatingModeId(HeatingMode.HighestTemperature), hasPriceInformation:false));
+                    WaterHeaterSchedule.Add(new HeaterWeeklyEvent(GetDateOfDay(day).AddHours(6), CurrentState.ModeLookup.GetHeatingModeId(HeatingMode.HeathingDisabled), hasPriceInformation: false));
+                    WaterHeaterSchedule.Add(new HeaterWeeklyEvent(GetDateOfDay(day).AddHours(12), CurrentState.ModeLookup.GetHeatingModeId(HeatingMode.MediumTemperature), hasPriceInformation: false));
                 }
             }
 

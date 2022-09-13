@@ -102,7 +102,9 @@ namespace MyUplinkSmartConnect.ExternalPrice
                                 }
 
                                 if (price.Price != double.MinValue)
+                                {
                                     CurrentState.PriceList.Add(price);
+                                }
                             }
                         }
                     }
