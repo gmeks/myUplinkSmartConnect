@@ -84,6 +84,12 @@ namespace MyUplinkSmartConnect
             }
         }
 
+        public double GetHeatingPowerInKwh(HeatingMode mode)
+        {
+            var tmp = GetHeatingPower(mode);
+            return GetHeatingPowerInKwh(tmp);
+        }
+
         public double GetHeatingPowerInKwh(WaterHeaterDesiredPower mode)
         {
             switch (mode)

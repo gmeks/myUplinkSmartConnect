@@ -211,8 +211,7 @@ namespace MyUplinkSmartConnect.CostSavings
                 case HeatingMode.HighestTemperature:
                     if (last.ExpectedEnergiLevel < _desiredMaximalTankEnergi)
                     {
-                        var heatingMode = CurrentState.ModeLookup.GetHeatingPower(last.HeatingMode);
-                        var energiChange = CurrentState.ModeLookup.GetHeatingPowerInKwh(heatingMode);
+                        var energiChange = CurrentState.ModeLookup.GetHeatingPowerInKwh(last.HeatingMode);
                         // We added up 1 hour of full powa.
                         newEnergiLevel = last.ExpectedEnergiLevel + energiChange;
                     }

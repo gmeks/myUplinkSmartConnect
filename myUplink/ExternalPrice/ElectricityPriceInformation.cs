@@ -30,8 +30,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
 
         public double GetMaximumCost()
         {
-            var heatingMode = CurrentState.ModeLookup.GetHeatingPower(HeatingMode);
-            var currentKwh = CurrentState.ModeLookup.GetHeatingPowerInKwh(heatingMode);
+            var currentKwh = CurrentState.ModeLookup.GetHeatingPowerInKwh(HeatingMode);
 
             return currentKwh > 0 ? (Price * currentKwh) : 0;
         }

@@ -66,22 +66,32 @@ namespace MyUplinkSmartConnect.ExternalPrice
             switch (powerzoneName)
             {
 
+                case "no1":
+                case "no-1":
                 case "oslo":
                     return "NO-1";
 
+                case "no2":
+                case "no-2":
                 case "kr.sand":
                 case "kristiansand":
                     return "NO-2";
 
+                case "no3":
+                case "no-3":
                 case "molde":
                 case "trondheim":
                 case "tr.heim":
                     return "NO-3";
 
+                case "no4":
+                case "no-4":
                 case "tromsø":
                 case "tromso":
                     return "NO-4";
 
+                case "no5":
+                case "no-5":
                 case "bergen":
                     return "NO-5";
             }
@@ -106,7 +116,6 @@ namespace MyUplinkSmartConnect.ExternalPrice
             }
 
             sortedList.Sort(new SortByLowestPrice());
-
             IEnumerable<ElectricityPriceInformation> maxPowerHours = Array.Empty<ElectricityPriceInformation>();
             IEnumerable<ElectricityPriceInformation> mediumPowerHours = Array.Empty<ElectricityPriceInformation>();
             if (desiredMaxpower != 0)

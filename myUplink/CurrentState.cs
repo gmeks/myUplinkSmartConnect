@@ -24,7 +24,6 @@ namespace MyUplinkSmartConnect
         static States _currentFailed = States.Ok;
         static DateTime _lastStatePublish = DateTime.MinValue;
 
-
         public static void SetSuccess(States state)
         {
             bool foundChanges = false;
@@ -66,7 +65,6 @@ namespace MyUplinkSmartConnect
                 PublishChanges();
             }
         }
-
 
         static void PublishChanges()
         {
