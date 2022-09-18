@@ -41,6 +41,9 @@ namespace MyUplinkSmartConnect.CostSavingsRules
 
                     foreach (var price in schedule)
                     {
+                        if (price.Start.DayOfWeek != day)
+                            continue;
+
                         if (price.HeatingMode != currentPowerLevel)
                         {
                             currentPowerLevel = price.HeatingMode;
