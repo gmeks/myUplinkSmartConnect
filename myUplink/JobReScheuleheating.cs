@@ -141,7 +141,7 @@ namespace MyUplinkSmartConnect
         {
             Log.Logger.Debug("Should try to find schedule for legionella program");
 
-            const int NextRunHoursBeforSchedule = 60;            
+            const int NextRunHoursBeforSchedule = 48;            
             var parameters = await Settings.Instance.myuplinkApi.GetDevicePoints(device, CurrentPointParameterType.LegionellaPreventionNext);
 
             if (!parameters.Any())
