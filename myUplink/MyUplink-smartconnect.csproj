@@ -11,9 +11,9 @@
     <PackageProjectUrl>https://github.com/gmeks/myUplinkSmartConnect</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/gmeks/myUplinkSmartConnect</RepositoryUrl>
-    <AssemblyVersion>1.1.0.4</AssemblyVersion>
-    <FileVersion>1.1.0.4</FileVersion>
-    <Version>1.1.0.4</Version>
+    <AssemblyVersion>1.1.0.5</AssemblyVersion>
+    <FileVersion>1.1.0.5</FileVersion>
+    <Version>1.1.0.5</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -39,7 +39,7 @@
     <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="6.0.0" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.17.0" />
-    <PackageReference Include="MQTTnet" Version="4.1.0.247" />
+    <PackageReference Include="MQTTnet" Version="4.1.1.318" />
     <PackageReference Include="RestSharp" Version="108.0.2" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="5.0.1" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
