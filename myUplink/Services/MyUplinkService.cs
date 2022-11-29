@@ -9,9 +9,9 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace MyUplinkSmartConnect
+namespace MyUplinkSmartConnect.Services
 {
-    internal class myuplinkApi
+    internal class MyUplinkService
     {
         RestClient _httpClient;
         AuthToken? _token;
@@ -20,7 +20,7 @@ namespace MyUplinkSmartConnect
         List<DeviceGroup>? _devices;
         string _myUplinkDirectory;
 
-        public myuplinkApi()
+        public MyUplinkService()
         {
             _heaterScheduleRoot = new Dictionary<string, HeaterWeeklyRoot[]>();
             _apiUrl = new Uri("https://internalapi.myuplink.com");
@@ -98,7 +98,7 @@ namespace MyUplinkSmartConnect
                 }
                 else
                 {
-                    Log.Logger.Warning("Login to myUplink API failed with status {StatusCode} and message {Content}",tResponse.StatusCode,tResponse.Content);
+                    Log.Logger.Warning("Login to myUplink API failed with status {StatusCode} and message {Content}", tResponse.StatusCode, tResponse.Content);
                     return false;
                 }
             }
@@ -167,10 +167,10 @@ namespace MyUplinkSmartConnect
 
                 foreach (var deviceGroup in deviceList)
                 {
-                    foreach(var device in deviceGroup.devices)
+                    foreach (var device in deviceGroup.devices)
                     {
-                        Log.Logger.Information("Found device with ID: {DeviceId}",device.id);
-                    }                    
+                        Log.Logger.Information("Found device with ID: {DeviceId}", device.id);
+                    }
                 }
 
                 _devices = deviceList;
@@ -195,10 +195,10 @@ namespace MyUplinkSmartConnect
                 var heaterRoot = JsonSerializer.Deserialize<HeaterWeeklyRoot[]>(tResponse.Content) ?? Array.Empty<HeaterWeeklyRoot>();
 
                 if (_heaterScheduleRoot.ContainsKey(device.id))
-                    _heaterScheduleRoot[device.id] =  heaterRoot;
+                    _heaterScheduleRoot[device.id] = heaterRoot;
                 else
                     _heaterScheduleRoot.Add(device.id, heaterRoot);
-                
+
                 return heaterRoot.First().events ?? Array.Empty<HeaterWeeklyEvent>().ToList();
             }
 
@@ -207,7 +207,7 @@ namespace MyUplinkSmartConnect
 
         public string GetCurrentDayOrder(Device device)
         {
-            if(string.IsNullOrEmpty(device.id))
+            if (string.IsNullOrEmpty(device.id))
                 throw new NullReferenceException("device.id is null");
 
             var heaterRoot = _heaterScheduleRoot[device.id];
@@ -268,7 +268,7 @@ namespace MyUplinkSmartConnect
             var request = new RestRequest($"/v2/devices/{device.id}/schedule-modes") { Method = Method.Put };
             request.AddJsonBody<IEnumerable<WaterHeaterMode>>(modes);
             var tResponse = await _httpClient.ExecuteAsync(request);
-            if (tResponse.StatusCode == System.Net.HttpStatusCode.OK  || tResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
+            if (tResponse.StatusCode == System.Net.HttpStatusCode.OK || tResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
             {
                 return true;
             }

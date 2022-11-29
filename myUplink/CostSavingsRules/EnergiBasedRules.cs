@@ -1,6 +1,7 @@
 ﻿using MyUplinkSmartConnect.CostSavingsRules;
 using MyUplinkSmartConnect.ExternalPrice;
 using MyUplinkSmartConnect.Models;
+using MyUplinkSmartConnect.Services;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -86,14 +87,14 @@ namespace MyUplinkSmartConnect.CostSavings
             CreateScheduleEmty();
             FindPeakHeatingRequirements(datesToSchuedule);
 
-            var status = GenerateRemoteSchedule(weekFormat, runLegionellaHeating, _tankHeatingSchedule, datesToSchuedule);
+            var status = GenerateRemoteSchedule( weekFormat, runLegionellaHeating, _tankHeatingSchedule, datesToSchuedule);
             return status;
         }
 
         string GenerateLogLineSchedule(HeaterWeeklyEvent schEvent, bool CSVFormat = false)
         {
             var logLine = new StringBuilder();
-            var heatingMode = CurrentState.ModeLookup.GetHeatingModeFromId(schEvent.modeId);
+            var heatingMode = _currentState.ModeLookup.GetHeatingModeFromId(schEvent.modeId);
             var energiPriceList = GetPriceFromSchedule(schEvent.Date);
 
             var heatingModes = new StringBuilder();
@@ -118,7 +119,7 @@ namespace MyUplinkSmartConnect.CostSavings
                 priceLists.Append(item.Price.ToString("0.00"));
                 expectedEnergiLevels.Append(item.ExpectedEnergiLevel.ToString("0.00"));
 
-                potensialMaximumCost += item.GetMaximumCost();
+                potensialMaximumCost += item.GetMaximumCost(_currentState);
             }
 
 
@@ -211,7 +212,7 @@ namespace MyUplinkSmartConnect.CostSavings
                 case HeatingMode.HighestTemperature:
                     if (last.ExpectedEnergiLevel < _desiredMaximalTankEnergi)
                     {
-                        var energiChange = CurrentState.ModeLookup.GetHeatingPowerInKwh(last.HeatingMode);
+                        var energiChange = _currentState.ModeLookup.GetHeatingPowerInKwh(last.HeatingMode);
                         // We added up 1 hour of full powa.
                         newEnergiLevel = last.ExpectedEnergiLevel + energiChange;
                     }
@@ -323,7 +324,7 @@ namespace MyUplinkSmartConnect.CostSavings
 
         void CreateScheduleEmty()
         {
-            foreach (var price in CurrentState.PriceList)
+            foreach (var price in _currentState.PriceList)
             {
                 var newPrice = JsonUtils.CloneTo<WaterHeaterState>(price);                
                 _tankHeatingSchedule.Add(newPrice);

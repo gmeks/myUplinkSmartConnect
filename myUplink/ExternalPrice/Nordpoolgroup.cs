@@ -17,7 +17,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
         }
         public async Task<bool> GetPriceInformation()
         {
-            CurrentState.PriceList.Clear();
+            _currentState.PriceList.Clear();
             var powerRegionIndex = GetPowerRegionIndex();
 
             //TomorrowsPrice
@@ -41,9 +41,9 @@ namespace MyUplinkSmartConnect.ExternalPrice
                             price.End = item.EndTime;
                             price.Price = Parse(column.Value);
 
-                            if (!CurrentState.PriceList.Contains(price) && price.Price != double.MinValue)
+                            if (!_currentState.PriceList.Contains(price) && price.Price != double.MinValue)
                             {
-                                CurrentState.PriceList.Add(price);
+                                _currentState.PriceList.Add(price);
                             }
                         }
                     }
@@ -77,9 +77,9 @@ namespace MyUplinkSmartConnect.ExternalPrice
                             price.End = item.EndTime;
                             price.Price = Parse(column.Value);
 
-                            if(!CurrentState.PriceList.Contains(price) && price.Price != double.MinValue)
+                            if(!_currentState.PriceList.Contains(price) && price.Price != double.MinValue)
                             {
-                                CurrentState.PriceList.Add(price);
+                                _currentState.PriceList.Add(price);
                             }
                         }
                     }

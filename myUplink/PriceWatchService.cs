@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Hosting;
 using MyUplinkSmartConnect.CostSavings;
 using MyUplinkSmartConnect.ExternalPrice;
+using MyUplinkSmartConnect.Services;
 using Serilog;
 using Serilog.Events;
 using System;
@@ -158,7 +159,6 @@ namespace MyUplinkSmartConnect
                 }
             }
 
-            Settings.Instance.myuplinkApi = new myuplinkApi();
             _backgroundJobs.Start();
         }
 

@@ -18,7 +18,7 @@ namespace MyUplinkSmartConnect
         HeatingLegionenna,
     }
 
-    internal class WaterHeaterModeLookup
+    public class WaterHeaterModeLookup
     {
         /*
          *  M6 High temprature

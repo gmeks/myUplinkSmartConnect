@@ -1,6 +1,8 @@
 ﻿using DetermenisticRandom;
+using Microsoft.Extensions.DependencyInjection;
 using MyUplinkSmartConnect.ExternalPrice;
 using MyUplinkSmartConnect.Models;
+using MyUplinkSmartConnect.Services;
 using Serilog;
 using Serilog.Core;
 using System;
@@ -26,11 +28,18 @@ namespace MyUplinkSmartConnect
         DateTime _nextScheduleUpdate;
 
         JobCheckHeaterStatus? _heaterStatus;
+        readonly MyUplinkService _myUplinkAPI;
+        readonly MQTTService _mqttService;
+        readonly CurrentStateService _currentState;
 
         const int _minimumHourForScheduleStart = 14;
 
         public BackgroundJobSupervisor()
         {
+            _mqttService = Settings.ServiceLookup.GetService<MQTTService>() ?? throw new NullReferenceException();
+            _myUplinkAPI = Settings.ServiceLookup.GetService<MyUplinkService>() ?? throw new NullReferenceException();
+            _currentState = Settings.ServiceLookup.GetService<CurrentStateService>() ?? throw new NullReferenceException();
+
             var random = new DetermenisticInt();
             int tmpHour = random.GetByte(_minimumHourForScheduleStart, 22, BuildDetermenisticRandomSeed(), 3);
             int tmpMinute = random.GetByte(_minimumHourForScheduleStart, 22, BuildDetermenisticRandomSeed(), 2);
@@ -125,9 +134,9 @@ namespace MyUplinkSmartConnect
                 _lastWorkerAliveCheck = DateTime.UtcNow;
 
                 if (_heaterStatus == null)
-                    _heaterStatus = new JobCheckHeaterStatus();
+                    _heaterStatus = new JobCheckHeaterStatus(_myUplinkAPI,_mqttService, _currentState);
 
-                if (Settings.Instance.myuplinkApi == null)
+                if (_myUplinkAPI == null)
                 {
                     Log.Logger.Debug("myUplink API is not ready");
                     continue;
@@ -158,39 +167,41 @@ namespace MyUplinkSmartConnect
         {
             var nextScheduleChange = DateTime.UtcNow - _nextScheduleUpdate;
 #if DEBUG
-            if (true)
+            if (true || Settings.Instance.ForceScheduleRebuild)
             //if (nextScheduleChange.TotalHours >= 24 && DateTime.UtcNow.Hour > _minimumHourForScheduleStart || _nextScheduleUpdate > DateTime.UtcNow && DateTime.UtcNow.Hour > _minimumHourForScheduleStart)
 #else
-            if (nextScheduleChange.TotalHours >= 24 && DateTime.UtcNow.Hour > _minimumHourForScheduleStart ||  _nextScheduleUpdate > DateTime.UtcNow && DateTime.UtcNow.Hour > _minimumHourForScheduleStart )
+            if (nextScheduleChange.TotalHours >= 24 && DateTime.UtcNow.Hour > _minimumHourForScheduleStart ||  _nextScheduleUpdate > DateTime.UtcNow && DateTime.UtcNow.Hour > _minimumHourForScheduleStart || Settings.Instance.ForceScheduleRebuild )
 #endif
             {
+                Settings.Instance.ForceScheduleRebuild = false;
                 Log.Logger.Debug("Last schedule was {hours} hours ago and above minimum hour for schedule start {minHour}", nextScheduleChange.TotalHours, (DateTime.UtcNow.Hour > _minimumHourForScheduleStart));
                 try
                 {
-                    Settings.Instance.myuplinkApi.ClearCached();
+                    _myUplinkAPI.ClearCached();
 
-                    var status = await JobReScheuleheating.Work();
+                    var buildSchedule = new JobReScheuleheating(_myUplinkAPI, _mqttService, _currentState);
+                    var status = await buildSchedule.Work();
 
                     if (status)
                     {                        
                         _nextScheduleUpdate = _nextScheduleUpdate.AddDays(1);
                         Log.Logger.Debug("Schedule update was successfull next one will be {nextUpdate}", _nextScheduleUpdate.ToString());
-                        CurrentState.SetSuccess(States.Schedule);
+                        _currentState.SetSuccess(States.Schedule);
                     }
                     else
                     {
-                        CurrentState.SetFailed(States.Schedule);
+                        _currentState.SetFailed(States.Schedule);
                     }
                 }
                 catch (Exception ex)
                 {
                     Log.Logger.Error(ex, "Failed to run heater schedule job");
-                    CurrentState.SetFailed(States.Schedule);
+                    _currentState.SetFailed(States.Schedule);
                 }
 
                 
                 // We now update the MQTT with information about when the next update will happen
-                var group = await Settings.Instance.myuplinkApi.GetDevices();
+                var group = await _myUplinkAPI.GetDevices();
                 if (group != null && _heaterStatus != null && Settings.Instance.MQTTActive)
                 {
                     var devicesStatusUpdatedCount = 0;
@@ -201,7 +212,7 @@ namespace MyUplinkSmartConnect
 
                         foreach (var tmpdevice in device.devices)
                         {
-                            await Settings.Instance.MQTTSender.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChangeInHours, Convert.ToInt32(nextScheduleChange.TotalHours),true);
+                            await _mqttService.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChangeInHours, Convert.ToInt32(nextScheduleChange.TotalHours),true);
                         }
 
                         devicesStatusUpdatedCount++;
@@ -220,7 +231,7 @@ namespace MyUplinkSmartConnect
         {
             if (_heaterStatus == null)
             {
-                Log.Logger.Debug("Cannot do status updates heaterstatus is null {_heaterStatus} or API is down {myapi}", (_heaterStatus is null), (Settings.Instance.myuplinkApi is null));
+                Log.Logger.Debug("Cannot do status updates heaterstatus is null {_heaterStatus} or API is down {myapi}", (_heaterStatus is null), (_myUplinkAPI is null));
                 return;
             }
             var nextStatusUpdate = DateTime.UtcNow - _nextStatusUpdate;
@@ -236,11 +247,11 @@ namespace MyUplinkSmartConnect
                     if(itemsUpdated != 0)
                     {
                         _nextStatusUpdate = DateTime.UtcNow;
-                        CurrentState.SetSuccess(States.HeaterStats);
+                        _currentState.SetSuccess(States.HeaterStats);
                     }
                     else
                     {
-                        CurrentState.SetFailed(States.HeaterStats);
+                        _currentState.SetFailed(States.HeaterStats);
                     }                    
                 }
                 catch (Exception ex)
@@ -248,7 +259,7 @@ namespace MyUplinkSmartConnect
                     Log.Logger.Error(ex, "Failed to run heater status job");
 
                     if (Settings.Instance.MQTTActive)
-                        CurrentState.SetFailed(States.HeaterStats);
+                        _currentState.SetFailed(States.HeaterStats);
 
                     _heaterStatus = null;
                     return;
