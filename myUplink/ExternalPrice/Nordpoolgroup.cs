@@ -25,7 +25,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
             if (tResponse.StatusCode == System.Net.HttpStatusCode.OK )
             {
                 var strContent = await tResponse.Content.ReadAsStringAsync();
-                var root = JsonSerializer.Deserialize<Root>(strContent);
+                var root = JsonSerializer.Deserialize<Root>(strContent) ?? throw new NullReferenceException();
 
                 foreach(var item in root.data.Rows)
                 {
@@ -61,7 +61,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
             if (tResponse.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 var strContent = await tResponse.Content.ReadAsStringAsync();
-                var root = JsonSerializer.Deserialize<Root>(strContent);
+                var root = JsonSerializer.Deserialize<Root>(strContent) ?? throw new NullReferenceException();
 
                 foreach (var item in root.data.Rows)
                 {

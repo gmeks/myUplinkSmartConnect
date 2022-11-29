@@ -11,9 +11,9 @@
     <PackageProjectUrl>https://github.com/gmeks/myUplinkSmartConnect</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/gmeks/myUplinkSmartConnect</RepositoryUrl>
-    <AssemblyVersion>1.1.0.4</AssemblyVersion>
-    <FileVersion>1.1.0.4</FileVersion>
-    <Version>1.1.0.4</Version>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>
+    <Version>1.2.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

@@ -103,7 +103,7 @@ namespace MyUplinkSmartConnect.Services
                         {
                             _connectionFailedCount = 0;
                         }
-                        _mqttClient.SubscribeAsync("HeaterBoost", MQTTnet.Protocol.MqttQualityOfServiceLevel.ExactlyOnce);
+                        _mqttClient.SubscribeAsync("heater/boost", MQTTnet.Protocol.MqttQualityOfServiceLevel.ExactlyOnce);
                         _mqttClient.ApplicationMessageReceivedAsync += _mqttClient_ApplicationMessageReceivedAsync;
                     }
                     catch (Exception ex)
@@ -121,19 +121,21 @@ namespace MyUplinkSmartConnect.Services
             }
         }
 
-        private async Task _mqttClient_ApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs arg)
+        private Task _mqttClient_ApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs arg)
         {
             if (string.IsNullOrEmpty(arg.ApplicationMessage.Topic))
-                return;
+                return Task.CompletedTask;
 
-            if (arg.ApplicationMessage.Topic.StartsWith("HeaterBoost"))
+            if (arg.ApplicationMessage.Topic.StartsWith("heater/boost"))
             {
                 Log.Logger.Information("MQTT sendt message, to add a boost now");
-                var scheduleAdjust = Settings.ServiceLookup.GetService<ScheduleAdjustService>();
+                var scheduleAdjust = Settings.ServiceLookup.GetService<ScheduleAdjustService>() ?? throw new NullReferenceException();
                 scheduleAdjust.Add();
 
                 Settings.Instance.ForceScheduleRebuild = true;
             }
+
+            return Task.CompletedTask;
         }
     }
 }

@@ -112,6 +112,16 @@ Q) Can i force it to update the schedule?
 
 Please note from my personal experimentation most of the values that the heater is reporting is best case just guessing. You can trust how much energi its using or has used.
 
+Its also posible to send a override/boost command to the water heater, this will create a new schedule entry for now, and set it to the highest configured temprature, this is done by sending a message to the topic: heater/boost .
+>      alias: TriggerWaterheaterBoost
+>      sequence:
+>        - service: mqtt.publish
+>          data:
+>            topic: heater/boost
+>            payload: "{   \"msg\": \"hello\" }"
+>      mode: single
+
+
 
 18760NE2240322014631 needs to be replaced with the ID of your hotwater heater, simplest way to find out is to just read the console output of this application*
 

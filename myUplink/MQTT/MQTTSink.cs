@@ -15,7 +15,7 @@ namespace MyUplinkSmartConnect.MQTT
     public class MQTTSink : ILogEventSink
     {
         private readonly IFormatProvider? _formatProvider;
-        private MQTTService _mqttService;
+        private MQTTService? _mqttService;
 
         public MQTTSink(IFormatProvider? formatProvider)
         {
@@ -41,7 +41,7 @@ namespace MyUplinkSmartConnect.MQTT
 
                 try
                 {
-                    _mqttService.SendUpdate(Models.CurrentPointParameterType.LogEntry,message,true).Wait();
+                    _mqttService?.SendUpdate(Models.CurrentPointParameterType.LogEntry,message,true).Wait();
                 }
                 catch
                 {
