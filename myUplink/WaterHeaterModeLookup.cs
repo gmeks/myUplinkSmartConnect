@@ -36,7 +36,7 @@ namespace MyUplinkSmartConnect
             ReCheckModes(waterHeaterModes);
         }
 
-        public IList<WaterHeaterMode> WaterHeaterModes { get { return WaterHeaterModes; } }
+        public IList<WaterHeaterMode> WaterHeaterModes { get { return _waterHeaterModes; } }
 
         public bool ReCheckModes(IList<WaterHeaterMode> waterHeaterModes)
         {
