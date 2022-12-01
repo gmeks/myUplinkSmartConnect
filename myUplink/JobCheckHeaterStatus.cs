@@ -88,7 +88,7 @@ namespace MyUplinkSmartConnect
 
             if(deviceStatsUpdatesSendt == 0)
             {
-                Log.Logger.Warning("When doing stats update for water heaters, 0 stats items where sendt");
+                Log.Logger.Debug("When doing stats update for water heaters, 0 stats items where sendt");
             }
 
             return deviceStatsUpdatesSendt;

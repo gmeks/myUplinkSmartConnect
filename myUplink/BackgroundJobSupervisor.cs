@@ -46,9 +46,9 @@ namespace MyUplinkSmartConnect
 
             _nextScheduleUpdate = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day, tmpHour, tmpMinute, 0);
             _nextStatusUpdate = DateTime.UtcNow;
-
             _nextScheduleUpdate = _nextScheduleUpdate.AddDays(-1);
-            Log.Logger.Information("Target Schedule change time is {NextScheduleUpdate}", _nextScheduleUpdate.ToLocalTime().ToShortTimeString());
+
+             Log.Logger.Information("Target Schedule change time is {NextScheduleUpdate}", _nextScheduleUpdate.ToLocalTime().ToShortTimeString());
         }
 
         void CreateWorkerThread()
@@ -165,12 +165,22 @@ namespace MyUplinkSmartConnect
 
         async Task WorkerSchedule()
         {
+            var timeSinceLastChange = DateTime.Now - _myUplinkAPI.GetLastScheduleChange();
             var nextScheduleChange = DateTime.UtcNow - _nextScheduleUpdate;
+
+            if(_myUplinkAPI.GetLastScheduleChange() == DateTime.MinValue)
+            {
+                timeSinceLastChange = nextScheduleChange;
+            }
+            
 #if DEBUG
             if (true || Settings.Instance.ForceScheduleRebuild)
             //if (nextScheduleChange.TotalHours >= 24 && DateTime.UtcNow.Hour > _minimumHourForScheduleStart || _nextScheduleUpdate > DateTime.UtcNow && DateTime.UtcNow.Hour > _minimumHourForScheduleStart)
 #else
-            if (nextScheduleChange.TotalHours >= 24 && DateTime.UtcNow.Hour > _minimumHourForScheduleStart ||  _nextScheduleUpdate > DateTime.UtcNow && DateTime.UtcNow.Hour > _minimumHourForScheduleStart || Settings.Instance.ForceScheduleRebuild )
+            if (nextScheduleChange.TotalHours >= 24 && DateTime.UtcNow.Hour > _minimumHourForScheduleStart 
+            ||  _nextScheduleUpdate > DateTime.UtcNow && DateTime.UtcNow.Hour > _minimumHourForScheduleStart 
+            || Settings.Instance.ForceScheduleRebuild 
+            || timeSinceLastChange.TotalHours >= 26 && DateTime.UtcNow.Hour > _minimumHourForScheduleStart)
 #endif
             {
                 Settings.Instance.ForceScheduleRebuild = false;
@@ -185,6 +195,7 @@ namespace MyUplinkSmartConnect
                     if (status)
                     {                        
                         _nextScheduleUpdate = _nextScheduleUpdate.AddDays(1);
+                        _myUplinkAPI.SetLastScheduleChange();
                         Log.Logger.Debug("Schedule update was successfull next one will be {nextUpdate}", _nextScheduleUpdate.ToString());
                         _currentState.SetSuccess(States.Schedule);
                     }
@@ -212,7 +223,7 @@ namespace MyUplinkSmartConnect
 
                         foreach (var tmpdevice in device.devices)
                         {
-                            await _mqttService.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChangeInHours, Convert.ToInt32(nextScheduleChange.TotalHours),true);
+                            await _mqttService.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChangeInHours, Convert.ToInt32(timeSinceLastChange.TotalHours),true);
                         }
 
                         devicesStatusUpdatedCount++;

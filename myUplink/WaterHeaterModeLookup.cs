@@ -33,7 +33,10 @@ namespace MyUplinkSmartConnect
 
         public WaterHeaterModeLookup(IList<WaterHeaterMode> waterHeaterModes)
         {
-            ReCheckModes(waterHeaterModes);
+            _waterHeaterModes = waterHeaterModes;
+            _heatingModeLookup = new Dictionary<HeatingMode, int>();
+
+            VerifyWaterHeaterModes(false);
         }
 
         public IList<WaterHeaterMode> WaterHeaterModes { get { return _waterHeaterModes; } }
@@ -41,8 +44,6 @@ namespace MyUplinkSmartConnect
         public bool ReCheckModes(IList<WaterHeaterMode> waterHeaterModes)
         {
             _waterHeaterModes = waterHeaterModes;
-            _heatingModeLookup = new Dictionary<HeatingMode, int>();
-
             return VerifyWaterHeaterModes();
         }       
 
@@ -111,9 +112,10 @@ namespace MyUplinkSmartConnect
             }
         }
 
-        bool VerifyWaterHeaterModes()
+        bool VerifyWaterHeaterModes(bool verifyModes = true)
         {
             bool allModesGood = true;
+            _heatingModeLookup.Clear();
 
             foreach (var mode in _waterHeaterModes)
             {
@@ -123,32 +125,51 @@ namespace MyUplinkSmartConnect
                 bool isGood = true;
                 if (mode.name.StartsWith("M6"))
                 {
-                    isGood = VerifyWaterHeaterMode(mode, GetHeatingPower(HeatingMode.HighestTemperature), Settings.Instance.HighPowerTargetTemperature);
+                    if(verifyModes)
+                    {
+                        isGood = VerifyWaterHeaterMode(mode, GetHeatingPower(HeatingMode.HighestTemperature), Settings.Instance.HighPowerTargetTemperature);
+                    }                    
 
                     _heatingModeLookup.Add(HeatingMode.HighestTemperature ,mode.modeId);
                 }
 
                 if (mode.name.StartsWith("M5"))
                 {
-                    isGood = VerifyWaterHeaterMode(mode, GetHeatingPower(HeatingMode.MediumTemperature), Settings.Instance.MediumPowerTargetTemperature);
+                    if (verifyModes)
+                    {
+                        isGood = VerifyWaterHeaterMode(mode, GetHeatingPower(HeatingMode.MediumTemperature), Settings.Instance.MediumPowerTargetTemperature);
+                    }
+                        
                     _heatingModeLookup.Add(HeatingMode.MediumTemperature, mode.modeId);
                 }
 
                 if (mode.name.StartsWith("M4"))
                 {
-                    isGood = VerifyWaterHeaterMode(mode, GetHeatingPower(HeatingMode.HeathingDisabled), Settings.Instance.MediumPowerTargetTemperature);
+                    if (verifyModes)
+                    {
+                        isGood = VerifyWaterHeaterMode(mode, GetHeatingPower(HeatingMode.HeathingDisabled), Settings.Instance.MediumPowerTargetTemperature);
+                    }
+                        
                     _heatingModeLookup.Add(HeatingMode.HeathingDisabled, mode.modeId);
                 }
 
                 if (Settings.Instance.EnergiBasedCostSaving && mode.name.StartsWith("M3"))
                 {
-                    isGood = VerifyWaterHeaterMode(mode, GetHeatingPower(HeatingMode.MediumTemprature1300watt), Settings.Instance.MediumPowerTargetTemperature);
+                    if (verifyModes)
+                    {
+                        isGood = VerifyWaterHeaterMode(mode, GetHeatingPower(HeatingMode.MediumTemprature1300watt), Settings.Instance.MediumPowerTargetTemperature);
+                    }
+                        
                     _heatingModeLookup.Add(HeatingMode.MediumTemprature1300watt, mode.modeId);
                 }
 
                 if (Settings.Instance.RequireUseOfM2ForLegionellaProgram && mode.name.StartsWith("M2"))
                 {
-                    isGood = VerifyWaterHeaterMode(mode, GetHeatingPower(HeatingMode.HeatingLegionenna), 75);
+                    if (verifyModes)
+                    {
+                        isGood = VerifyWaterHeaterMode(mode, GetHeatingPower(HeatingMode.HeatingLegionenna), 75);
+                    }
+                        
                     _heatingModeLookup.Add(HeatingMode.HeatingLegionenna, mode.modeId);
                 }
 

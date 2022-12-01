@@ -67,7 +67,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
                 {
                     foreach (var column in item.Columns)
                     {
-                        var regionName = ConvertRegionName(column.Name);
+                        var regionName = ConvertRegionName(column.Name,false);
 
                         if (regionName.Equals(NorwayPowerZones[powerRegionIndex], StringComparison.OrdinalIgnoreCase))
                         {

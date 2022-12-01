@@ -15,7 +15,7 @@ namespace MyUplinkSmartConnect.Services
             _scheduledBoosts = new List<ScheduleBoost>();
         }
 
-        public void Add(int maximumHours = 2)
+        public void Add(int maximumHours = 1)
         {
             var now = DateTime.Now;
             
@@ -58,6 +58,11 @@ namespace MyUplinkSmartConnect.Services
             }
 
             return foundMatchingSlot;
+        }
+
+        internal void RemoveBoost()
+        {
+            _scheduledBoosts.Clear();
         }
     }
 

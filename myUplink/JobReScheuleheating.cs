@@ -99,8 +99,6 @@ namespace MyUplinkSmartConnect
 
                     var heaterModes = await _myUplinkAPI.GetCurrentModes(tmpdevice);
                     costSaving.WaterHeaterSchedule = await _myUplinkAPI.GetWheeklySchedules(tmpdevice);
-
-
                     var weekdayOrder = _myUplinkAPI.GetCurrentDayOrder(tmpdevice);
 
                     if (!_currentState.ModeLookup.ReCheckModes(heaterModes))

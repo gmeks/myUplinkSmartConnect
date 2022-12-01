@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Hosting;
 using MyUplinkSmartConnect.CostSavings;
 using MyUplinkSmartConnect.ExternalPrice;
-using MyUplinkSmartConnect.Services;
 using Serilog;
 using Serilog.Events;
 using System;
@@ -15,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace MyUplinkSmartConnect
 {
-    internal class PriceWatchService : BackgroundService
+    internal class MyUplinkSmartconnect : BackgroundService
     {
 #if DEBUG
         const string settingsFile = "appsettings.Development.json";
@@ -24,7 +23,7 @@ namespace MyUplinkSmartConnect
 #endif
         readonly BackgroundJobSupervisor _backgroundJobs;
 
-        public PriceWatchService()
+        public MyUplinkSmartconnect()
         {
             _backgroundJobs = new BackgroundJobSupervisor();
         }
@@ -45,7 +44,7 @@ namespace MyUplinkSmartConnect
                     Log.Logger.Error($"No settings file found {settingsFile}");
                     return;
                 }
-                var dict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(File.ReadAllText(settingsFile));
+                var dict = JsonSerializer.Deserialize<Dictionary<string, object>>(File.ReadAllText(settingsFile));
                 Settings.Instance = new SettingsValues();
 
                 if (dict == null)
@@ -58,8 +57,8 @@ namespace MyUplinkSmartConnect
                 Log.Logger.Information("Reading settings from configuration file");
             }
 
-            Settings.Instance.MQTTLogLevel = env.GetValueEnum<LogEventLevel>(LogEventLevel.Warning, nameof(SettingsValues.MQTTLogLevel));
-            Settings.Instance.ConsoleLogLevel = env.GetValueEnum<LogEventLevel>(LogEventLevel.Information, nameof(SettingsValues.ConsoleLogLevel), "LogLevel");
+            Settings.Instance.MQTTLogLevel = env.GetValueEnum(LogEventLevel.Warning, nameof(SettingsValues.MQTTLogLevel));
+            Settings.Instance.ConsoleLogLevel = env.GetValueEnum(LogEventLevel.Information, nameof(SettingsValues.ConsoleLogLevel), "LogLevel");
 
             if (Settings.Instance.ConsoleLogLevel != LogEventLevel.Information || Settings.Instance.ConsoleLogLevel > Settings.Instance.MQTTLogLevel)
             {
@@ -79,7 +78,7 @@ namespace MyUplinkSmartConnect
                 Password = env.GetValue(nameof(SettingsValues.Password)),
 
                 ChangeSchedule = env.GetValueBool(nameof(SettingsValues.ChangeSchedule), true),
-                EnergiBasedCostSaving = env.GetValueBool(nameof(SettingsValues.EnergiBasedCostSaving), false),                
+                EnergiBasedCostSaving = env.GetValueBool(nameof(SettingsValues.EnergiBasedCostSaving), false),
                 CheckRemoteStatsIntervalInMinutes = env.GetValueInt(nameof(SettingsValues.CheckRemoteStatsIntervalInMinutes), 1),
                 WaterHeaterMaxPowerInHours = env.GetValueInt(nameof(SettingsValues.WaterHeaterMaxPowerInHours), 6),
                 WaterHeaterMediumPowerInHours = env.GetValueInt(nameof(SettingsValues.WaterHeaterMediumPowerInHours), 4),
@@ -92,8 +91,8 @@ namespace MyUplinkSmartConnect
                 MQTTServerPort = env.GetValueInt(nameof(SettingsValues.MQTTServerPort), 1883),
                 MQTTUserName = env.GetValue(nameof(SettingsValues.MQTTUserName)),
                 MQTTPassword = env.GetValue(nameof(SettingsValues.MQTTPassword)),
-                MQTTLogLevel = env.GetValueEnum<LogEventLevel>(LogEventLevel.Warning, nameof(SettingsValues.MQTTLogLevel)),
-                ConsoleLogLevel = env.GetValueEnum<LogEventLevel>(LogEventLevel.Information, nameof(SettingsValues.ConsoleLogLevel), "LogLevel")
+                MQTTLogLevel = env.GetValueEnum(LogEventLevel.Warning, nameof(SettingsValues.MQTTLogLevel)),
+                ConsoleLogLevel = env.GetValueEnum(LogEventLevel.Information, nameof(SettingsValues.ConsoleLogLevel), "LogLevel")
             };
 
             if (string.IsNullOrEmpty(Settings.Instance.UserName))
@@ -134,7 +133,7 @@ namespace MyUplinkSmartConnect
 
             Log.Logger.Information("Reporting to MQTT is: {status}", Settings.Instance.MQTTActive);
 
-            if(!Settings.Instance.ChangeSchedule)
+            if (!Settings.Instance.ChangeSchedule)
             {
                 Log.Logger.Information("Automatic adjusting of schedule is disabled", Settings.Instance.MQTTActive);
             }

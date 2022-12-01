@@ -19,6 +19,7 @@ namespace MyUplinkSmartConnect.Services
         Dictionary<string, HeaterWeeklyRoot[]> _heaterScheduleRoot;
         List<DeviceGroup>? _devices;
         string _myUplinkDirectory;
+        DateTime? _lastUpdateTime;
 
         public MyUplinkService()
         {
@@ -35,6 +36,50 @@ namespace MyUplinkSmartConnect.Services
         {
             _heaterScheduleRoot?.Clear();
             _devices?.Clear();
+        }
+
+        public DateTime GetLastScheduleChange()
+        {
+            if (_lastUpdateTime.HasValue)
+                return _lastUpdateTime.Value;
+
+            string tokenFileFullPath = System.IO.Path.Combine(_myUplinkDirectory + "\\lastScheduleChange.json");
+            _lastUpdateTime = DateTime.MinValue;
+
+            try
+            {
+                if (File.Exists(tokenFileFullPath))
+                {
+                    string fileContent = File.ReadAllText(tokenFileFullPath);
+                    _lastUpdateTime = DateTime.Parse(fileContent);
+                }
+            }
+            catch
+            {
+
+            }
+            return _lastUpdateTime.Value;
+        }
+
+        public bool SetLastScheduleChange()
+        {
+            string tokenFileFullPath = System.IO.Path.Combine(_myUplinkDirectory + "\\lastScheduleChange.json");
+
+            try
+            {
+                if (File.Exists(tokenFileFullPath))
+                {
+                    File.Delete(tokenFileFullPath);
+                }
+
+                _lastUpdateTime = DateTime.Now;
+                File.WriteAllText(tokenFileFullPath,DateTime.Now.ToString());
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public async Task<bool> LoginToApi()
@@ -267,6 +312,26 @@ namespace MyUplinkSmartConnect.Services
             //https://internalapi.myuplink.com/v2/devices/HOIAX_3083989de217_35f19927-203c-4a6b-a84b-9d1c1a9b8d6c/schedule-modes
             var request = new RestRequest($"/v2/devices/{device.id}/schedule-modes") { Method = Method.Put };
             request.AddJsonBody<IEnumerable<WaterHeaterMode>>(modes);
+            var tResponse = await _httpClient.ExecuteAsync(request);
+            if (tResponse.StatusCode == System.Net.HttpStatusCode.OK || tResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
+            {
+                return true;
+            }
+
+            Log.Logger.Warning("Failed to update modes {StatusCode} and message {Content}", tResponse.StatusCode, tResponse.Content);
+            return false;
+        }
+
+        public async Task<bool> SetVacation(Device device, VacationsSchedules vaction)
+        {
+            var loginStatus = await LoginToApi();
+            if (!loginStatus)
+                return false;
+
+            //            //Put
+            //https://internalapi.myuplink.com/v2/devices/HOIAX_3083989de217_35f19927-203c-4a6b-a84b-9d1c1a9b8d6c/schedule-modes
+            var request = new RestRequest($"/v2/devices/{device.id}/vacation-schedules") { Method = Method.Put };
+            request.AddJsonBody<IEnumerable<VacationsSchedules>>(new VacationsSchedules[] { vaction });
             var tResponse = await _httpClient.ExecuteAsync(request);
             if (tResponse.StatusCode == System.Net.HttpStatusCode.OK || tResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
             {

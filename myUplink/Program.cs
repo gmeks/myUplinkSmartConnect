@@ -23,7 +23,7 @@ namespace MyUplinkSmartConnect
             
             var service = Host.CreateDefaultBuilder(args).ConfigureServices((hostContext, services) =>
             {
-                services.AddHostedService<PriceWatchService>();
+                services.AddHostedService<MyUplinkSmartconnect>();
                 services.AddLogging();
             });
             
