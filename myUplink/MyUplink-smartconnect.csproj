@@ -47,6 +47,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DetermenisticRandom\DetermenisticRandom.csproj" />
+    <ProjectReference Include="..\xElectricityPriceApiShared\xElectricityPriceApiShared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -31,16 +31,22 @@ namespace MyUplinkSmartConnect
         IList<WaterHeaterMode> _waterHeaterModes;
         Dictionary<HeatingMode, int> _heatingModeLookup;
 
-        public WaterHeaterModeLookup(IList<WaterHeaterMode> waterHeaterModes)
+        public WaterHeaterModeLookup()
         {
-            ReCheckModes(waterHeaterModes);
+            _waterHeaterModes = new List<WaterHeaterMode>();
+            _heatingModeLookup = new Dictionary<HeatingMode, int>();
         }
 
         public IList<WaterHeaterMode> WaterHeaterModes { get { return _waterHeaterModes; } }
 
-        public bool ReCheckModes(IList<WaterHeaterMode> waterHeaterModes)
+        public async Task<bool> ReCheckModes(Device? device = null)
         {
-            _waterHeaterModes = waterHeaterModes;
+            if(device == null)
+            {
+                device = await Settings.Instance.myuplinkApi.GetDefaultDevice();
+            }
+
+            _waterHeaterModes = await Settings.Instance.myuplinkApi.GetCurrentModes(device);
             _heatingModeLookup = new Dictionary<HeatingMode, int>();
 
             return VerifyWaterHeaterModes();
@@ -48,12 +54,17 @@ namespace MyUplinkSmartConnect
 
         public int GetHeatingModeId(HeatingMode mode)
         {
+            if(!_heatingModeLookup.ContainsKey(mode))
+            {
+                _= ReCheckModes().Result;
+            }
+
             return _heatingModeLookup[mode];
         }
 
         public HeatingMode GetHeatingModeFromId(int modeId)
         {
-            foreach(var item in _heatingModeLookup)
+            foreach (var item in _heatingModeLookup)
             {
                 if (item.Value == modeId)
                     return item.Key;

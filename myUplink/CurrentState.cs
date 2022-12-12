@@ -76,6 +76,6 @@ namespace MyUplinkSmartConnect
 
         public static double CurrentTankEnergi { get; set; }
 
-        public static WaterHeaterModeLookup ModeLookup { get; set; } = new WaterHeaterModeLookup(Array.Empty<WaterHeaterMode>());
+        public static WaterHeaterModeLookup ModeLookup { get; set; } = new WaterHeaterModeLookup();
 }
 }

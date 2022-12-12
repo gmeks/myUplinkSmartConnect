@@ -145,6 +145,13 @@ namespace MyUplinkSmartConnect
             return Array.Empty<CurrentValues>();
         }
 
+        public async Task<Device> GetDefaultDevice()
+        {
+            var group = await Settings.Instance.myuplinkApi.GetDevices();
+
+            return group?.FirstOrDefault()?.devices.FirstOrDefault() ?? throw new NullReferenceException("Failed to find default device");           
+        }
+
         public async Task<IEnumerable<DeviceGroup>> GetDevices()
         {
             if (_devices?.Count > 0)
