@@ -21,7 +21,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
         {
             try
             {
-                CurrentState.PriceList.Clear();
+                _currentState.PriceList.Clear();
                 var today = await GetVgPriceInformation("https://redutv-api.vg.no/power-data/v1/nordpool/today");
                 var tomorrow = await GetVgPriceInformation("https://redutv-api.vg.no/power-data/v1/nordpool/day-ahead/latest");
 
@@ -65,9 +65,9 @@ namespace MyUplinkSmartConnect.ExternalPrice
                     price.End = range.end;
                     price.Price = hourPrices[i];
 
-                    if (!CurrentState.PriceList.Contains(price) && price.Price != double.MinValue)
+                    if (!_currentState.PriceList.Contains(price) && price.Price != double.MinValue)
                     {
-                        CurrentState.PriceList.Add(price);
+                        _currentState.PriceList.Add(price);
                     }
                 }
 

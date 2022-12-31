@@ -1,4 +1,5 @@
-﻿using MyUplinkSmartConnect.MQTT;
+﻿using Microsoft.Extensions.DependencyInjection;
+using MyUplinkSmartConnect.MQTT;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
@@ -14,6 +15,8 @@ namespace MyUplinkSmartConnect
         {
             return new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console(restrictedToMinimumLevel: consoleLogLevel).WriteTo.MQTTSink().CreateLogger();
         }
+        
+        public static ServiceProvider ServiceLookup { get; set; }
     }
 
     class SettingsValues
@@ -53,10 +56,7 @@ namespace MyUplinkSmartConnect
         public LogEventLevel MQTTLogLevel { get; set; } = LogEventLevel.Warning;
 
         [JsonIgnore]
-        public myuplinkApi myuplinkApi { get; set; } = new  myuplinkApi();
-
-        [JsonIgnore]
-        public MQTTSender MQTTSender { get; set; } = new MQTTSender();
+        public bool ForceScheduleRebuild { get; set; } = false;
 
         [JsonIgnore]
         public bool RequireUseOfM2ForLegionellaProgram

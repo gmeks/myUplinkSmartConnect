@@ -17,7 +17,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
         }
         public async Task<bool> GetPriceInformation()
         {
-            CurrentState.PriceList.Clear();
+            _currentState.PriceList.Clear();
             var powerRegionIndex = GetPowerRegionIndex();
 
             //TomorrowsPrice
@@ -25,7 +25,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
             if (tResponse.StatusCode == System.Net.HttpStatusCode.OK )
             {
                 var strContent = await tResponse.Content.ReadAsStringAsync();
-                var root = JsonSerializer.Deserialize<Root>(strContent);
+                var root = JsonSerializer.Deserialize<Root>(strContent) ?? throw new NullReferenceException();
 
                 foreach(var item in root.data.Rows)
                 {
@@ -41,9 +41,9 @@ namespace MyUplinkSmartConnect.ExternalPrice
                             price.End = item.EndTime;
                             price.Price = Parse(column.Value);
 
-                            if (!CurrentState.PriceList.Contains(price) && price.Price != double.MinValue)
+                            if (!_currentState.PriceList.Contains(price) && price.Price != double.MinValue)
                             {
-                                CurrentState.PriceList.Add(price);
+                                _currentState.PriceList.Add(price);
                             }
                         }
                     }
@@ -61,13 +61,13 @@ namespace MyUplinkSmartConnect.ExternalPrice
             if (tResponse.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 var strContent = await tResponse.Content.ReadAsStringAsync();
-                var root = JsonSerializer.Deserialize<Root>(strContent);
+                var root = JsonSerializer.Deserialize<Root>(strContent) ?? throw new NullReferenceException();
 
                 foreach (var item in root.data.Rows)
                 {
                     foreach (var column in item.Columns)
                     {
-                        var regionName = ConvertRegionName(column.Name);
+                        var regionName = ConvertRegionName(column.Name,false);
 
                         if (regionName.Equals(NorwayPowerZones[powerRegionIndex], StringComparison.OrdinalIgnoreCase))
                         {
@@ -77,9 +77,9 @@ namespace MyUplinkSmartConnect.ExternalPrice
                             price.End = item.EndTime;
                             price.Price = Parse(column.Value);
 
-                            if(!CurrentState.PriceList.Contains(price) && price.Price != double.MinValue)
+                            if(!_currentState.PriceList.Contains(price) && price.Price != double.MinValue)
                             {
-                                CurrentState.PriceList.Add(price);
+                                _currentState.PriceList.Add(price);
                             }
                         }
                     }

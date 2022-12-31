@@ -1,6 +1,7 @@
 ﻿using MQTTnet;
 using MQTTnet.Client;
 using MyUplinkSmartConnect.Models;
+using MyUplinkSmartConnect.Services;
 using Serilog;
 
 namespace MyUplinkSmartConnect
@@ -8,10 +9,20 @@ namespace MyUplinkSmartConnect
     internal class JobCheckHeaterStatus
     {
         IEnumerable<DeviceGroup>? _deviceGroup;
+        readonly MyUplinkService _myUplinkAPI;
+        readonly MQTTService _mqttService;
+        readonly CurrentStateService _currentState;
+
+        public JobCheckHeaterStatus(MyUplinkService myUplinkAPI, MQTTService mqttService,CurrentStateService currentState)
+        {
+            _myUplinkAPI = myUplinkAPI;
+            _mqttService = mqttService;
+            _currentState = currentState;
+        }
 
         public async Task<int> Work()
         {
-            if (Settings.Instance.myuplinkApi == null)
+            if (_myUplinkAPI == null)
             {
                 Log.Logger.Debug("myUplink APi is null, cannot do status updates");
                 return 0;
@@ -19,7 +30,7 @@ namespace MyUplinkSmartConnect
 
             if(_deviceGroup == null)
             {
-                _deviceGroup = await Settings.Instance.myuplinkApi.GetDevices();
+                _deviceGroup = await _myUplinkAPI.GetDevices();
             }
             
             Log.Logger.Debug("Found {DeviceCount} devices, will attemt to check for status updates", _deviceGroup.Count());
@@ -27,8 +38,8 @@ namespace MyUplinkSmartConnect
             if (_deviceGroup.Count() == 0)
             {
                 Log.Logger.Debug("Unable to find any devices to check in cache for stats update, will reset cache.");
-                Settings.Instance.myuplinkApi.ClearCached();
-                _deviceGroup = await Settings.Instance.myuplinkApi.GetDevices();
+                _myUplinkAPI.ClearCached();
+                _deviceGroup = await _myUplinkAPI.GetDevices();
 
                 if(_deviceGroup.Count() == 0)
                 {
@@ -45,7 +56,7 @@ namespace MyUplinkSmartConnect
 
                 foreach (var tmpdevice in device.devices)
                 {
-                    var devicePointsList = await Settings.Instance.myuplinkApi.GetDevicePoints(tmpdevice, CurrentPointParameterType.TargetTemprature, CurrentPointParameterType.CurrentTemprature, 
+                    var devicePointsList = await _myUplinkAPI.GetDevicePoints(tmpdevice, CurrentPointParameterType.TargetTemprature, CurrentPointParameterType.CurrentTemprature, 
                         CurrentPointParameterType.EstimatedPower, CurrentPointParameterType.EnergyTotal, CurrentPointParameterType.EnergiStored, CurrentPointParameterType.FillLevel);
 
                     foreach (var devicePoint in devicePointsList)
@@ -55,7 +66,7 @@ namespace MyUplinkSmartConnect
                         switch (parm)
                         {
                             case CurrentPointParameterType.EnergiStored:
-                                CurrentState.CurrentTankEnergi = devicePoint.value;
+                                _currentState.CurrentTankEnergi = devicePoint.value;
                                 break;
                         }
 
@@ -68,7 +79,7 @@ namespace MyUplinkSmartConnect
                             case CurrentPointParameterType.TargetTemprature:
                             case CurrentPointParameterType.CurrentTemprature:
                                 deviceStatsUpdatesSendt++;
-                                await Settings.Instance.MQTTSender.SendUpdate(device.name, parm, devicePoint.value);
+                                await _mqttService.SendUpdate(device.name, parm, devicePoint.value);
                                 break;
                         }                        
                     }
@@ -77,7 +88,7 @@ namespace MyUplinkSmartConnect
 
             if(deviceStatsUpdatesSendt == 0)
             {
-                Log.Logger.Warning("When doing stats update for water heaters, 0 stats items where sendt");
+                Log.Logger.Debug("When doing stats update for water heaters, 0 stats items where sendt");
             }
 
             return deviceStatsUpdatesSendt;

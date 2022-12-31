@@ -1,4 +1,5 @@
 ﻿using MyUplinkSmartConnect.Models;
+using MyUplinkSmartConnect.Services;
 
 namespace MyUplinkSmartConnect.ExternalPrice
 {
@@ -28,9 +29,9 @@ namespace MyUplinkSmartConnect.ExternalPrice
 
         public HeatingMode HeatingMode { get; set; }
 
-        public double GetMaximumCost()
+        public double GetMaximumCost(CurrentStateService state)
         {
-            var currentKwh = CurrentState.ModeLookup.GetHeatingPowerInKwh(HeatingMode);
+            var currentKwh = state.ModeLookup.GetHeatingPowerInKwh(HeatingMode);
 
             return currentKwh > 0 ? (Price * currentKwh) : 0;
         }

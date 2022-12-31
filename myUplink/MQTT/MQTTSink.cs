@@ -1,4 +1,6 @@
-﻿using Serilog;
+﻿using Microsoft.Extensions.DependencyInjection;
+using MyUplinkSmartConnect.Services;
+using Serilog;
 using Serilog.Configuration;
 using Serilog.Core;
 using Serilog.Events;
@@ -13,16 +15,22 @@ namespace MyUplinkSmartConnect.MQTT
     public class MQTTSink : ILogEventSink
     {
         private readonly IFormatProvider? _formatProvider;
+        private MQTTService? _mqttService;
 
         public MQTTSink(IFormatProvider? formatProvider)
         {
-            _formatProvider = formatProvider;
+            _formatProvider = formatProvider;            
         }
 
         public void Emit(LogEvent logEvent)
         {
             if (!Settings.Instance.MQTTActive)
                 return;
+
+            if(_mqttService == null)
+            {
+                _mqttService = Settings.ServiceLookup.GetService<MQTTService>();
+            }
 
             var logLevel = (int)logEvent.Level;
             var configuredMinimalLogLevel = (int)Settings.Instance.MQTTLogLevel;
@@ -33,7 +41,7 @@ namespace MyUplinkSmartConnect.MQTT
 
                 try
                 {
-                    Settings.Instance.MQTTSender.SendUpdate(Models.CurrentPointParameterType.LogEntry,message,true).Wait();
+                    _mqttService?.SendUpdate(Models.CurrentPointParameterType.LogEntry,message,true).Wait();
                 }
                 catch
                 {

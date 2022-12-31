@@ -9,9 +9,9 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace MyUplinkSmartConnect
+namespace MyUplinkSmartConnect.Services
 {
-    internal class myuplinkApi
+    internal class MyUplinkService
     {
         RestClient _httpClient;
         AuthToken? _token;
@@ -19,8 +19,9 @@ namespace MyUplinkSmartConnect
         Dictionary<string, HeaterWeeklyRoot[]> _heaterScheduleRoot;
         List<DeviceGroup>? _devices;
         string _myUplinkDirectory;
+        DateTime? _lastUpdateTime;
 
-        public myuplinkApi()
+        public MyUplinkService()
         {
             _heaterScheduleRoot = new Dictionary<string, HeaterWeeklyRoot[]>();
             _apiUrl = new Uri("https://internalapi.myuplink.com");
@@ -35,6 +36,50 @@ namespace MyUplinkSmartConnect
         {
             _heaterScheduleRoot?.Clear();
             _devices?.Clear();
+        }
+
+        public DateTime GetLastScheduleChange()
+        {
+            if (_lastUpdateTime.HasValue)
+                return _lastUpdateTime.Value;
+
+            string tokenFileFullPath = System.IO.Path.Combine(_myUplinkDirectory + "\\lastScheduleChange.json");
+            _lastUpdateTime = DateTime.MinValue;
+
+            try
+            {
+                if (File.Exists(tokenFileFullPath))
+                {
+                    string fileContent = File.ReadAllText(tokenFileFullPath);
+                    _lastUpdateTime = DateTime.Parse(fileContent);
+                }
+            }
+            catch
+            {
+
+            }
+            return _lastUpdateTime.Value;
+        }
+
+        public bool SetLastScheduleChange()
+        {
+            string tokenFileFullPath = System.IO.Path.Combine(_myUplinkDirectory + "\\lastScheduleChange.json");
+
+            try
+            {
+                if (File.Exists(tokenFileFullPath))
+                {
+                    File.Delete(tokenFileFullPath);
+                }
+
+                _lastUpdateTime = DateTime.Now;
+                File.WriteAllText(tokenFileFullPath,DateTime.Now.ToString());
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public async Task<bool> LoginToApi()
@@ -98,7 +143,7 @@ namespace MyUplinkSmartConnect
                 }
                 else
                 {
-                    Log.Logger.Warning("Login to myUplink API failed with status {StatusCode} and message {Content}",tResponse.StatusCode,tResponse.Content);
+                    Log.Logger.Warning("Login to myUplink API failed with status {StatusCode} and message {Content}", tResponse.StatusCode, tResponse.Content);
                     return false;
                 }
             }
@@ -174,10 +219,10 @@ namespace MyUplinkSmartConnect
 
                 foreach (var deviceGroup in deviceList)
                 {
-                    foreach(var device in deviceGroup.devices)
+                    foreach (var device in deviceGroup.devices)
                     {
-                        Log.Logger.Information("Found device with ID: {DeviceId}",device.id);
-                    }                    
+                        Log.Logger.Information("Found device with ID: {DeviceId}", device.id);
+                    }
                 }
 
                 _devices = deviceList;
@@ -202,10 +247,10 @@ namespace MyUplinkSmartConnect
                 var heaterRoot = JsonSerializer.Deserialize<HeaterWeeklyRoot[]>(tResponse.Content) ?? Array.Empty<HeaterWeeklyRoot>();
 
                 if (_heaterScheduleRoot.ContainsKey(device.id))
-                    _heaterScheduleRoot[device.id] =  heaterRoot;
+                    _heaterScheduleRoot[device.id] = heaterRoot;
                 else
                     _heaterScheduleRoot.Add(device.id, heaterRoot);
-                
+
                 return heaterRoot.First().events ?? Array.Empty<HeaterWeeklyEvent>().ToList();
             }
 
@@ -214,7 +259,7 @@ namespace MyUplinkSmartConnect
 
         public string GetCurrentDayOrder(Device device)
         {
-            if(string.IsNullOrEmpty(device.id))
+            if (string.IsNullOrEmpty(device.id))
                 throw new NullReferenceException("device.id is null");
 
             var heaterRoot = _heaterScheduleRoot[device.id];
@@ -275,7 +320,27 @@ namespace MyUplinkSmartConnect
             var request = new RestRequest($"/v2/devices/{device.id}/schedule-modes") { Method = Method.Put };
             request.AddJsonBody<IEnumerable<WaterHeaterMode>>(modes);
             var tResponse = await _httpClient.ExecuteAsync(request);
-            if (tResponse.StatusCode == System.Net.HttpStatusCode.OK  || tResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
+            if (tResponse.StatusCode == System.Net.HttpStatusCode.OK || tResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
+            {
+                return true;
+            }
+
+            Log.Logger.Warning("Failed to update modes {StatusCode} and message {Content}", tResponse.StatusCode, tResponse.Content);
+            return false;
+        }
+
+        public async Task<bool> SetVacation(Device device, VacationsSchedules vaction)
+        {
+            var loginStatus = await LoginToApi();
+            if (!loginStatus)
+                return false;
+
+            //            //Put
+            //https://internalapi.myuplink.com/v2/devices/HOIAX_3083989de217_35f19927-203c-4a6b-a84b-9d1c1a9b8d6c/schedule-modes
+            var request = new RestRequest($"/v2/devices/{device.id}/vacation-schedules") { Method = Method.Put };
+            request.AddJsonBody<IEnumerable<VacationsSchedules>>(new VacationsSchedules[] { vaction });
+            var tResponse = await _httpClient.ExecuteAsync(request);
+            if (tResponse.StatusCode == System.Net.HttpStatusCode.OK || tResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
             {
                 return true;
             }

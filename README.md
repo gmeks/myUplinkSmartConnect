@@ -112,6 +112,28 @@ Q) Can i force it to update the schedule?
 
 Please note from my personal experimentation most of the values that the heater is reporting is best case just guessing. You can trust how much energi its using or has used.
 
+heater/boost  - This will trigger a boost now, that will add maximum heating for 1 hour timeslot.
+heater/reset_schedule - This will reset and rebuild schedule ( And will remove any scheduled boosts or vacation mode).
+
+Sample command for homeassistant.
+
+>      alias: TriggerWaterheaterBoost
+>      sequence:
+>        - service: mqtt.publish
+>          data:
+>            topic: heater/boost
+>            payload: "{   \"msg\": \"hello\" }"
+>      mode: single
+
+
+Paylog for setting vacation
+>      alias: SetWaterHeaterVacation
+>      sequence:
+>        - service: mqtt.publish
+>          data:
+>            topic: heater/set_vacation
+>            payload: "{"start":"2022-12-01T00:00:00.000Z","end":"2022-12-22T02:00:00.000Z"}"
+>      mode: single
 
 18760NE2240322014631 needs to be replaced with the ID of your hotwater heater, simplest way to find out is to just read the console output of this application*
 

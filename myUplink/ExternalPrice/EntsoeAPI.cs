@@ -28,7 +28,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
 
             try
             {
-                CurrentState.PriceList.Clear();
+                _currentState.PriceList.Clear();
 
                 var powerRegionIndex = GetPowerRegionIndex();
 
@@ -103,7 +103,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
 
                                 if (price.Price != double.MinValue)
                                 {
-                                    CurrentState.PriceList.Add(price);
+                                    _currentState.PriceList.Add(price);
                                 }
                             }
                         }

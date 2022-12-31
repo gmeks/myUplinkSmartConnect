@@ -2,6 +2,7 @@
 using MyUplinkSmartConnect.CostSavingsRules;
 using MyUplinkSmartConnect.ExternalPrice;
 using MyUplinkSmartConnect.Models;
+using MyUplinkSmartConnect.Services;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -11,9 +12,20 @@ using System.Threading.Tasks;
 
 namespace MyUplinkSmartConnect
 {
-    public class JobReScheuleheating
+    internal class JobReScheuleheating
     {
-        static async Task<iBasePriceInformation?> GetPriceInformation()
+        readonly MyUplinkService _myUplinkAPI;
+        readonly MQTTService _mqttService;
+        readonly CurrentStateService _currentState;
+
+        public JobReScheuleheating(MyUplinkService myUplinkAPI, MQTTService mqttService, CurrentStateService currentState)
+        {
+            _myUplinkAPI = myUplinkAPI;
+            _mqttService = mqttService;
+            _currentState = currentState;
+        }
+
+        async Task<iBasePriceInformation?> GetPriceInformation()
         {
             var priceFetchApiList = new iBasePriceInformation[] { new EntsoeAPI(), new Nordpoolgroup(), new VgApi() };
 
@@ -21,7 +33,7 @@ namespace MyUplinkSmartConnect
             {
                 var status = await priceListApi.GetPriceInformation();
 
-                if(status && CurrentState.PriceList.Count >= 48)
+                if(status && _currentState.PriceList.Count >= 48)
                 {
                     Log.Logger.Debug("Using {priceApi} price list", priceListApi.GetType());
                     return priceListApi;
@@ -33,7 +45,7 @@ namespace MyUplinkSmartConnect
             {
                 var status = await priceListApi.GetPriceInformation();
 
-                if (status && CurrentState.PriceList.Count >= 24)
+                if (status && _currentState.PriceList.Count >= 24)
                 {
                     Log.Logger.Debug("Using {priceApi} price list for today", priceListApi.GetType());
                     return priceListApi;
@@ -44,13 +56,13 @@ namespace MyUplinkSmartConnect
             return null;
         }
 
-        public static async Task<bool> Work()
+        internal async Task<bool> Work()
         {
             var priceInformation = await GetPriceInformation();
             if (priceInformation == null)
                 return false;
 
-            bool hasTomorrowElectricityPrice = (CurrentState.PriceList.Count >= 48);
+            bool hasTomorrowElectricityPrice = (_currentState.PriceList.Count >= 48);
             var cleanDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
 
             priceInformation.CreateSortedList(cleanDate, Settings.Instance.WaterHeaterMaxPowerInHours, Settings.Instance.WaterHeaterMediumPowerInHours);
@@ -60,7 +72,7 @@ namespace MyUplinkSmartConnect
                 priceInformation.CreateSortedList(cleanDate.AddDays(1), Settings.Instance.WaterHeaterMaxPowerInHours, Settings.Instance.WaterHeaterMediumPowerInHours);
             }
             
-            var group = await Settings.Instance.myuplinkApi.GetDevices();
+            var group = await _myUplinkAPI.GetDevices();
             foreach (var device in group)
             {
                 if (device.devices == null)
@@ -85,16 +97,13 @@ namespace MyUplinkSmartConnect
                         Log.Logger.Debug("Using simple price based rules for building heating schedules");
                     }
 
-                   
-                    costSaving.WaterHeaterSchedule = await Settings.Instance.myuplinkApi.GetWheeklySchedules(tmpdevice);
+                    var heaterModes = await _myUplinkAPI.GetCurrentModes(tmpdevice);
+                    costSaving.WaterHeaterSchedule = await _myUplinkAPI.GetWheeklySchedules(tmpdevice);
+                    var weekdayOrder = _myUplinkAPI.GetCurrentDayOrder(tmpdevice);
 
-
-                    var weekdayOrder = Settings.Instance.myuplinkApi.GetCurrentDayOrder(tmpdevice);
-                    bool heatingModes = await CurrentState.ModeLookup.ReCheckModes(tmpdevice);
-
-                    if (!heatingModes)
+                    if (!_currentState.ModeLookup.ReCheckModes(heaterModes))
                     {
-                        var status = await Settings.Instance.myuplinkApi.SetCurrentModes(tmpdevice, CurrentState.ModeLookup.WaterHeaterModes);
+                        var status = await _myUplinkAPI.SetCurrentModes(tmpdevice, _currentState.ModeLookup.WaterHeaterModes);
 
                         if (!status)
                         {
@@ -111,7 +120,7 @@ namespace MyUplinkSmartConnect
 #endif
                         costSaving.LogSchedule();
 
-                        var status = await Settings.Instance.myuplinkApi.SetWheeklySchedules(tmpdevice, costSaving.WaterHeaterSchedule);
+                        var status = await _myUplinkAPI.SetWheeklySchedules(tmpdevice, costSaving.WaterHeaterSchedule);
 
                         if (!status)
                         {
@@ -127,7 +136,7 @@ namespace MyUplinkSmartConnect
 
                             if (!string.IsNullOrEmpty(Settings.Instance.MQTTServer) && !string.IsNullOrEmpty(device.name))
                             {
-                                await Settings.Instance.MQTTSender.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChangeInHours, Convert.ToInt32(0));
+                                await _mqttService.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChangeInHours, Convert.ToInt32(0));
                             }
                             return hasTomorrowElectricityPrice; // If we did not get tomorrows prices we return false so we can try the schedule again.
                         }
@@ -138,12 +147,12 @@ namespace MyUplinkSmartConnect
         }
 
 
-        async static Task<bool> ShouldRunLegionellaProgram(Device device)
+        async Task<bool> ShouldRunLegionellaProgram(Device device)
         {
             Log.Logger.Debug("Should try to find schedule for legionella program");
 
             const int NextRunHoursBeforSchedule = 48;            
-            var parameters = await Settings.Instance.myuplinkApi.GetDevicePoints(device, CurrentPointParameterType.LegionellaPreventionNext);
+            var parameters = await _myUplinkAPI.GetDevicePoints(device, CurrentPointParameterType.LegionellaPreventionNext);
 
             if (!parameters.Any())
             {

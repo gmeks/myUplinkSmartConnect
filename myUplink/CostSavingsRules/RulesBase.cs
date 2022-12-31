@@ -1,5 +1,7 @@
-﻿using MyUplinkSmartConnect.ExternalPrice;
+﻿using Microsoft.Extensions.DependencyInjection;
+using MyUplinkSmartConnect.ExternalPrice;
 using MyUplinkSmartConnect.Models;
+using MyUplinkSmartConnect.Services;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -12,9 +14,17 @@ using xElectricityPriceApiShared;
 
 namespace MyUplinkSmartConnect.CostSavingsRules
 {
-    internal class RulesBase
+    abstract internal class RulesBase
     {
-        IList<DayOfWeek> _daysInWeek = Array.Empty<DayOfWeek>();       
+        IList<DayOfWeek> _daysInWeek = Array.Empty<DayOfWeek>();
+        ScheduleAdjustService _scheduleAdjustService { get; set; }
+        internal CurrentStateService _currentState;
+
+        public RulesBase()
+        {
+            _scheduleAdjustService = Settings.ServiceLookup.GetService<ScheduleAdjustService>() ?? throw new NullReferenceException();
+            _currentState = Settings.ServiceLookup.GetService<CurrentStateService>() ?? throw new NullReferenceException(); 
+        }
 
         public List<HeaterWeeklyEvent> WaterHeaterSchedule { get; set; } = new List<HeaterWeeklyEvent>();
 
@@ -25,9 +35,9 @@ namespace MyUplinkSmartConnect.CostSavingsRules
 
             var requiredHours = datesToSchuedule.Length * 24;
 
-            if (CurrentState.PriceList.Count < requiredHours)
+            if (_currentState.PriceList.Count < requiredHours)
             {
-                Log.Logger.Warning("Cannot build waterheater schedule, the price list only contains {priceListCount}, but we are attempting to schedule {RequiredHours}", CurrentState.PriceList.Count, requiredHours);
+                Log.Logger.Warning("Cannot build waterheater schedule, the price list only contains {priceListCount}, but we are attempting to schedule {RequiredHours}", _currentState.PriceList.Count, requiredHours);
                 return false;
             }
 
@@ -45,10 +55,16 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                         if (price.Start.DayOfWeek != day)
                             continue;
 
-                        if (price.HeatingMode != currentPowerLevel)
+                        if(IsInsideBoostWindow(price.Start))
+                        {
+                            currentPowerLevel =  HeatingMode.HeatingLegionenna;
+                            WaterHeaterSchedule.Add(new HeaterWeeklyEvent(price.Start, _currentState.ModeLookup.GetHeatingModeId(currentPowerLevel), hasPriceInformation: true));
+                            addedPriceEvents++;
+                        }
+                        else if (price.HeatingMode != currentPowerLevel)
                         {
                             currentPowerLevel = price.HeatingMode;
-                            WaterHeaterSchedule.Add(new HeaterWeeklyEvent(price.Start, CurrentState.ModeLookup.GetHeatingModeId(price.HeatingMode), hasPriceInformation: true));
+                            WaterHeaterSchedule.Add(new HeaterWeeklyEvent(price.Start, _currentState.ModeLookup.GetHeatingModeId(price.HeatingMode), hasPriceInformation: true));
                             addedPriceEvents++;
                         }
                     }
@@ -59,9 +75,9 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                 
                 if (!foundDayInTargetSchedules)
                 {                   
-                    WaterHeaterSchedule.Add(new HeaterWeeklyEvent(GetDateOfDay(day), CurrentState.ModeLookup.GetHeatingModeId(HeatingMode.HighestTemperature), hasPriceInformation:false));
-                    WaterHeaterSchedule.Add(new HeaterWeeklyEvent(GetDateOfDay(day).AddHours(6), CurrentState.ModeLookup.GetHeatingModeId(HeatingMode.HeathingDisabled), hasPriceInformation: false));
-                    WaterHeaterSchedule.Add(new HeaterWeeklyEvent(GetDateOfDay(day).AddHours(12), CurrentState.ModeLookup.GetHeatingModeId(HeatingMode.MediumTemperature), hasPriceInformation: false));
+                    WaterHeaterSchedule.Add(new HeaterWeeklyEvent(GetDateOfDay(day), _currentState.ModeLookup.GetHeatingModeId(HeatingMode.HighestTemperature), hasPriceInformation:false));
+                    WaterHeaterSchedule.Add(new HeaterWeeklyEvent(GetDateOfDay(day).AddHours(6), _currentState.ModeLookup.GetHeatingModeId(HeatingMode.HeathingDisabled), hasPriceInformation: false));
+                    WaterHeaterSchedule.Add(new HeaterWeeklyEvent(GetDateOfDay(day).AddHours(12), _currentState.ModeLookup.GetHeatingModeId(HeatingMode.MediumTemperature), hasPriceInformation: false));
                 }
             }
 
@@ -134,6 +150,11 @@ namespace MyUplinkSmartConnect.CostSavingsRules
             return false;
         }
 
+        internal bool IsInsideBoostWindow(DateTime time)
+        {            
+            return _scheduleAdjustService?.IsBoostScheduled(time) ?? false;   
+        }
+
         internal DateTime GetDateOfDay(DayOfWeek day)
         {
             // Gets the DateTime from the day. This is done by calculating it from week order and todays index in that list.
@@ -173,7 +194,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
             const int requiredContinuousHours = 3;
             for (int i = 0; i < WaterHeaterSchedule.Count; i++)
             {
-                if (WaterHeaterSchedule[i].modeId != CurrentState.ModeLookup.GetHeatingModeId(HeatingMode.HighestTemperature))
+                if (WaterHeaterSchedule[i].modeId != _currentState.ModeLookup.GetHeatingModeId(HeatingMode.HighestTemperature))
                     continue;
 
                 if (!IsDayInsideScheduleWindow(datesToSchuedule, WaterHeaterSchedule[i].Day))
@@ -215,7 +236,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                 // We did not find a good window to heat up, so we find a window based purly on price. This is the worse case.
                 for (int i = 1; i < (WaterHeaterSchedule.Count - 1); i++)
                 {
-                    if (WaterHeaterSchedule[i].modeId != CurrentState.ModeLookup.GetHeatingModeId(HeatingMode.MediumTemperature))
+                    if (WaterHeaterSchedule[i].modeId != _currentState.ModeLookup.GetHeatingModeId(HeatingMode.MediumTemperature))
                         continue;
 
                     if (!IsDayInsideScheduleWindow(datesToSchuedule, WaterHeaterSchedule[i].Day))
@@ -233,7 +254,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
             var sortedTimeSlotList = timeSlotList.OrderBy(x => x.Price).ToList();
             if(sortedTimeSlotList.Count != 0)
             {
-                WaterHeaterSchedule[sortedTimeSlotList[0].TimeSlotIndex].modeId = CurrentState.ModeLookup.GetHeatingModeId(HeatingMode.HeatingLegionenna);
+                WaterHeaterSchedule[sortedTimeSlotList[0].TimeSlotIndex].modeId = _currentState.ModeLookup.GetHeatingModeId(HeatingMode.HeatingLegionenna);
 
                 if(sortedTimeSlotList[0].ExtendedTimeSlot != 0)
                 {
@@ -290,9 +311,9 @@ namespace MyUplinkSmartConnect.CostSavingsRules
         double CalculatePriceTotal(DateTime startTime,DateTime endTime)
         {
             double price = 0;
-            if (CurrentState.PriceList != null)
+            if (_currentState.PriceList != null)
             {
-                foreach (var priceItem in CurrentState.PriceList)
+                foreach (var priceItem in _currentState.PriceList)
                 {
                     if (priceItem.Start.InRange(startTime, endTime))
                     {

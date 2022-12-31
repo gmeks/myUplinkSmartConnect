@@ -1,4 +1,6 @@
-﻿using MyUplinkSmartConnect.Models;
+﻿using Microsoft.Extensions.DependencyInjection;
+using MyUplinkSmartConnect.Models;
+using MyUplinkSmartConnect.Services;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -9,14 +11,15 @@ using System.Threading.Tasks;
 
 namespace MyUplinkSmartConnect.ExternalPrice
 {
-    internal class BasePriceAPI
+    internal abstract class BasePriceAPI
     {
         internal HttpClient _client;
         internal static IList<string> NorwayPowerZones = new string[] { "NO-1", "NO-2", "NO-3", "NO-4", "NO-5" }.ToList();
-
+        internal CurrentStateService _currentState;
 
         public BasePriceAPI()
         {
+            _currentState = Settings.ServiceLookup.GetService<CurrentStateService>() ?? throw new NullReferenceException();
             _client = new HttpClient();
         }
 
@@ -107,7 +110,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
         public void CreateSortedList(DateTime filterDate, int desiredMaxpower, int mediumPower)
         {
             var sortedList = new List<ElectricityPriceInformation>(24);
-            foreach (ElectricityPriceInformation price in CurrentState.PriceList)
+            foreach (ElectricityPriceInformation price in _currentState.PriceList)
             {
                 if (price.Start.Date != filterDate.Date)
                     continue;
@@ -136,8 +139,8 @@ namespace MyUplinkSmartConnect.ExternalPrice
                 }
             }
 
-            CurrentState.PriceList.Sort(new SortByStartDate());
-            foreach (var price in CurrentState.PriceList)
+            _currentState.PriceList.Sort(new SortByStartDate());
+            foreach (var price in _currentState.PriceList)
             {
                 var updatedPrice = sortedList.FirstOrDefault(x => x.Id == price.Id);
                 if (updatedPrice != null)
@@ -179,7 +182,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
             return double.MinValue;
         }
 
-        public List<ElectricityPriceInformation> PriceList { get { return CurrentState.PriceList; } }
+        public List<ElectricityPriceInformation> PriceList { get { return _currentState.PriceList; } }
     }
 
     class ApiDateTimeFormat : IFormatProvider
