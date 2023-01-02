@@ -27,7 +27,11 @@ namespace xElectricityPriceApiShared
         {
             PowerZone = powerZone;
             _logger = logger;
-        }   
+        }
+
+        public PowerZoneName PowerZone { get; set; }
+
+        public List<PricePoint> PriceList { get; set; } = new List<PricePoint>();
 
         public async Task<bool> FetchHistoricPrices()
         {
@@ -72,7 +76,7 @@ namespace xElectricityPriceApiShared
 
             _logger.LogWarning("Failed to price list from all known apis, will check schedule later.");
             return false;
-        }
+        }       
 
         async Task NormalizePrices(iBasePriceInformation api)
         {
@@ -107,9 +111,5 @@ namespace xElectricityPriceApiShared
             var conversion = await norgeBank.GetConversion();
             return conversion;
         }
-
-        public PowerZoneName PowerZone { get; set; }
-
-        public List<PricePoint> PriceList { get; set; } = new List<PricePoint>();
     }
 }

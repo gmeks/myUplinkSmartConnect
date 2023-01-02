@@ -5,11 +5,10 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using xElectricityPriceApiShared.Model;
 
 namespace xElectricityPriceApiShared.ElectricityPrice
 {
-    internal class BasePriceAPI
+    internal abstract class BasePriceAPI
     {
         internal HttpClient _client;
         internal ILogger<object> _logger;
@@ -128,40 +127,6 @@ namespace xElectricityPriceApiShared.ElectricityPrice
         public object? GetFormat(Type? formatType)
         {
             return "dd-MM-yyyy HH:mm:ss";
-        }
-    }
-
-    class SortByLowestPrice : IComparer<PricePoint>
-    {
-        public int Compare(PricePoint? x, PricePoint? y)
-        {
-            if (x == null && y == null)
-                return 0;
-
-            if (x == null)
-                return 1;
-
-            if (y == null)
-                return -1;
-
-            if (x.Price == y.Price)
-                return 0;
-
-            if (x.Price < y.Price)
-                return -1;
-
-            return 1;
-        }
-    }
-
-    class SortByStartDate : IComparer<PricePoint>
-    {
-        public int Compare(PricePoint? x, PricePoint? y)
-        {
-            if (x == null)
-                return 1;
-
-            return x.Start.CompareTo(y?.Start);
         }
     }
 }

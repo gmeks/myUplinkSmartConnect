@@ -1,4 +1,6 @@
-﻿using LiteDB;
+﻿using Hangfire;
+using LiteDB;
+using xElectricityPriceApi.Controllers;
 using xElectricityPriceApi.Models;
 using xElectricityPriceApiShared;
 using xElectricityPriceApiShared.Model;
@@ -9,11 +11,13 @@ namespace xElectricityPriceApi.Services
     {
         readonly ILiteCollection<PriceInformation> _pricePointCol;
         readonly ILiteCollection<AveragePrice> _priceAvarageCol;
+        readonly ILogger<PriceService> _logger;
 
-        public PriceService(LiteDBService db) 
+        public PriceService(LiteDBService db,ILogger<PriceService> logger) 
         {
             _pricePointCol = db.GetCollection<PriceInformation>();
             _priceAvarageCol = db.GetCollection<AveragePrice>();
+            _logger = logger;
         }
 
         public void AddOrUpdate(PricePoint pricePoint)
@@ -68,8 +72,14 @@ namespace xElectricityPriceApi.Services
 
             var tmpPriceList = _pricePointCol.Find(Query.Between(nameof(PriceInformation.Start), start, end)).ToArray();
             var avarage = GetAverageForMonth();
-            var priceList = JsonUtils.CloneTo<ExtendedPriceInformation[]>(tmpPriceList);
+            if (tmpPriceList == null || tmpPriceList.Length == 0 || avarage == null)
+            {
+                _logger.LogWarning("No price information was gotten, we force a check.");
+                RecurringJob.TriggerJob("Update prices");
+                return Enumerable.Empty<ExtendedPriceInformation>();
+            }
 
+            var priceList = JsonUtils.CloneTo<ExtendedPriceInformation[]>(tmpPriceList);
             var electricitySupportPayBackPrKw = (avarage.Price - ElectricitySupportStart) * ElectricitySupportPercentage;
 
             foreach (var price in priceList)

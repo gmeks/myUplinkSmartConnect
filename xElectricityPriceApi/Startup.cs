@@ -99,7 +99,7 @@ namespace xElectricityPriceApi
 
         void ConfigureBackgroundJobs(IServiceProvider serviceProvider)
         {
-            RecurringJob.AddOrUpdate<UpdatePrices>("Update prices", o => o.Work(), "0 1 13 1/1 * ?");
+            RecurringJob.AddOrUpdate<UpdatePrices>("Update prices", o => o.Work(), "2 13 * * *");
 
             var priceService = serviceProvider.GetRequiredService<PriceService>();
             if (priceService.AveragePriceCount == 0)

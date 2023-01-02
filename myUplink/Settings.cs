@@ -4,6 +4,7 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using System.Text.Json.Serialization;
+using xElectricityPriceApiShared;
 
 namespace MyUplinkSmartConnect
 {
@@ -54,6 +55,9 @@ namespace MyUplinkSmartConnect
         public LogEventLevel ConsoleLogLevel { get; set; } = LogEventLevel.Information;
 
         public LogEventLevel MQTTLogLevel { get; set; } = LogEventLevel.Warning;
+
+        [JsonIgnore]
+        public PowerZoneName InternalPowerZone { get; set; }
 
         [JsonIgnore]
         public bool ForceScheduleRebuild { get; set; } = false;

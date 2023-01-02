@@ -1,4 +1,5 @@
-﻿using MyUplinkSmartConnect.CostSavings;
+﻿using Microsoft.Extensions.Logging;
+using MyUplinkSmartConnect.CostSavings;
 using MyUplinkSmartConnect.CostSavingsRules;
 using MyUplinkSmartConnect.ExternalPrice;
 using MyUplinkSmartConnect.Models;
@@ -9,6 +10,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using xElectricityPriceApiShared;
+using xElectricityPriceApiShared.ElectricityPrice;
+using xElectricityPriceApiShared.Model;
 
 namespace MyUplinkSmartConnect
 {
@@ -17,59 +21,33 @@ namespace MyUplinkSmartConnect
         readonly MyUplinkService _myUplinkAPI;
         readonly MQTTService _mqttService;
         readonly CurrentStateService _currentState;
+        ILogger<object> _logger;
 
-        public JobReScheuleheating(MyUplinkService myUplinkAPI, MQTTService mqttService, CurrentStateService currentState)
+        public JobReScheuleheating(ILogger<object> logger,MyUplinkService myUplinkAPI, MQTTService mqttService, CurrentStateService currentState)
         {
             _myUplinkAPI = myUplinkAPI;
             _mqttService = mqttService;
             _currentState = currentState;
-        }
-
-        async Task<iBasePriceInformation?> GetPriceInformation()
-        {
-            var priceFetchApiList = new iBasePriceInformation[] { new EntsoeAPI(), new Nordpoolgroup(), new VgApi() };
-
-            foreach(var priceListApi in priceFetchApiList)
-            {
-                var status = await priceListApi.GetPriceInformation();
-
-                if(status && _currentState.PriceList.Count >= 48)
-                {
-                    Log.Logger.Debug("Using {priceApi} price list", priceListApi.GetType());
-                    return priceListApi;
-                }
-            }
-
-            Log.Logger.Warning("Failed to get price information for today and tomorrow, will check for todays prices");
-            foreach (var priceListApi in priceFetchApiList)
-            {
-                var status = await priceListApi.GetPriceInformation();
-
-                if (status && _currentState.PriceList.Count >= 24)
-                {
-                    Log.Logger.Debug("Using {priceApi} price list for today", priceListApi.GetType());
-                    return priceListApi;
-                }
-            }
-
-            Log.Logger.Warning("Failed to price list from all known apis, will check schedule later.");
-            return null;
+            _logger = logger;
         }
 
         internal async Task<bool> Work()
         {
-            var priceInformation = await GetPriceInformation();
-            if (priceInformation == null)
+            var priceFetcher = new PriceFetcher(_logger, Settings.Instance.InternalPowerZone);
+            var priceInformation = await priceFetcher.UpdateRecentPrices();
+            if (priceFetcher.PriceList == null || priceFetcher.PriceList.Count == 0)
                 return false;
+
+            _currentState.PriceList = JsonUtils.CloneTo<PricePointWithPower[]>(priceFetcher.PriceList).ToList();
 
             bool hasTomorrowElectricityPrice = (_currentState.PriceList.Count >= 48);
             var cleanDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
 
-            priceInformation.CreateSortedList(cleanDate, Settings.Instance.WaterHeaterMaxPowerInHours, Settings.Instance.WaterHeaterMediumPowerInHours);
+            CreateSortedList(cleanDate, Settings.Instance.WaterHeaterMaxPowerInHours, Settings.Instance.WaterHeaterMediumPowerInHours);
 
             if(hasTomorrowElectricityPrice)
             {
-                priceInformation.CreateSortedList(cleanDate.AddDays(1), Settings.Instance.WaterHeaterMaxPowerInHours, Settings.Instance.WaterHeaterMediumPowerInHours);
+                CreateSortedList(cleanDate.AddDays(1), Settings.Instance.WaterHeaterMaxPowerInHours, Settings.Instance.WaterHeaterMediumPowerInHours);
             }
             
             var group = await _myUplinkAPI.GetDevices();
@@ -146,7 +124,48 @@ namespace MyUplinkSmartConnect
             return false;
         }
 
+        void CreateSortedList(DateTime filterDate, int desiredMaxpower, int mediumPower)
+        {
+            var sortedList = new List<PricePointWithPower>(24);
+            foreach (var price in _currentState.PriceList)
+            {
+                if (price.Start.Date != filterDate.Date)
+                    continue;
 
+                sortedList.Add(price);
+            }
+
+            sortedList.Sort(new SortByLowestPrice());
+            IEnumerable<PricePoint> maxPowerHours = Array.Empty<PricePoint>();
+            IEnumerable<PricePoint> mediumPowerHours = Array.Empty<PricePoint>();
+            if (desiredMaxpower != 0)
+                maxPowerHours = sortedList.Take(desiredMaxpower);
+
+            if (mediumPower != 0)
+                mediumPowerHours = sortedList.Take(mediumPower + desiredMaxpower);
+
+            for (int i = 0; i < sortedList.Count; i++)
+            {
+                if (maxPowerHours.Contains(sortedList[i]))
+                {
+                    sortedList[i].HeatingMode = HeatingMode.HighestTemperature;
+                }
+                else if (mediumPowerHours.Contains(sortedList[i]))
+                {
+                    sortedList[i].HeatingMode = HeatingMode.MediumTemperature;
+                }
+            }
+
+            _currentState.PriceList.Sort(new SortByStartDate());
+            foreach (var price in _currentState.PriceList)
+            {
+                var updatedPrice = sortedList.FirstOrDefault(x => x.Id == price.Id);
+                if (updatedPrice != null)
+                {
+                    price.HeatingMode = updatedPrice.HeatingMode;
+                }
+            }
+        }
         async Task<bool> ShouldRunLegionellaProgram(Device device)
         {
             Log.Logger.Debug("Should try to find schedule for legionella program");

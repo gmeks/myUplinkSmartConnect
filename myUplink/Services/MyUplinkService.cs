@@ -192,7 +192,7 @@ namespace MyUplinkSmartConnect.Services
 
         public async Task<Device> GetDefaultDevice()
         {
-            var group = await Settings.Instance.myuplinkApi.GetDevices();
+            var group = await GetDevices();
 
             return group?.FirstOrDefault()?.devices.FirstOrDefault() ?? throw new NullReferenceException("Failed to find default device");           
         }

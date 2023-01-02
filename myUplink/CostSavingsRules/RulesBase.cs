@@ -28,7 +28,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
 
         public List<HeaterWeeklyEvent> WaterHeaterSchedule { get; set; } = new List<HeaterWeeklyEvent>();
 
-        internal bool GenerateRemoteSchedule(string weekFormat,bool runLegionellaProgram,IReadOnlyList<ElectricityPriceInformation> schedule, params DateTime[] datesToSchuedule)
+        internal bool GenerateRemoteSchedule(string weekFormat,bool runLegionellaProgram,IReadOnlyList<PricePointWithPower> schedule, params DateTime[] datesToSchuedule)
         {
             WaterHeaterSchedule.Clear();
             _daysInWeek = GetWeekDayOrder(weekFormat).ToList();

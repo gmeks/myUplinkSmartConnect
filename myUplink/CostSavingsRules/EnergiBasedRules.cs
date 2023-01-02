@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using xElectricityPriceApiShared;
+using xElectricityPriceApiShared.Model;
 
 namespace MyUplinkSmartConnect.CostSavings
 {
@@ -31,7 +32,7 @@ namespace MyUplinkSmartConnect.CostSavings
             _desiredMaximalTankEnergi = EnergiInTank(TankVolume, Settings.Instance.HighPowerTargetTemperature);
         }
 
-        class WaterHeaterState : ElectricityPriceInformation
+        class WaterHeaterState : PricePointWithPower
         {
             public double ExpectedEnergiLevel { get; set; }
 

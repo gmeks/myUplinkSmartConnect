@@ -1,6 +1,6 @@
 ﻿namespace xElectricityPriceApiShared.Model
 {
-    public class PricePoint : IEquatable<PricePoint>
+    public class PricePoint : IPricePoint,IEquatable<PricePoint>
     {
         public PricePoint()
         {
@@ -28,5 +28,14 @@
         }
 
         public string SouceApi { get; set; }
+    }
+
+    public interface IPricePoint
+    {
+        Guid Id { get; set; }
+
+        double Price { get; set; }
+
+        DateTime Start { get; set; }
     }
 }

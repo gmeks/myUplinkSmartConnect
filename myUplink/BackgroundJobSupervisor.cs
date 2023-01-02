@@ -1,6 +1,6 @@
 ﻿using DetermenisticRandom;
 using Microsoft.Extensions.DependencyInjection;
-using MyUplinkSmartConnect.ExternalPrice;
+using Microsoft.Extensions.Logging;
 using MyUplinkSmartConnect.Models;
 using MyUplinkSmartConnect.Services;
 using Serilog;
@@ -31,10 +31,11 @@ namespace MyUplinkSmartConnect
         readonly MyUplinkService _myUplinkAPI;
         readonly MQTTService _mqttService;
         readonly CurrentStateService _currentState;
+        readonly ILogger<object> _logger;
 
         const int _minimumHourForScheduleStart = 14;
 
-        public BackgroundJobSupervisor()
+        public BackgroundJobSupervisor(ILogger<object> logger)
         {
             _mqttService = Settings.ServiceLookup.GetService<MQTTService>() ?? throw new NullReferenceException();
             _myUplinkAPI = Settings.ServiceLookup.GetService<MyUplinkService>() ?? throw new NullReferenceException();
@@ -47,7 +48,7 @@ namespace MyUplinkSmartConnect
             _nextScheduleUpdate = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day, tmpHour, tmpMinute, 0);
             _nextStatusUpdate = DateTime.UtcNow;
             _nextScheduleUpdate = _nextScheduleUpdate.AddDays(-1);
-
+            _logger = logger;
              Log.Logger.Information("Target Schedule change time is {NextScheduleUpdate}", _nextScheduleUpdate.ToLocalTime().ToShortTimeString());
         }
 
@@ -189,7 +190,7 @@ namespace MyUplinkSmartConnect
                 {
                     _myUplinkAPI.ClearCached();
 
-                    var buildSchedule = new JobReScheuleheating(_myUplinkAPI, _mqttService, _currentState);
+                    var buildSchedule = new JobReScheuleheating(_logger ,_myUplinkAPI, _mqttService, _currentState);
                     var status = await buildSchedule.Work();
 
                     if (status)

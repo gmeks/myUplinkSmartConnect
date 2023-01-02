@@ -1,11 +1,12 @@
 ﻿using MyUplinkSmartConnect.Models;
 using MyUplinkSmartConnect.Services;
+using xElectricityPriceApiShared.Model;
 
 namespace MyUplinkSmartConnect.ExternalPrice
 {
-    public class ElectricityPriceInformation : IEquatable<ElectricityPriceInformation>
+    public class PricePointWithPower : PricePoint,IEquatable<PricePointWithPower>
     {
-        public ElectricityPriceInformation()
+        public PricePointWithPower()
         {
             Id = Guid.NewGuid();
             Price = 0;
@@ -14,15 +15,7 @@ namespace MyUplinkSmartConnect.ExternalPrice
             HeatingMode =  HeatingMode.HeathingDisabled;
         }
 
-        public Guid Id { get; set; }
-
-        public double Price { get; set; }
-
-        public DateTime Start { get; set; }
-
-        public DateTime End { get; set; }
-
-        public bool Equals(ElectricityPriceInformation? other)
+        public bool Equals(PricePointWithPower? other)
         {
             return Id.Equals(other?.Id);
         }

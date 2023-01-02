@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using xElectricityPriceApiShared.Model;
 
 namespace MyUplinkSmartConnect.Services
 {
@@ -79,7 +80,7 @@ namespace MyUplinkSmartConnect.Services
             _mqttService.SendUpdate(Models.CurrentPointParameterType.ServiceStatus, _currentFailed, true).Wait();
         }
 
-        public List<ElectricityPriceInformation> PriceList { get; set; } = new List<ElectricityPriceInformation>();
+        public List<PricePointWithPower> PriceList { get; set; } = new List<PricePointWithPower>();
 
         public double CurrentTankEnergi { get; set; }
 

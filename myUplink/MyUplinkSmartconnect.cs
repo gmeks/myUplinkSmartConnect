@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using MyUplinkSmartConnect.CostSavings;
-using MyUplinkSmartConnect.ExternalPrice;
 using Serilog;
 using Serilog.Events;
 using System;
@@ -10,7 +10,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-
+using xElectricityPriceApiShared;
 
 namespace MyUplinkSmartConnect
 {
@@ -23,9 +23,9 @@ namespace MyUplinkSmartConnect
 #endif
         readonly BackgroundJobSupervisor _backgroundJobs;
 
-        public MyUplinkSmartconnect()
+        public MyUplinkSmartconnect(ILogger<object> logger)
         {
-            _backgroundJobs = new BackgroundJobSupervisor();
+            _backgroundJobs = new BackgroundJobSupervisor(logger);
         }
 
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -143,6 +143,20 @@ namespace MyUplinkSmartConnect
                     Log.Logger.Information("Automatic adjusting of schedule  will follow energi based rules", Settings.Instance.MQTTActive);
                 else
                     Log.Logger.Information("Automatic adjusting of schedule  will follow price rules", Settings.Instance.MQTTActive);
+            }
+
+            if(Enum.TryParse<PowerZoneName>(Settings.Instance.PowerZone,out PowerZoneName result))
+            {
+                Settings.Instance.InternalPowerZone= result;
+            }
+            else
+            {
+                Log.Logger.Error("Failed to get powerzone name, from " + Settings.Instance.PowerZone, Settings.Instance.MQTTActive);
+                var posiblePowerZoens = Enum.GetValues<PowerZoneName>();
+                foreach(var zone in posiblePowerZoens) 
+                {
+                    Log.Logger.Error("Posible valid name: " + zone, Settings.Instance.MQTTActive);
+                }
             }
 
             if (string.IsNullOrEmpty(env.GetValue("IsInsideDocker")))
