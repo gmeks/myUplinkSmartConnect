@@ -1,5 +1,6 @@
 ﻿using Hangfire;
-using Hangfire.MemoryStorage;
+using Hangfire.LiteDB.Entities;
+using Hangfire.LiteDB;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Net.Http.Headers;
 using xElectricityPriceApi.BackgroundJobs;
@@ -49,7 +50,7 @@ namespace xElectricityPriceApi
 
             services.AddHangfire(config =>
             {
-                config.UseMemoryStorage();
+                config.UseLiteDbStorage(idatabase.DatabaseInstance);
             });
         }
 
@@ -87,7 +88,10 @@ namespace xElectricityPriceApi
             GlobalConfiguration.Configuration.UseActivator(new HangfireActivator(serviceProvider));
             //app.UseHangfireDashboard();
             app.UseHangfireServer();
-
+            app.UseHangfireDashboard("/HangFireDashboard", new DashboardOptions
+            {
+                //Authorization = new[] { new HangFireAuthorizeFilter() },
+            });
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

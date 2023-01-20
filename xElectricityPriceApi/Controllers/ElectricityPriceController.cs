@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using xElectricityPriceApi.Models;
 using xElectricityPriceApi.Services;
 using xElectricityPriceApiShared;
+using xElectricityPriceApiShared.ElectricityPrice;
 
 namespace xElectricityPriceApi.Controllers;
 
@@ -22,5 +23,21 @@ public class ElectricityPriceController : ControllerBase
     public async Task<IEnumerable<PriceInformation>> Get()
     {
         return _priceService.GetAllTodayAndTomorrow();
+    }
+
+    [HttpGet, Route("api/price/sortByPrice")]
+    public IEnumerable<PriceInformation> SortByPrice()
+    {
+        var priceList = _priceService.GetAllTodayAndTomorrow();
+        priceList.Sort(new SortByLowestPrice());
+        return priceList;
+    }
+
+    [HttpGet, Route("api/price/sortByPrice/{takeLimit}")]
+    public IEnumerable<PriceInformation> SortByPrice(int takeLimit = 4)
+    {
+        var priceList = _priceService.GetAllTodayAndTomorrow();
+        priceList.Sort(new SortByLowestPrice());
+        return priceList.Take(takeLimit);
     }
 }

@@ -62,7 +62,7 @@ namespace xElectricityPriceApi.Services
             return priceList;
         }
 
-        public IEnumerable<ExtendedPriceInformation> GetAllTodayAndTomorrow()
+        public List<ExtendedPriceInformation> GetAllTodayAndTomorrow()
         {
             const double ElectricitySupportStart = 0.875d;
             const double ElectricitySupportPercentage = 0.90d;
@@ -76,10 +76,10 @@ namespace xElectricityPriceApi.Services
             {
                 _logger.LogWarning("No price information was gotten, we force a check.");
                 RecurringJob.TriggerJob("Update prices");
-                return Enumerable.Empty<ExtendedPriceInformation>();
+                return Enumerable.Empty<ExtendedPriceInformation>().ToList();
             }
 
-            var priceList = JsonUtils.CloneTo<ExtendedPriceInformation[]>(tmpPriceList);
+            var priceList = JsonUtils.CloneTo<List<ExtendedPriceInformation>>(tmpPriceList);
             var electricitySupportPayBackPrKw = (avarage.Price - ElectricitySupportStart) * ElectricitySupportPercentage;
 
             foreach (var price in priceList)

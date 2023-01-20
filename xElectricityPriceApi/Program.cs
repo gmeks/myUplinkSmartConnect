@@ -15,10 +15,12 @@ public class Program
         Host.CreateDefaultBuilder(args)
             .ConfigureWebHostDefaults(webBuilder =>
             {
+#if !DEBUG
                 webBuilder.UseKestrel((context, options) =>
                 {
                     options.ListenAnyIP(5097);
                 });
+#endif
                 webBuilder.UseStartup<Startup>();
             })
         .ConfigureLogging((context, logging) => {

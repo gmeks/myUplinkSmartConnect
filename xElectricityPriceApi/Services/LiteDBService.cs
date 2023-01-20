@@ -25,6 +25,11 @@ namespace xElectricityPriceApi.Services
             avaregeprice.EnsureIndex(x => x.Point);
         }
 
+        public LiteDatabase DatabaseInstance
+        {
+            get { return _databaseInstance; }
+        }
+
         public ILiteCollection<T> GetCollection<T>() where T : class
         {
             if (_databaseInstance is null)
