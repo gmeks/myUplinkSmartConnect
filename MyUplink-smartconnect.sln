@@ -7,9 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyUplink-smartconnect", "my
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D77A98C5-F336-4C71-9A80-010FB4C8E951}"
 	ProjectSection(SolutionItems) = preProject
-		build_xElectricityPriceApi.cmd = build_xElectricityPriceApi.cmd
-		Dockerfile = Dockerfile
-		DockerfileElPriceApi = DockerfileElPriceApi
 		readme-docker.md = readme-docker.md
 		README.md = README.md
 	EndProjectSection
@@ -19,8 +16,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "xElectricityPriceApiShared", "xElectricityPriceApiShared\xElectricityPriceApiShared.csproj", "{1C4EE747-C1EC-45DC-8C6D-2FAE08C2635F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "xElectricityPriceApi", "xElectricityPriceApi\xElectricityPriceApi.csproj", "{F184C2AE-D66D-4297-A0DD-B6FFCFF45719}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hangfire.LiteDB", "..\Hangfire.LiteDB\src\Hangfire.LiteDB\Hangfire.LiteDB.csproj", "{9DB81245-C59C-438E-B59E-528DE8421B7B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -44,10 +39,6 @@ Global
 		{F184C2AE-D66D-4297-A0DD-B6FFCFF45719}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F184C2AE-D66D-4297-A0DD-B6FFCFF45719}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F184C2AE-D66D-4297-A0DD-B6FFCFF45719}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9DB81245-C59C-438E-B59E-528DE8421B7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9DB81245-C59C-438E-B59E-528DE8421B7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9DB81245-C59C-438E-B59E-528DE8421B7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9DB81245-C59C-438E-B59E-528DE8421B7B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

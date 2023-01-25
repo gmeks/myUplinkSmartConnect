@@ -19,8 +19,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Hangfire.LiteDB\src\Hangfire.LiteDB\Hangfire.LiteDB.csproj" />
     <ProjectReference Include="..\xElectricityPriceApiShared\xElectricityPriceApiShared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Hangfire.LiteDB">
+      <HintPath>..\Hangfire.LiteDB.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
