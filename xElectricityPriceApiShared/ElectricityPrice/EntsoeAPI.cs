@@ -121,7 +121,7 @@ namespace xElectricityPriceApiShared.ElectricityPrice
                                 }
                                 else
                                 {
-                                    _logger.LogWarning("Failed to get valid data from price endpoint", price.Price, timeRange.TotalHours);
+                                    _logger.LogWarning("Failed to get valid data from price endpoint");
                                 }
                             }
                         }

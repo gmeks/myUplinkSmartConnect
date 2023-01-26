@@ -37,9 +37,9 @@ namespace MyUplinkSmartConnect
 
         public BackgroundJobSupervisor(ILogger<object> logger)
         {
-            _mqttService = Settings.ServiceLookup.GetService<MQTTService>() ?? throw new NullReferenceException();
-            _myUplinkAPI = Settings.ServiceLookup.GetService<MyUplinkService>() ?? throw new NullReferenceException();
-            _currentState = Settings.ServiceLookup.GetService<CurrentStateService>() ?? throw new NullReferenceException();
+            _mqttService = Settings.ServiceLookup?.GetService<MQTTService>() ?? throw new NullReferenceException();
+            _myUplinkAPI = Settings.ServiceLookup?.GetService<MyUplinkService>() ?? throw new NullReferenceException();
+            _currentState = Settings.ServiceLookup?.GetService<CurrentStateService>() ?? throw new NullReferenceException();
 
             var random = new DetermenisticInt();
             int tmpHour = random.GetByte(_minimumHourForScheduleStart, 22, BuildDetermenisticRandomSeed(), 3);
@@ -134,16 +134,18 @@ namespace MyUplinkSmartConnect
             {
                 _lastWorkerAliveCheck = DateTime.UtcNow;
 
-                if (_heaterStatus == null)
-                    _heaterStatus = new JobCheckHeaterStatus(_myUplinkAPI,_mqttService, _currentState);
-
                 if (_myUplinkAPI == null)
                 {
                     Log.Logger.Debug("myUplink API is not ready");
                     continue;
                 }
 
-                if(Settings.Instance.ChangeSchedule)
+                if (_heaterStatus == null)
+                {
+                    _heaterStatus = new JobCheckHeaterStatus(_myUplinkAPI, _mqttService, _currentState);
+                }
+
+                if (Settings.Instance.ChangeSchedule)
                 {
                     await WorkerSchedule();
                 }                

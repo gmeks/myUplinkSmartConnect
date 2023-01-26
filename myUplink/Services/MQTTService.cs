@@ -133,7 +133,7 @@ namespace MyUplinkSmartConnect.Services
             if (arg.ApplicationMessage.Topic.StartsWith("heater/boost"))
             {
                 Log.Logger.Information("MQTT message recived, to add a boost now");
-                var scheduleAdjust = Settings.ServiceLookup.GetService<ScheduleAdjustService>() ?? throw new NullReferenceException();
+                var scheduleAdjust = Settings.ServiceLookup?.GetService<ScheduleAdjustService>() ?? throw new NullReferenceException();
                 scheduleAdjust.Add();
 
                 Settings.Instance.ForceScheduleRebuild = true;
@@ -142,7 +142,7 @@ namespace MyUplinkSmartConnect.Services
             if (arg.ApplicationMessage.Topic.StartsWith("heater/reset_schedule"))
             {
                 Log.Logger.Information("MQTT message recived, reset and rebuild schedule");
-                var scheduleAdjust = Settings.ServiceLookup.GetService<ScheduleAdjustService>() ?? throw new NullReferenceException();
+                var scheduleAdjust = Settings.ServiceLookup?.GetService<ScheduleAdjustService>() ?? throw new NullReferenceException();
                 scheduleAdjust.RemoveBoost();
 
                 Settings.Instance.ForceScheduleRebuild = true;
@@ -151,7 +151,7 @@ namespace MyUplinkSmartConnect.Services
             if (arg.ApplicationMessage.Topic.StartsWith("heater/set_vacation"))
             {
                 Log.Logger.Information("MQTT message recived, reset and rebuild schedule");
-                var stateService = Settings.ServiceLookup.GetService<CurrentStateService>() ?? throw new NullReferenceException();
+                var stateService = Settings.ServiceLookup?.GetService<CurrentStateService>() ?? throw new NullReferenceException();
                 var myUplink = Settings.ServiceLookup.GetService<MyUplinkService>() ?? throw new NullReferenceException();
 
                 var vacation = JsonSerializer.Deserialize<VacationsSchedules>(arg.ApplicationMessage.ConvertPayloadToString()) ?? throw new NullReferenceException();

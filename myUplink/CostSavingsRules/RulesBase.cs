@@ -22,8 +22,8 @@ namespace MyUplinkSmartConnect.CostSavingsRules
 
         public RulesBase()
         {
-            _scheduleAdjustService = Settings.ServiceLookup.GetService<ScheduleAdjustService>() ?? throw new NullReferenceException();
-            _currentState = Settings.ServiceLookup.GetService<CurrentStateService>() ?? throw new NullReferenceException(); 
+            _scheduleAdjustService = Settings.ServiceLookup?.GetService<ScheduleAdjustService>() ?? throw new NullReferenceException();
+            _currentState = Settings.ServiceLookup?.GetService<CurrentStateService>() ?? throw new NullReferenceException(); 
         }
 
         public List<HeaterWeeklyEvent> WaterHeaterSchedule { get; set; } = new List<HeaterWeeklyEvent>();

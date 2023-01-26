@@ -17,7 +17,7 @@ namespace MyUplinkSmartConnect
             return new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console(restrictedToMinimumLevel: consoleLogLevel).WriteTo.MQTTSink().CreateLogger();
         }
         
-        public static ServiceProvider ServiceLookup { get; set; }
+        public static ServiceProvider? ServiceLookup { get; set; }
     }
 
     class SettingsValues

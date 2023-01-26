@@ -341,3 +341,4 @@ healthchecksdb
 /myUplink/appsettings.Development.json
 /xElectricityPriceApi/xElectricityPrice-log.db
 /xElectricityPriceApi/xElectricityPrice.db
+/dist

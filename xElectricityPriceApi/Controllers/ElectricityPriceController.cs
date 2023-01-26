@@ -20,7 +20,7 @@ public class ElectricityPriceController : ControllerBase
     }
 
     [HttpGet, Route("api/price/")]
-    public async Task<IEnumerable<PriceInformation>> Get()
+    public IEnumerable<PriceInformation> Get()
     {
         return _priceService.GetAllTodayAndTomorrow();
     }

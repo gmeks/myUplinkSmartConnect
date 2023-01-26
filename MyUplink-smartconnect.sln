@@ -7,6 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyUplink-smartconnect", "my
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D77A98C5-F336-4C71-9A80-010FB4C8E951}"
 	ProjectSection(SolutionItems) = preProject
+		build.ps1 = build.ps1
 		readme-docker.md = readme-docker.md
 		README.md = README.md
 	EndProjectSection

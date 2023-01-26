@@ -11,7 +11,7 @@
 
         public override object ActivateJob(Type type)
         {
-            return _serviceProvider.GetService(type);
+            return _serviceProvider?.GetService(type) ?? throw new NullReferenceException();
         }
     }
 }

@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml;
 using xElectricityPriceApiShared.Model;
+using static xElectricityPriceApiShared.ElectricityPrice.Nordpoolgroup;
 
 namespace xElectricityPriceApiShared.ElectricityPrice
 {
@@ -56,7 +57,8 @@ namespace xElectricityPriceApiShared.ElectricityPrice
                 }
 
                 var strContent = await response.Content.ReadAsStringAsync();
-                var rootToday = JsonSerializer.Deserialize<VgRoot>(strContent) ?? new VgRoot();
+                var rootToday = JsonSerializer.Deserialize<VgRoot>(strContent);
+                if (rootToday == null || rootToday.priceByHour == null) throw new NullReferenceException();
 
                 var hourPrices = GetPriceListByHour(rootToday);
 
@@ -97,6 +99,9 @@ namespace xElectricityPriceApiShared.ElectricityPrice
 
         IList<double> GetPriceListByHour(VgRoot root)
         {
+            if (root.priceByHour == null || root.priceByHour.pricesObj == null)
+                throw new NullReferenceException();
+
             switch (_priceFetcher.PowerZone)
             {
                 case PowerZoneName.NO1:
@@ -132,34 +137,34 @@ namespace xElectricityPriceApiShared.ElectricityPrice
 
         class VgPrice2
         {
-            public string name { get; set; }
-            public List<double> data { get; set; }
+            public string name { get; set; } = "";
+            public IEnumerable<double> data { get; set; } = Array.Empty<double>();
         }
 
         class VgPriceByHour
         {
-            public string date { get; set; }
-            public string updated { get; set; }
-            public List<string> hours { get; set; }
+            public string date { get; set; } = "";
+            public string updated { get; set; } = "";
+            public IList<string> hours { get; set; } = Array.Empty<string>();
             public bool isToday { get; set; }
-            public VgPricesObj pricesObj { get; set; }
+            public VgPricesObj? pricesObj { get; set; }
         }
 
         class VgPricesObj
         {
-            public List<double> oslo { get; set; }
-            public List<double> kristiansand { get; set; }
-            public List<double> molde { get; set; }
-            public List<double> bergen { get; set; }
-            public List<double> trondheim { get; set; }
-            public List<double> tromso { get; set; }
+            public IList<double> oslo { get; set; } = Array.Empty<double>(); 
+            public IList<double> kristiansand { get; set; } = Array.Empty<double>();
+            public IList<double> molde { get; set; } = Array.Empty<double>();
+            public IList<double> bergen { get; set; } = Array.Empty<double>();
+            public IList<double> trondheim { get; set; } = Array.Empty<double>();
+            public IList<double> tromso { get; set; } = Array.Empty<double>();
         }
 
         class VgRoot
         {
-            public string date { get; set; }
-            public string updated { get; set; }
-            public VgPriceByHour priceByHour { get; set; }
+            public string date { get; set; } = "";
+            public string updated { get; set; } = "";
+            public VgPriceByHour? priceByHour { get; set; }
         }
     }
 }

@@ -29,7 +29,7 @@ namespace MyUplinkSmartConnect.MQTT
 
             if(_mqttService == null)
             {
-                _mqttService = Settings.ServiceLookup.GetService<MQTTService>();
+                _mqttService = Settings.ServiceLookup?.GetService<MQTTService>();
             }
 
             var logLevel = (int)logEvent.Level;
