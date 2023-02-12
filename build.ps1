@@ -30,4 +30,4 @@ Remove-Item dist/Windows/  -Recurse
 
 Write-Host Building docker.
 docker build -t erlingsaeterdal/myuplinksmartconnect:$targetVersion .
-#docker push erlingsaeterdal/myuplinksmartconnect:$targetVersion
+docker push erlingsaeterdal/myuplinksmartconnect:$targetVersion

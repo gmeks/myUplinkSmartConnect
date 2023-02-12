@@ -182,12 +182,17 @@ namespace MyUplinkSmartConnect
 #else
             if (nextScheduleChange.TotalHours >= 24 && DateTime.UtcNow.Hour > _minimumHourForScheduleStart 
             ||  _nextScheduleUpdate > DateTime.UtcNow && DateTime.UtcNow.Hour > _minimumHourForScheduleStart 
-            || Settings.Instance.ForceScheduleRebuild 
-            || timeSinceLastChange.TotalHours >= 26 && DateTime.UtcNow.Hour > _minimumHourForScheduleStart)
+            ||  Settings.Instance.ForceScheduleRebuild 
+            ||  timeSinceLastChange.TotalHours >= 26 && DateTime.UtcNow.Hour > _minimumHourForScheduleStart)
 #endif
             {
+
                 Settings.Instance.ForceScheduleRebuild = false;
-                Log.Logger.Debug("Last schedule was {hours} hours ago and above minimum hour for schedule start {minHour}", nextScheduleChange.TotalHours, (DateTime.UtcNow.Hour > _minimumHourForScheduleStart));
+                Log.Logger.Debug("Last schedule was {hours}");
+                Log.Logger.Debug("Its been more then 24 hours since last schedule update",(nextScheduleChange.TotalHours >= 24 && DateTime.UtcNow.Hour > _minimumHourForScheduleStart));
+                Log.Logger.Debug("Next scheduled update time is now {minHour}", (_nextScheduleUpdate > DateTime.UtcNow && DateTime.UtcNow.Hour > _minimumHourForScheduleStart));
+                Log.Logger.Debug("ForceScheduleRebuild {minHour}", (Settings.Instance.ForceScheduleRebuild));
+                Log.Logger.Debug("Its been more then 26 hours since schedule update {minHour}", (timeSinceLastChange.TotalHours >= 26 && DateTime.UtcNow.Hour > _minimumHourForScheduleStart));
                 try
                 {
                     _myUplinkAPI.ClearCached();

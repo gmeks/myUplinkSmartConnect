@@ -108,6 +108,7 @@ namespace MyUplinkSmartConnect.Services
                         _mqttClient.SubscribeAsync("heater/boost", MQTTnet.Protocol.MqttQualityOfServiceLevel.ExactlyOnce);
                         _mqttClient.SubscribeAsync("heater/reset_schedule", MQTTnet.Protocol.MqttQualityOfServiceLevel.ExactlyOnce);
                         _mqttClient.SubscribeAsync("heater/set_vacation", MQTTnet.Protocol.MqttQualityOfServiceLevel.ExactlyOnce);
+                        _mqttClient.SubscribeAsync("heater/consoleloglevel", MQTTnet.Protocol.MqttQualityOfServiceLevel.ExactlyOnce);
                         _mqttClient.ApplicationMessageReceivedAsync += _mqttClient_ApplicationMessageReceivedAsync;
                     }
                     catch (Exception ex)
@@ -129,6 +130,14 @@ namespace MyUplinkSmartConnect.Services
         {
             if (string.IsNullOrEmpty(arg.ApplicationMessage.Topic))
                 return;
+
+            Log.Logger.Debug("MQTT message recived: " + arg.ApplicationMessage.Topic);
+
+            if (arg.ApplicationMessage.Topic.StartsWith("heater/consoleloglevel"))
+            {
+                Log.Logger.Information("MQTT message recived, changing logging to debug");
+                Settings.Instance.ConsoleLogLevel = Serilog.Events.LogEventLevel.Debug;
+            }
 
             if (arg.ApplicationMessage.Topic.StartsWith("heater/boost"))
             {

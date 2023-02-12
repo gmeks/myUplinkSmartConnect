@@ -14,7 +14,7 @@ namespace MyUplinkSmartConnect
     {
         public static void Main(string[] args)
         {
-            Log.Logger = Settings.CreateLogger(LogEventLevel.Information);
+            Settings.Instance.ConsoleLogLevel = LogEventLevel.Information;
             MainAsync(args).GetAwaiter().GetResult();
         }
 

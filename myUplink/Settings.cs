@@ -22,6 +22,8 @@ namespace MyUplinkSmartConnect
 
     class SettingsValues
     {
+        LogEventLevel _logLevel;
+
         public string UserName { get; set; } = "";
 
         public string Password { get; set; } = "";
@@ -52,7 +54,15 @@ namespace MyUplinkSmartConnect
 
         public string? MQTTPassword { get; set; }
 
-        public LogEventLevel ConsoleLogLevel { get; set; } = LogEventLevel.Information;
+        public LogEventLevel ConsoleLogLevel 
+        { 
+            get { return _logLevel; }
+            set 
+            { 
+                _logLevel = value;
+                Log.Logger = Settings.CreateLogger(value);
+            }
+        }
 
         public LogEventLevel MQTTLogLevel { get; set; } = LogEventLevel.Warning;
 

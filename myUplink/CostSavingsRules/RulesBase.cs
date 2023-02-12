@@ -272,8 +272,14 @@ namespace MyUplinkSmartConnect.CostSavingsRules
         TimeSlot GetScheduleTimes(int index)
         {
             var timeslot = new TimeSlot();
+            if ((index + 1) >= WaterHeaterSchedule.Count)
+            {
+                // This timeslot cannot be used, we cannot extend beyond the current headter schedule.
+                timeslot.Duration = new TimeSpan();
+                return timeslot;
+            }
+            
             (DateTime starTime, DateTime endTime) result = GetDateTimeFromHourString(WaterHeaterSchedule[index].startTime, WaterHeaterSchedule[index + 1].startTime, WaterHeaterSchedule[index].Date);
-
             timeslot.Duration = result.endTime - result.starTime;
             timeslot.TimeSlotIndex = index;
 
