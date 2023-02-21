@@ -66,7 +66,7 @@ namespace xElectricityPriceApiShared.ElectricityPrice
 
             if (logFailedLookups)
             {
-                _logger.LogWarning("Failed to find tekniskal name of powerzone from {pwrZone}", powerzoneName);
+                _logger.LogDebug("Failed to find real name of powerzone from {pwrZone}", powerzoneName);
             }
 
             return  PowerZoneName.NO2;

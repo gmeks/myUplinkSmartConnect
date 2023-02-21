@@ -58,7 +58,8 @@ namespace xElectricityPriceApiShared.ElectricityPrice
             }
             else
             {
-                _logger.LogInformation($"Login to myUplink API failed with status {tResponse.StatusCode} and message {tResponse.Content}");
+                _logger.LogInformation($"Failed to fetch tomorrows price price information from Nordpool {tResponse.StatusCode}");
+                _logger.LogDebug($"Nordpool content returned {tResponse.Content}");
                 return false;
             }
 
@@ -97,7 +98,8 @@ namespace xElectricityPriceApiShared.ElectricityPrice
             }
             else
             {
-                _logger.LogInformation($"Login to myUplink API failed with status {tResponse.StatusCode} and message {tResponse.Content}");
+                _logger.LogInformation($"Failed to fetch todays price information from Nordpool {tResponse.StatusCode}");
+                _logger.LogDebug($"Nordpool content returned {tResponse.Content}");
                 return false;
             }            
         }

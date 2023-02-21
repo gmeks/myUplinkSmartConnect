@@ -204,7 +204,7 @@ namespace MyUplinkSmartConnect
                     {                        
                         _nextScheduleUpdate = _nextScheduleUpdate.AddDays(1);
                         _myUplinkAPI.SetLastScheduleChange();
-                        Log.Logger.Debug("Schedule update was successfull next one will be {nextUpdate}", _nextScheduleUpdate.ToString());
+                        Log.Logger.Debug("Schedule update was successfull next one will be {nextUpdate}", _nextScheduleUpdate.AddDays(1).ToString());
                         _currentState.SetSuccess(States.Schedule);
                     }
                     else

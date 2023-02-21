@@ -187,7 +187,7 @@ namespace MyUplinkSmartConnect
                     case CurrentPointParameterType.LegionellaPreventionNext:
                         var shouldRun = (para.value <= NextRunHoursBeforSchedule);
 
-                        Log.Logger.Debug("Next legionella program required to run in {h} hours, returning status: {status}", para.value, shouldRun);
+                        Log.Logger.Debug("Next legionella program required to run in {h} hours, should attemt to run legionella in the next 48 hours: {status}", para.value, shouldRun);
                         return shouldRun;
                 }
             }
