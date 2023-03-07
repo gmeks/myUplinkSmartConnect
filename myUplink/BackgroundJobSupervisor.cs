@@ -185,9 +185,7 @@ namespace MyUplinkSmartConnect
             ||  Settings.Instance.ForceScheduleRebuild 
             ||  timeSinceLastChange.TotalHours >= 26 && DateTime.UtcNow.Hour > _minimumHourForScheduleStart)
 #endif
-            {
-
-                Settings.Instance.ForceScheduleRebuild = false;
+            { 
                 Log.Logger.Debug("Last schedule was {hours}");
                 Log.Logger.Debug("Its been more then 24 hours since last schedule update",(nextScheduleChange.TotalHours >= 24 && DateTime.UtcNow.Hour > _minimumHourForScheduleStart));
                 Log.Logger.Debug("Next scheduled update time is now {minHour}", (_nextScheduleUpdate > DateTime.UtcNow && DateTime.UtcNow.Hour > _minimumHourForScheduleStart));
@@ -201,15 +199,23 @@ namespace MyUplinkSmartConnect
                     var status = await buildSchedule.Work();
 
                     if (status)
-                    {                        
-                        _nextScheduleUpdate = _nextScheduleUpdate.AddDays(1);
-                        _myUplinkAPI.SetLastScheduleChange();
-                        Log.Logger.Debug("Schedule update was successfull next one will be {nextUpdate}", _nextScheduleUpdate.AddDays(1).ToString());
+                    {           
+                        if(!Settings.Instance.ForceScheduleRebuild)
+                        {
+                            _nextScheduleUpdate = _nextScheduleUpdate.AddDays(1);
+                            _myUplinkAPI.SetLastScheduleChange();
+                            Log.Logger.Debug("Schedule update was successfull next one will be {nextUpdate}", _nextScheduleUpdate.AddDays(1).ToString());
+                        }                        
                         _currentState.SetSuccess(States.Schedule);
                     }
                     else
                     {
-                        _currentState.SetFailed(States.Schedule);
+                        if (!Settings.Instance.ForceScheduleRebuild)
+                        {
+                            _nextScheduleUpdate = _nextScheduleUpdate.AddMinutes(5);
+                            _currentState.SetFailed(States.Schedule);
+                            Log.Logger.Debug("Schedule update was failed");
+                        }                            
                     }
                 }
                 catch (Exception ex)
@@ -217,7 +223,6 @@ namespace MyUplinkSmartConnect
                     Log.Logger.Error(ex, "Failed to run heater schedule job");
                     _currentState.SetFailed(States.Schedule);
                 }
-
                 
                 // We now update the MQTT with information about when the next update will happen
                 var group = await _myUplinkAPI.GetDevices();
@@ -244,6 +249,8 @@ namespace MyUplinkSmartConnect
                     Log.Logger.Debug("Failed to do device status updates, found no devices");
                 }
             }
+
+            Settings.Instance.ForceScheduleRebuild = false;
         }
 
         async Task WorkerHeaterStatus()
