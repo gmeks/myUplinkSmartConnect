@@ -31,3 +31,5 @@ Remove-Item dist/Windows/  -Recurse
 Write-Host Building docker.
 docker build -t erlingsaeterdal/myuplinksmartconnect:$targetVersion .
 docker push erlingsaeterdal/myuplinksmartconnect:$targetVersion
+
+#docker buildx build --push --tag erlingsaeterdal/myuplinksmartconnect:$targetVersion --platform linux/amd64,linux/arm/v7,linux/arm64 .
