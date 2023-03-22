@@ -154,8 +154,8 @@ namespace xElectricityPriceApiShared.ElectricityPrice
                 case PowerZoneName.NO4:
                     return "NO-4--------9";
 
-                case PowerZoneName.NO0:
-                    return "NO-0--------C";
+                case PowerZoneName.NO5:
+                    return "1001A1001A48H";
 
                 default:
                     throw new NotImplementedException(zone.ToString());
