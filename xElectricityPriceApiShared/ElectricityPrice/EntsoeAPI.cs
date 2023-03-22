@@ -43,7 +43,7 @@ namespace xElectricityPriceApiShared.ElectricityPrice
             {
                 _priceFetcher.PriceList.Clear();
 
-                string url = $"https://transparency.entsoe.eu/api?documentType=A44&in_Domain=10Y{GetPowerZoneName(_priceFetcher.PowerZone)}--------T&out_Domain=10Y{GetPowerZoneName(_priceFetcher.PowerZone)}--------T&periodStart={startDateFormat}&periodEnd={endDateFormat}&securityToken=5cd1c4f6-2172-4453-a8bb-c9467fa0fabc";
+                string url = $"https://web-api.tp.entsoe.eu/api?documentType=A44&in_Domain=10Y{GetPowerZoneName(_priceFetcher.PowerZone)}--------T&out_Domain=10Y{GetPowerZoneName(_priceFetcher.PowerZone)}--------T&periodStart={startDateFormat}&periodEnd={endDateFormat}&securityToken=5cd1c4f6-2172-4453-a8bb-c9467fa0fabc";
                 var response = await _client.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
