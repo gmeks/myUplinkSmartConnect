@@ -31,9 +31,9 @@ namespace xElectricityPriceApiShared.ElectricityPrice
         {
             var result = await GetPriceInformation(DateTime.Now, DateTime.Now.AddDays(1));
             return result;
-        }            
+        }
 
-        public async Task<bool> GetPriceInformation(DateTime startFind,DateTime endFind)
+        public async Task<bool> GetPriceInformation(DateTime startFind, DateTime endFind)
         {
             // i hate xml, and this function is a pure pain
             string startDateFormat = startFind.ToString("yyyyMMdd") + "0000";
@@ -43,7 +43,7 @@ namespace xElectricityPriceApiShared.ElectricityPrice
             {
                 _priceFetcher.PriceList.Clear();
 
-                string url = $"https://transparency.entsoe.eu/api?documentType=A44&in_Domain=10Y{GetPowerZoneName(_priceFetcher.PowerZone)}--------T&out_Domain=10Y{GetPowerZoneName(_priceFetcher.PowerZone)}--------T&periodStart={startDateFormat}&periodEnd={endDateFormat}&securityToken=5cd1c4f6-2172-4453-a8bb-c9467fa0fabc";
+                string url = $"https://web-api.tp.entsoe.eu/api?documentType=A44&in_Domain=10Y{GetPowerZoneName(_priceFetcher.PowerZone)}&out_Domain=10Y{GetPowerZoneName(_priceFetcher.PowerZone)}&periodStart={startDateFormat}&periodEnd={endDateFormat}&securityToken=5cd1c4f6-2172-4453-a8bb-c9467fa0fabc";
                 var response = await _client.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
@@ -91,7 +91,7 @@ namespace xElectricityPriceApiShared.ElectricityPrice
                             }
                             else if (actualData.Name == "Point")
                             {
-                                var price = new PricePoint();                                
+                                var price = new PricePoint();
                                 price.SouceApi = nameof(EntsoeAPI);
 
                                 foreach (XmlNode timeIntervalNode in actualData.ChildNodes)
@@ -127,7 +127,7 @@ namespace xElectricityPriceApiShared.ElectricityPrice
                         }
                     }
                 }
-      
+
                 return true;
 
             }
@@ -140,22 +140,22 @@ namespace xElectricityPriceApiShared.ElectricityPrice
 
         string GetPowerZoneName(PowerZoneName zone)
         {
-            switch(zone)
+            switch (zone)
             {
                 case PowerZoneName.NO1:
-                    return "NO-1";
+                    return "NO-1--------2";
 
                 case PowerZoneName.NO2:
-                    return "NO-2";
+                    return "NO-2--------T";
 
                 case PowerZoneName.NO3:
-                    return "NO-3";
+                    return "NO-3--------J";
 
                 case PowerZoneName.NO4:
-                    return "NO-4";
+                    return "NO-4--------9";
 
                 case PowerZoneName.NO5:
-                    return "NO-5";
+                    return "1001A1001A48H";
 
                 default:
                     throw new NotImplementedException(zone.ToString());
