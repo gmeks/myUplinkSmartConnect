@@ -43,7 +43,7 @@ namespace xElectricityPriceApiShared.ElectricityPrice
             {
                 _priceFetcher.PriceList.Clear();
 
-                string url = $"https://web-api.tp.entsoe.eu/api?documentType=A44&in_Domain=10Y{GetPowerZoneName(_priceFetcher.PowerZone)}--------T&out_Domain=10Y{GetPowerZoneName(_priceFetcher.PowerZone)}--------T&periodStart={startDateFormat}&periodEnd={endDateFormat}&securityToken=5cd1c4f6-2172-4453-a8bb-c9467fa0fabc";
+                string url = $"https://web-api.tp.entsoe.eu/api?documentType=A44&in_Domain=10Y{GetPowerZoneName(_priceFetcher.PowerZone)}&out_Domain=10Y{GetPowerZoneName(_priceFetcher.PowerZone)}&periodStart={startDateFormat}&periodEnd={endDateFormat}&securityToken=5cd1c4f6-2172-4453-a8bb-c9467fa0fabc";
                 var response = await _client.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
@@ -143,19 +143,19 @@ namespace xElectricityPriceApiShared.ElectricityPrice
             switch(zone)
             {
                 case PowerZoneName.NO1:
-                    return "NO-1";
+                    return "NO-1--------2";
 
                 case PowerZoneName.NO2:
-                    return "NO-2";
+                    return "NO-2--------T";
 
                 case PowerZoneName.NO3:
-                    return "NO-3";
+                    return "NO-3--------J";
 
                 case PowerZoneName.NO4:
-                    return "NO-4";
+                    return "NO-4--------9";
 
-                case PowerZoneName.NO5:
-                    return "NO-5";
+                case PowerZoneName.NO0:
+                    return "NO-0--------C";
 
                 default:
                     throw new NotImplementedException(zone.ToString());
