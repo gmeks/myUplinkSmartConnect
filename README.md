@@ -167,7 +167,7 @@ Paylog for setting vacation
 >         - name: "Energi in tank"
 >           state_topic: "heater/18760NE2240322014631/EnergiStored"
 >           unique_id: "Waterheater.EnergiStored"
->           device_class: power
+>           device_class: energy
 >           unit_of_measurement : kWh    
 >     
 >         - name: "Tank fill level"

@@ -9,6 +9,20 @@ namespace xElectricityPriceApiShared
 {
     public static class JsonUtils
     {
+        public static JsonSerializerOptions GetJsonSettings()
+        {
+            var serializeOptions = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                Converters =
+                {
+                    new DoubleConverter()
+                }
+            };
+
+            return serializeOptions;
+        }
+
         public static T CloneTo<T>(object otherObj) where T : class
         {
             ReadOnlySpan<byte> objBytes = JsonSerializer.SerializeToUtf8Bytes(otherObj);

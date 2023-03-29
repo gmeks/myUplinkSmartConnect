@@ -47,7 +47,11 @@ namespace xElectricityPriceApiShared
 
         public async Task<bool> UpdateRecentPrices()
         {
-            var priceFetchApiList = new iBasePriceInformation[] { new EntsoeAPI(this,_logger), new Nordpoolgroup(this, _logger), new VgApi(this, _logger) };            
+#if DEBUG
+            var priceFetchApiList = new iBasePriceInformation[] { new VgApi(this, _logger) };
+#else
+            var priceFetchApiList = new iBasePriceInformation[] { new EntsoeAPI(this,_logger), new Nordpoolgroup(this, _logger), new VgApi(this, _logger) };
+#endif
 
             foreach (var priceListApi in priceFetchApiList)
             {

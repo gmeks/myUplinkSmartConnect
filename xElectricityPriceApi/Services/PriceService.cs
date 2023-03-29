@@ -64,6 +64,7 @@ namespace xElectricityPriceApi.Services
 
         public List<ExtendedPriceInformation> GetAllTodayAndTomorrow()
         {
+
             const double ElectricitySupportStart = 0.875d;
             const double ElectricitySupportPercentage = 0.90d;
 

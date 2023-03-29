@@ -30,7 +30,7 @@ namespace xElectricityPriceApiShared.ElectricityPrice
             if (tResponse.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 var strContent = await tResponse.Content.ReadAsStringAsync();
-                var root = JsonSerializer.Deserialize<Root>(strContent);
+                var root = JsonSerializer.Deserialize<Root>(strContent,JsonUtils.GetJsonSettings());
                 if (root == null || root.data == null) throw new NullReferenceException();
 
                 foreach (var item in root.data.Rows)

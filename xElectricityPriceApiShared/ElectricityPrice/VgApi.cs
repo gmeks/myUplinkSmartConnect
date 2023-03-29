@@ -57,7 +57,7 @@ namespace xElectricityPriceApiShared.ElectricityPrice
                 }
 
                 var strContent = await response.Content.ReadAsStringAsync();
-                var rootToday = JsonSerializer.Deserialize<VgRoot>(strContent);
+                var rootToday = JsonSerializer.Deserialize<VgRoot>(strContent,JsonUtils.GetJsonSettings());
                 if (rootToday == null || rootToday.priceByHour == null) throw new NullReferenceException();
 
                 var hourPrices = GetPriceListByHour(rootToday);
