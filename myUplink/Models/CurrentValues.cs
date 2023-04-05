@@ -11,6 +11,7 @@ namespace MyUplinkSmartConnect.Models
         LastScheduleChangeInHours=1,
         LogEntry=2,
         ServiceStatus = 3,
+        Schedule = 4,
         TargetTemprature = 527,
         CurrentTemprature = 528,
         FillLevel = 404, // How much water in tank

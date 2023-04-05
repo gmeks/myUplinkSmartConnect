@@ -1,5 +1,6 @@
 ﻿using Hangfire;
-using LiteDB;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using xElectricityPriceApi.Controllers;
 using xElectricityPriceApi.Models;
 using xElectricityPriceApiShared;
@@ -9,18 +10,16 @@ namespace xElectricityPriceApi.Services
 {
     public class PriceService
     {
-        readonly ILiteCollection<PriceInformation> _pricePointCol;
-        readonly ILiteCollection<AveragePrice> _priceAvarageCol;
+        readonly DatabaseContext _context;
         readonly ILogger<PriceService> _logger;
 
-        public PriceService(LiteDBService db,ILogger<PriceService> logger) 
+        public PriceService(DatabaseContext context, ILogger<PriceService> logger) 
         {
-            _pricePointCol = db.GetCollection<PriceInformation>();
-            _priceAvarageCol = db.GetCollection<AveragePrice>();
+            _context = context;
             _logger = logger;
         }
 
-        public void AddOrUpdate(PricePoint pricePoint)
+        public void Add(PricePoint pricePoint)
         {
             var item = new PriceInformation()
             {
@@ -32,24 +31,52 @@ namespace xElectricityPriceApi.Services
                 StartHour = pricePoint.Start.Hour
             };
 
-            AddOrUpdate(item);
-        }
-
-        public void AddOrUpdate(PriceInformation pricePoint)
-        {
-            if(_pricePointCol.FindById(pricePoint.Id) == null)
+            var existingItem = _context.PriceInformation.FirstOrDefault(x => x.Id == item.Id);
+            if (existingItem != null)
             {
-                _pricePointCol.Insert(pricePoint);
+                existingItem.Price = item.Price;
+                existingItem.SouceApi = item.SouceApi;
+                _context.SaveChanges();
             }
             else
             {
-                _pricePointCol.Update(pricePoint);
+                Add(item);
+            }            
+        }
+
+        public void Add(AveragePrice averagePrice)
+        {
+            var existingItem = _context.AveragePrice.FirstOrDefault(x => x.Id == averagePrice.Id);
+            if (existingItem != null)
+            {
+                existingItem.Price = averagePrice.Price;
+            }
+            else
+            {
+                _context.AveragePrice.Add(averagePrice);
+            }
+                
+            _context.SaveChanges();
+        }
+
+        public int AveragePriceCount
+        {
+            get
+            {
+                return _context.AveragePrice.Count();
             }
         }
 
-        public AveragePrice GetAverageForMonth()
+        public void Add(PriceInformation pricePoint)
         {
-            var avr = _priceAvarageCol.FindOne(Query.EQ(nameof(AveragePrice.Point), DateTime.Now.Date));
+            _context.PriceInformation.Add(pricePoint);
+
+            _context.SaveChanges();
+        }
+
+        public AveragePrice GetAverageForMonth()
+        {            
+            var avr = _context.AveragePrice.FirstOrDefault(x => x.Point == DateTime.Now.Date);
             return avr;
         }
 
@@ -58,7 +85,13 @@ namespace xElectricityPriceApi.Services
             var start = new DateTime(DateTime.Now.Year, DateTime.Now.Month,1);
             var end = DateTime.Now.Date.AddDays(2).AddSeconds(-1);
 
-            var priceList = _pricePointCol.Find(Query.Between(nameof(PriceInformation.Start), start, end)).ToArray();
+            var priceList = Between(start,end);
+            return priceList;
+        }
+
+        public IEnumerable<PriceInformation> Between(DateTime start,DateTime end)
+        {
+            var priceList = _context.PriceInformation.Where(x => x.Start >= start && x.End < end);
             return priceList;
         }
 
@@ -71,11 +104,18 @@ namespace xElectricityPriceApi.Services
             var start = DateTime.Now.Date;
             var end = start.AddDays(2).AddSeconds(-1);
 
-            var tmpPriceList = _pricePointCol.Find(Query.Between(nameof(PriceInformation.Start), start, end)).ToArray();
+            var tmpPriceList = Between(start, end).ToList();
             var avarage = GetAverageForMonth();
-            if (tmpPriceList == null || tmpPriceList.Length == 0 || avarage == null)
+            if (tmpPriceList?.Any() != true)
             {
                 _logger.LogWarning("No price information was gotten, we force a check.");
+                RecurringJob.TriggerJob("Update prices");
+                return Enumerable.Empty<ExtendedPriceInformation>().ToList();
+            }
+
+            if(avarage == null)
+            {
+                _logger.LogWarning("Avarage price not ready, forcing update");
                 RecurringJob.TriggerJob("Update prices");
                 return Enumerable.Empty<ExtendedPriceInformation>().ToList();
             }
@@ -89,26 +129,6 @@ namespace xElectricityPriceApi.Services
             }
 
             return priceList;
-        }
-
-        public void AddOrUpdate(AveragePrice averagePrice)
-        {
-            if (_priceAvarageCol.FindById(averagePrice.Id) == null)
-            {
-                _priceAvarageCol.Insert(averagePrice);
-            }
-            else
-            {
-                _priceAvarageCol.Update(averagePrice);
-            }
-        }
-
-        public int AveragePriceCount
-        {
-            get
-            {
-                return _priceAvarageCol.Count();
-            }
-        }
+        }  
     }
 }

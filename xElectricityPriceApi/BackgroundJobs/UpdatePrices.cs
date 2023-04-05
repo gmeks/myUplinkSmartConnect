@@ -23,7 +23,7 @@ namespace xElectricityPriceApi.BackgroundJobs
             await _priceFetcher.UpdateRecentPrices();
             foreach(var price in _priceFetcher.PriceList)
             {
-                _priceService.AddOrUpdate(price);
+                _priceService.Add(price);
             }
             await UpdateAvaragePrices();
         }
@@ -40,7 +40,7 @@ namespace xElectricityPriceApi.BackgroundJobs
 
                 foreach (var price in _priceFetcher.PriceList)
                 {
-                    _priceService.AddOrUpdate(price);
+                    _priceService.Add(price);
                 }
                 thisMonthPrices = _priceService.GetAllThisMonth();
             }
@@ -56,7 +56,7 @@ namespace xElectricityPriceApi.BackgroundJobs
             var avaragePrice = thisMonthPrices.Average(x => x.Price);
             avarage.Price = avaragePrice;
 
-            _priceService.AddOrUpdate(avarage);
+            _priceService.Add(avarage);
         }
 
 

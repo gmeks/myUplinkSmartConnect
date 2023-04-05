@@ -47,6 +47,25 @@ namespace MyUplinkSmartConnect
             return VerifyWaterHeaterModes();
         }       
 
+        public int GetTargetTemperature(int modeId)
+        {
+            foreach (var setting in _waterHeaterModes)
+            {
+                if (setting.modeId != modeId)
+                    continue;
+
+                if(setting.settings?.Any() == true)
+                {
+                    foreach (var subSetting in setting.settings)
+                    {
+                        return subSetting.value;
+                    }
+                }               
+            }
+
+            return 0;
+        }
+
         public int GetHeatingModeId(HeatingMode mode)
         {
             return _heatingModeLookup[mode];

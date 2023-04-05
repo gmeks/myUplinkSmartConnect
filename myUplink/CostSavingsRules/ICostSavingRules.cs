@@ -18,5 +18,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
         void LogSchedule();
 
         void LogToCSV();
+
+        string GetJson();
     }
 }

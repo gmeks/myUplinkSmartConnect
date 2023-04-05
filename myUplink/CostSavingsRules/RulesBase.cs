@@ -9,6 +9,7 @@ using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using xElectricityPriceApiShared;
 
@@ -185,6 +186,25 @@ namespace MyUplinkSmartConnect.CostSavingsRules
             return DateTime.MinValue;
         }
 
+        internal string GetGenericJsonSchedule()
+        {
+            var genericSchedule = new List<GenericSchedule>();
+            foreach(var sch in WaterHeaterSchedule)
+            {
+                var heatingMode = _currentState.ModeLookup.GetHeatingModeFromId(sch.modeId);
+
+                genericSchedule.Add(new GenericSchedule()
+                {
+                    MaximumPower = Convert.ToInt32(_currentState.ModeLookup.GetHeatingPowerInKwh(heatingMode) * 100),
+                    Time = sch.Date,
+                    TargetTemprature = _currentState.ModeLookup.GetTargetTemperature(sch.modeId),
+
+                });
+            }
+
+            return JsonSerializer.Serialize(genericSchedule);
+        }
+
         bool CreateLegionellaHeating(params DateTime[] datesToSchuedule)
         {
             Log.Logger.Debug("Will attemt to find best posible moment to heat water above 75c, to prevent legionella");
@@ -328,6 +348,15 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                 }
             }
             return price;
+        }
+
+        class GenericSchedule
+        {
+            public DateTime Time { get; set; }
+
+            public int MaximumPower { get; set; }
+
+            public int TargetTemprature { get; set; }
         }
 
         class TimeSlot

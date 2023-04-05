@@ -26,6 +26,11 @@ namespace MyUplinkSmartConnect.CostSavings
             }
         }
 
+        public string GetJson()
+        {
+            return GetGenericJsonSchedule();
+        }
+
         public void LogToCSV()
         {
             var csv = new StringBuilder();

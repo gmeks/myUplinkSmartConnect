@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using xElectricityPriceApiShared;
 using xElectricityPriceApiShared.Model;
@@ -56,6 +57,11 @@ namespace MyUplinkSmartConnect.CostSavings
 
                 Log.Logger.Debug(GenerateLogLineSchedule(sch));
             }
+        }
+
+        public string GetJson()
+        {
+            return GetGenericJsonSchedule();
         }
 
         public void LogToCSV()

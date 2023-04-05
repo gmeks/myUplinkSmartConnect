@@ -115,6 +115,7 @@ namespace MyUplinkSmartConnect
                             if (!string.IsNullOrEmpty(Settings.Instance.MQTTServer) && !string.IsNullOrEmpty(device.name))
                             {
                                 await _mqttService.SendUpdate(device.name, Models.CurrentPointParameterType.LastScheduleChangeInHours, Convert.ToInt32(0));
+                                await _mqttService.SendUpdate(device.name, Models.CurrentPointParameterType.Schedule, costSaving.GetJson());
                             }
                             return hasTomorrowElectricityPrice; // If we did not get tomorrows prices we return false so we can try the schedule again.
                         }
