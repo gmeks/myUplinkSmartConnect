@@ -84,7 +84,7 @@ namespace xElectricityPriceApi.Services
         public PriceInformation? GetCurrentPrice()
         {
             var currentDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour,0,0);
-            var price = _context.PriceInformation.Where(x => x.Start >= currentDate && x.End < currentDate).FirstOrDefault();
+            var price = _context.PriceInformation.Where(x => x.Start >= currentDate && currentDate < x.End).FirstOrDefault();
 
             if (price == null)
             {
