@@ -9,7 +9,10 @@ namespace xElectricityPriceApiShared.ElectricityPrice
             if (x == null)
                 return 1;
 
-            return x.Start.CompareTo(y?.Start);
+            if (y == null)
+                return -1;
+
+            return x.Start.CompareTo(y.Start);
         }
     }
 }

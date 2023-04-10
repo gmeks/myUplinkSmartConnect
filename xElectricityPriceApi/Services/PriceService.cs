@@ -1,5 +1,8 @@
 ﻿using Hangfire;
 using Microsoft.EntityFrameworkCore;
+using NodaTime;
+using NodaTime.Extensions;
+using System;
 using System.Linq;
 using xElectricityPriceApi.BackgroundJobs;
 using xElectricityPriceApi.Controllers;
@@ -76,13 +79,15 @@ namespace xElectricityPriceApi.Services
         }
 
         public AveragePrice GetAverageForMonth()
-        {            
-            var avr = _context.AveragePrice.FirstOrDefault(x => x.Point == DateTime.Now.Date);
+        {
+            var currentMonth = DateTime.Now.Date;
+            var avr = _context.AveragePrice.FirstOrDefault(x => x.Point == currentMonth);
             return avr;
         }
 
         public PriceInformation? GetCurrentPrice()
         {
+            //SystemClock.Instance.GetCurrentInstant()
             var currentDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour,0,0);
             var price = _context.PriceInformation.Where(x => x.Start >= currentDate && currentDate < x.End).FirstOrDefault();
 
@@ -105,7 +110,7 @@ namespace xElectricityPriceApi.Services
             return priceList;
         }
 
-        public IEnumerable<PriceInformation> Between(DateTime start,DateTime end)
+        public IEnumerable<PriceInformation> Between(DateTime start, DateTime end)
         {
             var priceList = _context.PriceInformation.Where(x => x.Start >= start && x.End < end);
             return priceList;
@@ -115,9 +120,19 @@ namespace xElectricityPriceApi.Services
         {
             const double ElectricitySupportStart = 0.875d;
             const double ElectricitySupportPercentage = 0.90d;
+            /*
+            Instant now = SystemClock.Instance.GetCurrentInstant();
+            DateTimeZone zone1 = DateTimeZoneProviders.Tzdb.GetSystemDefault();
+            LocalDate todayInTheSystemZone = now.InZone(zone1).Date;
 
-            var start = DateTime.Now.Date;
-            var end = start.AddDays(2).AddSeconds(-1);
+
+            var zonedTime = todayInTheSystemZone.AtStartOfDayInZone(zone1);
+            var start = zonedTime;
+            var end = todayInTheSystemZone.AtStartOfDayInZone(zone1).PlusHours(48);
+            */
+
+            var start = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+            var end = DateTime.Now.Date.AddDays(2).AddSeconds(-1);
 
             var tmpPriceList = Between(start, end).ToList();
             var avarage = GetAverageForMonth();

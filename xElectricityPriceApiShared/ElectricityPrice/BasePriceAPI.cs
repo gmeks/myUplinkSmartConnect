@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using NodaTime;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -102,6 +103,14 @@ namespace xElectricityPriceApiShared.ElectricityPrice
 
             _logger.LogDebug("Failed to parse double from string:{value}", input.ToString());
             return double.MinValue;
+        }
+
+        internal static Guid ToGuid(DateTime startTime, DateTime endtime)
+        {
+            var lStart = startTime.Ticks;
+            var lEnd = endtime.Ticks;
+
+            return ToGuid(lStart, lEnd);
         }
 
         internal static Guid ToGuid(long startTime, long endtime)

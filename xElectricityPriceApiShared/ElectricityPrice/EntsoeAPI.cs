@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using NodaTime.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -116,7 +117,7 @@ namespace xElectricityPriceApiShared.ElectricityPrice
                                 var timeRange = price.End - price.Start;
                                 if (price.Price != double.MinValue && timeRange.TotalHours <= 1)
                                 {
-                                    price.Id = ToGuid(price.Start.ToFileTime(), price.End.ToFileTime());
+                                    price.Id = ToGuid(price.Start, price.End);
                                     _priceFetcher.PriceList.Add(price);
                                 }
                                 else

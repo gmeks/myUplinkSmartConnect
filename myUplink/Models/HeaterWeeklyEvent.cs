@@ -1,5 +1,7 @@
-﻿using System.Diagnostics;
+﻿using NodaTime;
+using System.Diagnostics;
 using System.Text.Json.Serialization;
+using xElectricityPriceApiShared;
 
 namespace MyUplinkSmartConnect.Models
 {

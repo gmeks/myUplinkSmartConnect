@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using Npgsql;
 using Serilog.Events;
 using xElectricityPriceApiShared;
 using static Dapper.SqlMapper;
@@ -31,13 +32,13 @@ namespace xElectricityPriceApi.Services
                 Database = "electricityprice_db";
                 DatabaseServer = "192.168.50.19";
                 DatabaseUser = "electricityprice";
-                
+                DatabasePassword = "Xbjdks98aaJl9";
             }
-        }
+        }   
 
-        public string GetSqlLightDatabaseConStr()
+        public string GetConnectionStr()
         {
-            return $"Host={DatabaseServer}; Database={Database}; Username={DatabaseUser}; Password={DatabasePassword}";
+            return $"Host={DatabaseServer}; Database={Database}; Username={DatabaseUser}; Password={DatabasePassword}";          
         }
 
         public string Database { get; set; } = "";

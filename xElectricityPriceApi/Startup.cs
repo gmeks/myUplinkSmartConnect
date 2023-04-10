@@ -3,6 +3,10 @@ using Hangfire.PostgreSql;
 using xElectricityPriceApi.BackgroundJobs;
 using xElectricityPriceApi.Services;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace xElectricityPriceApi
 {
@@ -30,12 +34,17 @@ namespace xElectricityPriceApi
         {
             services.AddLogging();
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
-        
+
+            //var dataSource = dataSourceBuilder.;
 
             services.AddControllersWithViews();
             services.AddRazorPages();
 
-            services.AddDbContext<DatabaseContext>(options => options.UseNpgsql(_settingsService.GetSqlLightDatabaseConStr()).EnableSensitiveDataLogging(false));
+            services.AddEntityFrameworkNpgsql().AddDbContext<DatabaseContext>(
+             options => options.UseNpgsql(_settingsService.GetConnectionStr())
+            );
+
+            //services.AddDbContext<DatabaseContext>(_settingsService.GetConnection().CreationOptions);
             services.AddHangfire(config =>
             {
                 //config.UseLiteDbStorage(liteDb.DatabaseInstance);
@@ -59,7 +68,7 @@ namespace xElectricityPriceApi
             services.AddScoped<MQTTSenderService>();
             services.AddScoped<PriceService>();
 
-            services.AddHangfire(config => config.UsePostgreSqlStorage(_settingsService.GetSqlLightDatabaseConStr()));
+            services.AddHangfire(config => config.UsePostgreSqlStorage(_settingsService.GetConnectionStr()));
 
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();            
@@ -112,7 +121,7 @@ namespace xElectricityPriceApi
             {
                 endpoints.MapControllers();
             });
-
+            app.UseHangfireServer();
             //SetupLogger();
             UpdateDatabase(app);
             ConfigureBackgroundJobs(serviceProvider);
@@ -144,16 +153,7 @@ namespace xElectricityPriceApi
             {
                 using (var context = serviceScope.ServiceProvider.GetService<DatabaseContext>())
                 {
-                    context.Database.Migrate();
-                    /*
-                    using (var connection = context.Database.GetDbConnection())
-                    using (var command = connection.CreateCommand())
-                    {
-                        connection.Open();
-
-                        //command.CommandText = "PRAGMA journal_mode=WAL;";
-                        command.ExecuteNonQuery();
-                    }*/
+                    context.Database.Migrate();            
                 }
             }
         }

@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using xElectricityPriceApiShared;
 
 namespace MyUplinkSmartConnect.CostSavings
 {
@@ -22,7 +23,7 @@ namespace MyUplinkSmartConnect.CostSavings
         {
             foreach (var price in _currentState.PriceList)
             {
-                Log.Logger.Debug($"{price.Start.Day}) Start: {price.Start.ToShortTimeString()} | {price.End.ToShortTimeString()} - {price.HeatingMode} - {price.Price}");
+                Log.Logger.Debug($"{price.Start.DayOfWeek}) Start: {price.Start.ToLocalTime()} | {price.End.ToLocalTime()} - {price.HeatingMode} - {price.Price}");
             }
         }
 
@@ -38,8 +39,8 @@ namespace MyUplinkSmartConnect.CostSavings
 
             foreach (var price in _currentState.PriceList)
             {
-                Console.WriteLine($"{price.Start.Day}) Start: {price.Start.ToShortTimeString()} | {price.End.ToShortTimeString()} - {price.HeatingMode} - {price.Price}");
-                csv.AppendLine($"{price.Start.Day};{price.Start.ToShortTimeString()};{price.End.ToShortTimeString()};{price.HeatingMode};{price.Price}");
+                Console.WriteLine($"{price.Start.DayOfWeek}) Start: {price.Start.ToLocalTime()} | {price.End.ToLocalTime()} - {price.HeatingMode} - {price.Price}");
+                csv.AppendLine($"{price.Start.DayOfWeek};{price.Start.ToLocalTime()};{price.End.ToLocalTime()};{price.HeatingMode};{price.Price}");
             }
 
             File.WriteAllText("c:\\temp\\1.csv", csv.ToString());

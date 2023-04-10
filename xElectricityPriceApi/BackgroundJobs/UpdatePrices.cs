@@ -1,4 +1,5 @@
-﻿using xElectricityPriceApi.Controllers;
+﻿using NodaTime.Extensions;
+using xElectricityPriceApi.Controllers;
 using xElectricityPriceApi.Services;
 using xElectricityPriceApiShared;
 

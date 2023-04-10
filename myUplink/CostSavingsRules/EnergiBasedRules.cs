@@ -2,6 +2,7 @@
 using MyUplinkSmartConnect.ExternalPrice;
 using MyUplinkSmartConnect.Models;
 using MyUplinkSmartConnect.Services;
+using NodaTime;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -133,11 +134,11 @@ namespace MyUplinkSmartConnect.CostSavings
 
             if (CSVFormat)
             {
-                logLine.Append($"{schEvent.Date.Day};{schEvent.Date.ToShortTimeString()};{heatingMode};{heatingModes};{priceLists};{expectedEnergiLevels};{potensialMaximumCost.ToString("0.00")}"); // ToString("C");
+                logLine.Append($"{schEvent.Date.Day};{schEvent.Date.ToString()};{heatingMode};{heatingModes};{priceLists};{expectedEnergiLevels};{potensialMaximumCost.ToString("0.00")}"); // ToString("C");
             }
             else
             {
-                logLine.Append($"{schEvent.Date.Day} {schEvent.Date.ToShortTimeString()} ) - {heatingMode}|{heatingModes} - {priceLists} - {expectedEnergiLevels} - {potensialMaximumCost.ToString("0.00")}");
+                logLine.Append($"{schEvent.Date.Day} {schEvent.Date.ToString()} ) - {heatingMode}|{heatingModes} - {priceLists} - {expectedEnergiLevels} - {potensialMaximumCost.ToString("0.00")}");
             }
             return logLine.ToString();
         }
@@ -165,7 +166,7 @@ namespace MyUplinkSmartConnect.CostSavings
             {
                 if (IsDefinedPeakUsageTime(_tankHeatingSchedule[i].Start) && IsDayInsideScheduleWindow(datesToSchuedule, _tankHeatingSchedule[i].Start.DayOfWeek))
                 {
-                    Log.Logger.Debug("Peak time at {time} on day {day}", _tankHeatingSchedule[i].Start.ToLongTimeString(), _tankHeatingSchedule[i].Start.DayOfWeek);
+                    Log.Logger.Debug("Peak time at {time} on day {day}", _tankHeatingSchedule[i].Start.ToString(), _tankHeatingSchedule[i].Start.DayOfWeek);
 
                     var neededEnergiInTank = _desiredMaximalTankEnergi - _tankHeatingSchedule[i].ExpectedEnergiLevel;
                     int lastChangeIndex = i;

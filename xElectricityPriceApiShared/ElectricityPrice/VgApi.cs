@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using NodaTime.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -77,7 +78,7 @@ namespace xElectricityPriceApiShared.ElectricityPrice
                     {
                         // We are at the last index. So we have to add 
                         price.End = range.end.AddDays(1);
-                        price.Id = ToGuid(price.Start.ToFileTime(), price.End.ToFileTime());
+                        price.Id = ToGuid(price.Start, price.End);
                     }
 
 

@@ -1,4 +1,6 @@
 ﻿
+using NodaTime;
+
 namespace xElectricityPriceApi.Models
 {
     public class AveragePrice

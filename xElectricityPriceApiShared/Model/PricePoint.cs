@@ -1,4 +1,6 @@
-﻿namespace xElectricityPriceApiShared.Model
+﻿using NodaTime;
+
+namespace xElectricityPriceApiShared.Model
 {
     public class PricePoint : IPricePoint,IEquatable<PricePoint>
     {

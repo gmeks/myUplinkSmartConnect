@@ -2,6 +2,9 @@
 using MyUplinkSmartConnect.ExternalPrice;
 using MyUplinkSmartConnect.Models;
 using MyUplinkSmartConnect.Services;
+using NodaTime;
+using NodaTime.Extensions;
+using NodaTime.TimeZones;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -50,10 +53,12 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                 {
                     int addedPriceEvents = 0;
                     var currentPowerLevel = HeatingMode.Unkown;
-
+                    
+                    
                     foreach (var price in schedule)
                     {
-                        if (price.Start.DayOfWeek != day)
+                        var lTime = price.Start;
+                        if (lTime.DayOfWeek != day)
                             continue;
 
                         if(IsInsideBoostWindow(price.Start))
@@ -158,14 +163,11 @@ namespace MyUplinkSmartConnect.CostSavingsRules
 
         internal DateTime GetDateOfDay(DayOfWeek day)
         {
-            // Gets the DateTime from the day. This is done by calculating it from week order and todays index in that list.
-
-            var now = DateTime.Now.Date;
-
+            // Gets the DateTime from the day. This is done by calculating it from week order and todays index in that list.            
             int indexOfToday = -1;
             for (int i = 0; i < _daysInWeek.Count(); i++)
             {
-                if (_daysInWeek[i] == now.DayOfWeek)
+                if (_daysInWeek[i] == day)
                 {
                     indexOfToday = i;
                     break;
@@ -179,7 +181,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                 {
                     int realativeDay = i - indexOfToday;
 
-                    var relativeDate = now.AddDays(realativeDay);
+                    var relativeDate = DateTime.Now.AddDays(realativeDay);
                     return relativeDate;
                 }
             }
@@ -299,8 +301,8 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                 return timeslot;
             }
             
-            (DateTime starTime, DateTime endTime) result = GetDateTimeFromHourString(WaterHeaterSchedule[index].startTime, WaterHeaterSchedule[index + 1].startTime, WaterHeaterSchedule[index].Date);
-            timeslot.Duration = result.endTime - result.starTime;
+            var result = GetDateTimeFromHourString(WaterHeaterSchedule[index].startTime, WaterHeaterSchedule[index + 1].startTime, WaterHeaterSchedule[index].Date);
+            timeslot.Duration = (result.endTime - result.starTime);
             timeslot.TimeSlotIndex = index;
 
             if (result.starTime <= DateTime.Now || timeslot.Duration.TotalHours < 0 || timeslot.Duration.TotalHours > 6)
@@ -315,7 +317,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
             return timeslot;
         }
 
-        (DateTime starTime,DateTime endTime) GetDateTimeFromHourString(string? strStart,string? strEnd,DateTime date)
+        (DateTime starTime, DateTime endTime) GetDateTimeFromHourString(string? strStart,string? strEnd, DateTime date)
         {
             string strDate;
             if (date == DateTime.MinValue)
@@ -326,7 +328,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
                     strDate = DateTime.Now.ToLongDateString();
             }                
             else
-                strDate = date.ToLongDateString();
+                strDate = date.ToString("D");
 
             var startTime = DateTime.Parse($"{strDate} {strStart}");
             var endTime = DateTime.Parse($"{strDate} {strEnd}");
@@ -334,7 +336,7 @@ namespace MyUplinkSmartConnect.CostSavingsRules
             return (startTime, endTime);
         }
 
-        double CalculatePriceTotal(DateTime startTime,DateTime endTime)
+        double CalculatePriceTotal(DateTime startTime, DateTime endTime)
         {
             double price = 0;
             if (_currentState.PriceList != null)

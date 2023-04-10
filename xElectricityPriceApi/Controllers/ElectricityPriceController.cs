@@ -25,6 +25,13 @@ public class ElectricityPriceController : ControllerBase
         return _priceService.GetAllTodayAndTomorrow();
     }
 
+    [HttpGet, Route("api/GetCurrentPrice/")]
+    public PriceInformation GetCurrentPrice()
+    {
+        var price = _priceService.GetCurrentPrice() ?? new PriceInformation();
+        return price;
+    }
+
     [HttpGet, Route("api/price/sortByPrice")]
     public IEnumerable<PriceInformation> SortByPrice()
     {
