@@ -21,6 +21,17 @@ namespace xElectricityPriceApiShared
             GetVariables(EnvironmentVariableTarget.Machine);
         }
 
+        public bool HasSetting(string keyName)
+        {
+            keyName = keyName.ToLowerInvariant();
+            if (_machine.ContainsKey(keyName))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         public EnvVariables(ILogger<object> logger,Dictionary<string,object> tmpList)
         {
             _logger = logger;

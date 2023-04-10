@@ -1,12 +1,8 @@
 ﻿using Hangfire;
-using Hangfire.LiteDB.Entities;
-using Hangfire.LiteDB;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.Net.Http.Headers;
+using Hangfire.PostgreSql;
 using xElectricityPriceApi.BackgroundJobs;
 using xElectricityPriceApi.Services;
 using Microsoft.EntityFrameworkCore;
-using Hangfire.EntityFrameworkCore;
 
 namespace xElectricityPriceApi
 {
@@ -39,7 +35,7 @@ namespace xElectricityPriceApi
             services.AddControllersWithViews();
             services.AddRazorPages();
 
-            services.AddDbContext<DatabaseContext>(options => options.UseSqlite(_settingsService.GetSqlLightDatabaseConStr()).EnableSensitiveDataLogging(false));
+            services.AddDbContext<DatabaseContext>(options => options.UseNpgsql(_settingsService.GetSqlLightDatabaseConStr()).EnableSensitiveDataLogging(false));
             services.AddHangfire(config =>
             {
                 //config.UseLiteDbStorage(liteDb.DatabaseInstance);
@@ -47,22 +43,24 @@ namespace xElectricityPriceApi
                 config.UseRecommendedSerializerSettings();
                 config.UseSerilogLogProvider();
                 config.SetDataCompatibilityLevel(CompatibilityLevel.Version_170);
-                config.UseEFCoreStorage(builder => builder.UseSqlite(_settingsService.GetSqlLightDatabaseConStr()), new EFCoreStorageOptions
+               /* config.UseEFCoreStorage(builder => builder.UseNpgsql(_settingsService.GetSqlLightDatabaseConStr()), new EFCoreStorageOptions
                 {
                     CountersAggregationInterval = new TimeSpan(0, 5, 0),
                     DistributedLockTimeout = new TimeSpan(0, 10, 0),
                     JobExpirationCheckInterval = new TimeSpan(0, 30, 0),
                     QueuePollInterval = new TimeSpan(0, 0, 15),
-                    Schema = string.Empty,
+//                    PrepareSchemaIfNecessary = true,
+ //                   SchemaName = ["Schema"]
                     SlidingInvisibilityTimeout = new TimeSpan(0, 5, 0),
-                }).UseDatabaseCreator();
+                }).UseDatabaseCreator();*/
             });
 
             services.AddSingleton<SettingsService>();
             services.AddScoped<MQTTSenderService>();
             services.AddScoped<PriceService>();
 
-            services.AddHangfireServer();
+            services.AddHangfire(config => config.UsePostgreSqlStorage(_settingsService.GetSqlLightDatabaseConStr()));
+
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();            
             
@@ -141,21 +139,21 @@ namespace xElectricityPriceApi
 
         private void UpdateDatabase(IApplicationBuilder app)
         {
-            Serilog.Log.Logger.Information("Checking for database migration on database stored  in {path}", _settingsService.DatabasePath);
+            Serilog.Log.Logger.Information("Checking for database migration on database stored  in {path}", _settingsService.Database);
             using (var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
             {
                 using (var context = serviceScope.ServiceProvider.GetService<DatabaseContext>())
                 {
                     context.Database.Migrate();
-
+                    /*
                     using (var connection = context.Database.GetDbConnection())
                     using (var command = connection.CreateCommand())
                     {
                         connection.Open();
 
-                        command.CommandText = "PRAGMA journal_mode=WAL;";
+                        //command.CommandText = "PRAGMA journal_mode=WAL;";
                         command.ExecuteNonQuery();
-                    }
+                    }*/
                 }
             }
         }

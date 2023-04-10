@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using Serilog.Events;
 using xElectricityPriceApiShared;
+using static Dapper.SqlMapper;
 
 namespace xElectricityPriceApi.Services
 {
@@ -13,25 +14,39 @@ namespace xElectricityPriceApi.Services
             _logger = logger;
 
             EnvVariables env = new EnvVariables(_logger);
-            MQTTServer = env.GetValue(nameof(MQTTServer));
-            MQTTServerPort = env.GetValueInt(nameof(MQTTServerPort), 1883);
-            MQTTUserName = env.GetValue(nameof(MQTTUserName));
-            MQTTPassword = env.GetValue(nameof(MQTTPassword));
+            if (env.HasSetting("IsInsideDocker"))
+            {
+                MQTTServer = env.GetValue(nameof(MQTTServer));
+                MQTTServerPort = env.GetValueInt(nameof(MQTTServerPort), 1883);
+                MQTTUserName = env.GetValue(nameof(MQTTUserName));
+                MQTTPassword = env.GetValue(nameof(MQTTPassword));
+
+                DatabaseServer = env.GetValue(nameof(DatabaseServer));
+                Database = env.GetValue(nameof(Database));
+                DatabaseUser = env.GetValue(nameof(DatabaseUser));
+                DatabasePassword = env.GetValue(nameof(DatabasePassword));
+            }
+            else
+            {
+                Database = "electricityprice_db";
+                DatabaseServer = "192.168.50.19";
+                DatabaseUser = "electricityprice";
+                
+            }
         }
 
         public string GetSqlLightDatabaseConStr()
         {
-            //MQTTLogLevel = env.GetValueEnum(LogEventLevel.Warning, nameof(MQTTLogLevel));
-
-            //Data Source=C:\SQLITEDATABASES\SQLITEDB1.sqlite;Version=3;
-            if (!Directory.Exists(DatabasePath))
-                Directory.CreateDirectory(DatabasePath);
-
-            string databseName = Path.Combine(DatabasePath, "Database.db");
-            return $"Data Source={databseName}";
+            return $"Host={DatabaseServer}; Database={Database}; Username={DatabaseUser}; Password={DatabasePassword}";
         }
 
-        public string DatabasePath { get; set; } = "d:\\temp\\";
+        public string Database { get; set; } = "";
+
+        public string DatabaseServer { get; set; } = "";
+
+        public string DatabaseUser { get; set; } = "";
+
+        public string DatabasePassword { get; set; } = "";
 
         public string? MQTTServer { get; set; }
 
