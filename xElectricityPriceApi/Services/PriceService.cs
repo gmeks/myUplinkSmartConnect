@@ -1,6 +1,7 @@
 ﻿using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using xElectricityPriceApi.BackgroundJobs;
 using xElectricityPriceApi.Controllers;
 using xElectricityPriceApi.Models;
 using xElectricityPriceApiShared;
@@ -80,6 +81,21 @@ namespace xElectricityPriceApi.Services
             return avr;
         }
 
+        public PriceInformation? GetCurrentPrice()
+        {
+            var currentDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour,0,0);
+            var price = _context.PriceInformation.Where(x => x.Start >= currentDate && x.End < currentDate).FirstOrDefault();
+
+            if (price == null)
+            {
+                _logger.LogWarning("No price information was gotten, we force a check.");
+                RecurringJob.TriggerJob(UpdatePrices.HangfireJobDescription);
+                return null;
+            }
+
+            return price;
+        }
+
         public IEnumerable<PriceInformation> GetAllThisMonth()
         {
             var start = new DateTime(DateTime.Now.Year, DateTime.Now.Month,1);
@@ -97,7 +113,6 @@ namespace xElectricityPriceApi.Services
 
         public List<ExtendedPriceInformation> GetAllTodayAndTomorrow()
         {
-
             const double ElectricitySupportStart = 0.875d;
             const double ElectricitySupportPercentage = 0.90d;
 
@@ -109,14 +124,14 @@ namespace xElectricityPriceApi.Services
             if (tmpPriceList?.Any() != true)
             {
                 _logger.LogWarning("No price information was gotten, we force a check.");
-                RecurringJob.TriggerJob("Update prices");
+                RecurringJob.TriggerJob(UpdatePrices.HangfireJobDescription);
                 return Enumerable.Empty<ExtendedPriceInformation>().ToList();
             }
 
             if(avarage == null)
             {
                 _logger.LogWarning("Avarage price not ready, forcing update");
-                RecurringJob.TriggerJob("Update prices");
+                RecurringJob.TriggerJob(UpdatePrices.HangfireJobDescription);
                 return Enumerable.Empty<ExtendedPriceInformation>().ToList();
             }
 

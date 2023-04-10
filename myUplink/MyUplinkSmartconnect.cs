@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using MyUplinkSmartConnect.CostSavings;
 using Serilog;
+using Serilog.Core;
 using Serilog.Events;
 using System;
 using System.Collections.Generic;
@@ -22,9 +23,11 @@ namespace MyUplinkSmartConnect
         const string settingsFile = "appsettings.json";         
 #endif
         readonly BackgroundJobSupervisor _backgroundJobs;
+        readonly ILogger<object> _logger;
 
         public MyUplinkSmartconnect(ILogger<object> logger)
         {
+            _logger = logger;
             _backgroundJobs = new BackgroundJobSupervisor(logger);
         }
 
@@ -32,7 +35,7 @@ namespace MyUplinkSmartConnect
         {
             Log.Logger.Information("Starting up service, detected version is {version}", GetVersion());
 
-            EnvVariables env = new EnvVariables();
+            EnvVariables env = new EnvVariables(_logger);
             if (!string.IsNullOrEmpty(env.GetValue("IsInsideDocker")))
             {
                 Log.Logger.Information("Reading settings from environmental variables");
@@ -53,7 +56,7 @@ namespace MyUplinkSmartConnect
                     return;
                 }
 
-                env = new EnvVariables(dict);
+                env = new EnvVariables(_logger,dict);
                 Log.Logger.Information("Reading settings from configuration file");
             }
 

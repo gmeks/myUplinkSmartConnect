@@ -1,26 +1,29 @@
-﻿using Serilog;
+﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MyUplinkSmartConnect
+namespace xElectricityPriceApiShared
 {
     public class EnvVariables
     {
         readonly Dictionary<string, string> _machine;
+        readonly ILogger<object> _logger;
 
-        public EnvVariables()
+        public EnvVariables(ILogger<object> logger)
         {
+            _logger = logger;
             _machine = new Dictionary<string, string>();
             GetVariables(EnvironmentVariableTarget.Process);
             GetVariables(EnvironmentVariableTarget.User);
             GetVariables(EnvironmentVariableTarget.Machine);
         }
 
-        public EnvVariables(Dictionary<string,object> tmpList)
+        public EnvVariables(ILogger<object> logger,Dictionary<string,object> tmpList)
         {
+            _logger = logger;
             _machine = new Dictionary<string, string>();
 
             foreach(var item in tmpList)
@@ -35,11 +38,11 @@ namespace MyUplinkSmartConnect
             keyName = keyName.ToLowerInvariant();
             if (_machine.ContainsKey(keyName))
             {
-                Log.Logger.Debug("Environmental variable {KeyName} - {KeyValue}",keyName,_machine[keyName]);
+                _logger.LogDebug("Environmental variable {KeyName} - {KeyValue}",keyName,_machine[keyName]);
                 return _machine[keyName];
             }
-            
-            Log.Logger.Debug("Failed to find environmental variable {KeyName}",keyName);
+
+            _logger.LogDebug("Failed to find environmental variable {KeyName}",keyName);
             return defaultValue;
         }
 
@@ -48,7 +51,7 @@ namespace MyUplinkSmartConnect
             var strValue = GetValue(keyName);
             if (string.IsNullOrWhiteSpace(strValue))
             {
-                Log.Logger.Debug("Environmental variable {KeyName} using default value of {defaultValue}", keyName, defaultValue);
+                _logger.LogDebug("Environmental variable {KeyName} using default value of {defaultValue}", keyName, defaultValue);
                 return defaultValue;
             }
 
@@ -57,7 +60,7 @@ namespace MyUplinkSmartConnect
                 return result;
             }
 
-            Log.Logger.Error("{KeyName} has invalid value and cannot be read as a {Type}: {KeyValue}", keyName, typeof(TEnum), strValue);
+            _logger.LogError("{KeyName} has invalid value and cannot be read as a {Type}: {KeyValue}", keyName, typeof(TEnum), strValue);
             return defaultValue;
         }
 
@@ -71,7 +74,7 @@ namespace MyUplinkSmartConnect
                     return GetValue(tmpKey);
             }
 
-            Log.Logger.Debug("Environmental variable {KeyName} using default value of {defaultValue}", keyName);
+            _logger.LogDebug("Environmental variable {KeyName} using default value of {defaultValue}", keyName);
             return string.Empty;
         }
 
@@ -80,7 +83,7 @@ namespace MyUplinkSmartConnect
             var strValue = GetValue(keyName);
             if (string.IsNullOrWhiteSpace(strValue))
             {
-                Log.Logger.Debug("Environmental variable {KeyName} using default value of {defaultValue}", keyName, defaultValue);
+                _logger.LogDebug("Environmental variable {KeyName} using default value of {defaultValue}", keyName, defaultValue);
                 return defaultValue;
             }
 
@@ -89,7 +92,7 @@ namespace MyUplinkSmartConnect
                 return result;
             }
 
-            Log.Logger.Error("{KeyName} has invalid value and cannot be read as a bool: {Value}", keyName, strValue);
+            _logger.LogError("{KeyName} has invalid value and cannot be read as a bool: {Value}", keyName, strValue);
             return defaultValue;
         }
 
@@ -98,7 +101,7 @@ namespace MyUplinkSmartConnect
             var strValue = GetValue(keyName);
             if (string.IsNullOrWhiteSpace(strValue))
             {
-                Log.Logger.Debug("Environmental variable {KeyName} using default value of {defaultValue}", keyName, defaultValue);
+                _logger.LogDebug("Environmental variable {KeyName} using default value of {defaultValue}", keyName, defaultValue);
                 return defaultValue;
             }
 
@@ -107,7 +110,7 @@ namespace MyUplinkSmartConnect
                 return result;
             }
 
-            Log.Logger.Error("{KeyName} has invalid value and cannot be read as a int: {Value}", keyName, strValue);
+            _logger.LogError("{KeyName} has invalid value and cannot be read as a int: {Value}", keyName, strValue);
             return defaultValue;
         }
 
@@ -121,7 +124,7 @@ namespace MyUplinkSmartConnect
                     return GetValueInt(tmpKey, defaultValue);
             }
 
-            Log.Logger.Debug("Environmental variable {KeyName} using default value of {defaultValue}", keyName);
+            _logger.LogDebug("Environmental variable {KeyName} using default value of {defaultValue}", keyName);
             return defaultValue;
         }
 
@@ -141,20 +144,20 @@ namespace MyUplinkSmartConnect
         {            
             if(string.IsNullOrEmpty(keyName))
             {
-                Log.Logger.Debug("Cannot add setting with no keyvalue");
+                _logger.LogDebug("Cannot add setting with no keyvalue");
                 return;
             }
 
             var tmpKeyName = keyName.ToLowerInvariant();
             if (_machine.ContainsKey(tmpKeyName))
             {
-                Log.Logger.Debug("Will not add duplicate key values");
+                _logger.LogDebug("Will not add duplicate key values");
                 return;
             }
 
             if (string.IsNullOrEmpty(value))
             {
-                Log.Logger.Debug("{Key} was setting did not have a value, and will be ignored",keyName);
+                _logger.LogDebug("{Key} was setting did not have a value, and will be ignored",keyName);
                 return;
             }
 

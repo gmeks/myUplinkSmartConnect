@@ -17,6 +17,8 @@ namespace xElectricityPriceApi.BackgroundJobs
             _logger = logger;
         }
 
+        public const string HangfireJobDescription = "Update prices";
+
         public async Task Work()
         {
             _logger.LogInformation("Updating price information");

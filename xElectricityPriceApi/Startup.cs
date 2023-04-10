@@ -12,10 +12,19 @@ namespace xElectricityPriceApi
 {
     public class Startup
     {
+        SettingsService _settingsService;
+
         public Startup(IConfiguration configuration)
         {
-            //Console.WriteLine($"HttpCache busting ID set to: {Settings.HttpCacheID}");
-            Configuration = configuration;
+            using var loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder.SetMinimumLevel(LogLevel.Information);
+                builder.AddConsole();
+                builder.AddEventSourceLogger();
+            });
+            var logger = loggerFactory.CreateLogger<Startup>();
+            _settingsService = new SettingsService(logger);
+            Configuration = configuration;           
         }
 
         public IConfiguration Configuration { get; }
@@ -23,12 +32,14 @@ namespace xElectricityPriceApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddLogging();
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+        
 
             services.AddControllersWithViews();
             services.AddRazorPages();
 
-            services.AddDbContext<DatabaseContext>(options => options.UseSqlite(Settings.GetSqlLightDatabaseConStr()).EnableSensitiveDataLogging(false));
+            services.AddDbContext<DatabaseContext>(options => options.UseSqlite(_settingsService.GetSqlLightDatabaseConStr()).EnableSensitiveDataLogging(false));
             services.AddHangfire(config =>
             {
                 //config.UseLiteDbStorage(liteDb.DatabaseInstance);
@@ -36,7 +47,7 @@ namespace xElectricityPriceApi
                 config.UseRecommendedSerializerSettings();
                 config.UseSerilogLogProvider();
                 config.SetDataCompatibilityLevel(CompatibilityLevel.Version_170);
-                config.UseEFCoreStorage(builder => builder.UseSqlite(Settings.GetSqlLightDatabaseConStr()), new EFCoreStorageOptions
+                config.UseEFCoreStorage(builder => builder.UseSqlite(_settingsService.GetSqlLightDatabaseConStr()), new EFCoreStorageOptions
                 {
                     CountersAggregationInterval = new TimeSpan(0, 5, 0),
                     DistributedLockTimeout = new TimeSpan(0, 10, 0),
@@ -46,13 +57,15 @@ namespace xElectricityPriceApi
                     SlidingInvisibilityTimeout = new TimeSpan(0, 5, 0),
                 }).UseDatabaseCreator();
             });
+
+            services.AddSingleton<SettingsService>();
+            services.AddScoped<MQTTSenderService>();
             services.AddScoped<PriceService>();
 
-
+            services.AddHangfireServer();
             services.AddEndpointsApiExplorer();
-            services.AddSwaggerGen();
+            services.AddSwaggerGen();            
             
-            services.AddLogging();
             services.AddResponseCompression(opts =>
             {
                 opts.EnableForHttps = true;
@@ -81,7 +94,7 @@ namespace xElectricityPriceApi
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "VesselSource API v1"));
             app.UseResponseCompression();
 
-#if DEBUG
+#if !DEBUG
             app.UseHttpsRedirection();
 #endif
 
@@ -93,7 +106,6 @@ namespace xElectricityPriceApi
 
             GlobalConfiguration.Configuration.UseActivator(new HangfireActivator(serviceProvider));
             //app.UseHangfireDashboard();
-            app.UseHangfireServer();
             app.UseHangfireDashboard("/HangFireDashboard", new DashboardOptions
             {
                 //Authorization = new[] { new HangFireAuthorizeFilter() },
@@ -110,24 +122,26 @@ namespace xElectricityPriceApi
 
         void ConfigureBackgroundJobs(IServiceProvider serviceProvider)
         {
-            RecurringJob.AddOrUpdate<UpdatePrices>("Update prices", o => o.Work(), "2 13 * * *");
+            RecurringJob.AddOrUpdate<UpdatePrices>(UpdatePrices.HangfireJobDescription, o => o.Work(), "2 13 * * *");
+            RecurringJob.AddOrUpdate<SendPriceInformation>(SendPriceInformation.HangfireJobDescription, o => o.WorkOncePrHour(), "0 * * * *"); 
+
 
             var priceService = serviceProvider.GetRequiredService<PriceService>();
             if (priceService.AveragePriceCount == 0)
             {
-                RecurringJob.TriggerJob("Update prices");
+                RecurringJob.TriggerJob(UpdatePrices.HangfireJobDescription);
             }
 #if DEBUG
             else
             {
-                RecurringJob.TriggerJob("Update prices");
+                RecurringJob.TriggerJob(UpdatePrices.HangfireJobDescription);
             }            
 #endif
         }
 
-        private static void UpdateDatabase(IApplicationBuilder app)
+        private void UpdateDatabase(IApplicationBuilder app)
         {
-            Serilog.Log.Logger.Information("Checking for database migration on database stored  in {path}", Settings.DatabasePath);
+            Serilog.Log.Logger.Information("Checking for database migration on database stored  in {path}", _settingsService.DatabasePath);
             using (var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
             {
                 using (var context = serviceScope.ServiceProvider.GetService<DatabaseContext>())
