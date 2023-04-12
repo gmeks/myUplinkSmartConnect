@@ -9,6 +9,7 @@ namespace xElectricityPriceApi.Services
         Unkown,
         CurrentListPrice,
         CurrentPriceEstimatedEffectivePrice,
+        CurrentPriceDescription
     }
     public class MQTTSenderService
     {
@@ -61,14 +62,14 @@ namespace xElectricityPriceApi.Services
                     MqttClientOptionsBuilder optionsBuilder;
 
 
-                    if (_settingsService.MQTTServerPort != 0)
-                        optionsBuilder = new MqttClientOptionsBuilder().WithTcpServer(_settingsService.MQTTServer, _settingsService.MQTTServerPort).WithKeepAlivePeriod(TimeSpan.FromMinutes(1));
+                    if (_settingsService.Instance.MQTTServerPort != 0)
+                        optionsBuilder = new MqttClientOptionsBuilder().WithTcpServer(_settingsService.Instance.MQTTServer, _settingsService.Instance.MQTTServerPort).WithKeepAlivePeriod(TimeSpan.FromMinutes(1));
                     else
-                        optionsBuilder = new MqttClientOptionsBuilder().WithTcpServer(_settingsService.MQTTServer).WithKeepAlivePeriod(TimeSpan.FromMinutes(1));
+                        optionsBuilder = new MqttClientOptionsBuilder().WithTcpServer(_settingsService.Instance.MQTTServer).WithKeepAlivePeriod(TimeSpan.FromMinutes(1));
 
-                    if (!string.IsNullOrEmpty(_settingsService.MQTTUserName))
+                    if (!string.IsNullOrEmpty(_settingsService.Instance.MQTTUserName))
                     {
-                        optionsBuilder = optionsBuilder.WithCredentials(_settingsService.MQTTUserName, _settingsService.MQTTPassword);
+                        optionsBuilder = optionsBuilder.WithCredentials(_settingsService.Instance.MQTTUserName, _settingsService.Instance.MQTTPassword);
                     }
 
                     try

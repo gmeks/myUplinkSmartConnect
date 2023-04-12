@@ -74,7 +74,6 @@ namespace xElectricityPriceApi.Services
         public void Add(PriceInformation pricePoint)
         {
             _context.PriceInformation.Add(pricePoint);
-
             _context.SaveChanges();
         }
 
@@ -116,25 +115,22 @@ namespace xElectricityPriceApi.Services
             return priceList;
         }
 
+        public IQueryable<PriceInformation> GetAll(DateOnly date)
+        {
+            var start = date.ToDateTime(new TimeOnly(0,0,0));
+            var end = date.ToDateTime(new TimeOnly(23, 59, 59));
+
+            var priceList = _context.PriceInformation.Where(x => x.Start >= start && x.End < end);
+            return priceList;
+        }
+
         public List<ExtendedPriceInformation> GetAllTodayAndTomorrow()
         {
-            const double ElectricitySupportStart = 0.875d;
-            const double ElectricitySupportPercentage = 0.90d;
-            /*
-            Instant now = SystemClock.Instance.GetCurrentInstant();
-            DateTimeZone zone1 = DateTimeZoneProviders.Tzdb.GetSystemDefault();
-            LocalDate todayInTheSystemZone = now.InZone(zone1).Date;
-
-
-            var zonedTime = todayInTheSystemZone.AtStartOfDayInZone(zone1);
-            var start = zonedTime;
-            var end = todayInTheSystemZone.AtStartOfDayInZone(zone1).PlusHours(48);
-            */
-
             var start = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
             var end = DateTime.Now.Date.AddDays(2).AddSeconds(-1);
 
-            var tmpPriceList = Between(start, end).ToList();
+            var tmpPriceList = Between(start,end).ToList();
+
             var avarage = GetAverageForMonth();
             if (tmpPriceList?.Any() != true)
             {
@@ -150,15 +146,55 @@ namespace xElectricityPriceApi.Services
                 return Enumerable.Empty<ExtendedPriceInformation>().ToList();
             }
 
+            List<PriceInformation>? todayPrices = GetAll(DateOnly.FromDateTime(DateTime.Now)).OrderBy(x => x.Price).ToList();
+            var TommorrowPrices = GetAll(DateOnly.FromDateTime(DateTime.Now.AddDays(1))).OrderBy(x => x.Price).ToList();
+
             var priceList = JsonUtils.CloneTo<List<ExtendedPriceInformation>>(tmpPriceList);
-            var electricitySupportPayBackPrKw = (avarage.Price - ElectricitySupportStart) * ElectricitySupportPercentage;
+            var electricitySupportPayBackPrKw = GetEstimatedSupportPrKw(avarage);
 
             foreach (var price in priceList)
             {
                 price.PriceAfterSupport = price.Price - electricitySupportPayBackPrKw;
+                
+
+                if(todayPrices?.FirstOrDefault()?.Start.Date == price.Start.Date)
+                    price.PriceDescription = GetPricePointDescriptionFromPriceList(price, todayPrices);
+
+                if (TommorrowPrices?.FirstOrDefault()?.Start.Date == price.Start.Date)
+                    price.PriceDescription = GetPricePointDescriptionFromPriceList(price, TommorrowPrices);
             }
 
             return priceList;
         }  
+
+        public PriceDescription GetPricePointDescriptionFromPriceList(ExtendedPriceInformation price, List<PriceInformation>? priceList)
+        {
+            if (price.PriceAfterSupport <= 0.30) // Price bellow 30 øre is always considered cheap.
+                return PriceDescription.Cheap;
+
+            if(priceList?.Any() != true)
+            {
+                priceList = GetAll(DateOnly.FromDateTime(price.Start)).OrderBy(x => x.Price).ToList();
+            }
+
+            int index = priceList.IndexOf(price);
+
+            if (index <= 6)
+                return PriceDescription.Cheap;
+
+            if (index <= 18)
+                return PriceDescription.Normal;
+
+            return PriceDescription.Expensive;
+        }
+
+        public double GetEstimatedSupportPrKw(AveragePrice avarage)
+        {
+            const double ElectricitySupportStart = 0.875d;
+            const double ElectricitySupportPercentage = 0.90d;
+
+            var electricitySupportPayBackPrKw = (avarage.Price - ElectricitySupportStart) * ElectricitySupportPercentage;
+            return electricitySupportPayBackPrKw;
+        }
     }
 }

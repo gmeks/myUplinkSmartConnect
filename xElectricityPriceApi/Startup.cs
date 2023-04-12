@@ -7,6 +7,7 @@ using Npgsql;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Hangfire.EntityFrameworkCore;
 
 namespace xElectricityPriceApi
 {
@@ -52,7 +53,7 @@ namespace xElectricityPriceApi
                 config.UseRecommendedSerializerSettings();
                 config.UseSerilogLogProvider();
                 config.SetDataCompatibilityLevel(CompatibilityLevel.Version_170);
-               /* config.UseEFCoreStorage(builder => builder.UseNpgsql(_settingsService.GetSqlLightDatabaseConStr()), new EFCoreStorageOptions
+                config.UseEFCoreStorage(builder => builder.UseNpgsql(_settingsService.GetConnectionStr()), new EFCoreStorageOptions
                 {
                     CountersAggregationInterval = new TimeSpan(0, 5, 0),
                     DistributedLockTimeout = new TimeSpan(0, 10, 0),
@@ -61,7 +62,7 @@ namespace xElectricityPriceApi
 //                    PrepareSchemaIfNecessary = true,
  //                   SchemaName = ["Schema"]
                     SlidingInvisibilityTimeout = new TimeSpan(0, 5, 0),
-                }).UseDatabaseCreator();*/
+                }).UseDatabaseCreator();
             });
 
             services.AddSingleton<SettingsService>();
@@ -142,13 +143,14 @@ namespace xElectricityPriceApi
             else
             {
                 RecurringJob.TriggerJob(UpdatePrices.HangfireJobDescription);
-            }            
+            }
 #endif
+            RecurringJob.TriggerJob(SendPriceInformation.HangfireJobDescription); // We always send price information in startup
         }
 
         private void UpdateDatabase(IApplicationBuilder app)
         {
-            Serilog.Log.Logger.Information("Checking for database migration on database stored  in {path}", _settingsService.Database);
+            Serilog.Log.Logger.Information("Checking for database migration on database stored  in {path}", _settingsService.Instance.Database);
             using (var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
             {
                 using (var context = serviceScope.ServiceProvider.GetService<DatabaseContext>())

@@ -342,3 +342,4 @@ healthchecksdb
 /xElectricityPriceApi/xElectricityPrice-log.db
 /xElectricityPriceApi/xElectricityPrice.db
 /dist
+/xElectricityPriceApi/appsettings.Development.json

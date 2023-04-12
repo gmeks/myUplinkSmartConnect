@@ -85,7 +85,7 @@ namespace xElectricityPriceApiShared
                     return GetValue(tmpKey);
             }
 
-            _logger.LogDebug("Environmental variable {KeyName} using default value of {defaultValue}", keyName);
+            _logger.LogDebug("Environmental variable {KeyName}, failed to find value returning empty", keyName);
             return string.Empty;
         }
 

@@ -1,5 +1,7 @@
 ﻿using Hangfire;
+using xElectricityPriceApi.Models;
 using xElectricityPriceApi.Services;
+using xElectricityPriceApiShared;
 
 namespace xElectricityPriceApi.BackgroundJobs
 {
@@ -21,7 +23,9 @@ namespace xElectricityPriceApi.BackgroundJobs
         public async Task WorkOncePrHour()
         {
             var currentPrice = _priceService.GetCurrentPrice();
-            if (currentPrice == null)
+            var avg = _priceService.GetAverageForMonth();
+
+            if (currentPrice == null || avg == null)
             {
                 _logger.LogDebug("Failed to get current price, will retry in a bit");
 
@@ -30,7 +34,13 @@ namespace xElectricityPriceApi.BackgroundJobs
                 return;
             }
 
-            await _mqTTSender.SendUpdate(MessageType.CurrentListPrice, currentPrice.Price, true);
+            var price = JsonUtils.CloneTo<ExtendedPriceInformation>(currentPrice);
+            price.PriceAfterSupport = price.Price - _priceService.GetEstimatedSupportPrKw(avg);
+            price.PriceDescription = _priceService.GetPricePointDescriptionFromPriceList(price,null);
+
+            await _mqTTSender.SendUpdate(MessageType.CurrentListPrice, price.Price, true);
+            await _mqTTSender.SendUpdate(MessageType.CurrentPriceEstimatedEffectivePrice, price.PriceAfterSupport, true);
+            await _mqTTSender.SendUpdate(MessageType.CurrentPriceDescription, price.PriceDescription.ToString(), true);
         }
     }
 }
