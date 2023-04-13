@@ -131,8 +131,8 @@ namespace xElectricityPriceApi
         void ConfigureBackgroundJobs(IServiceProvider serviceProvider)
         {
             RecurringJob.AddOrUpdate<UpdatePrices>(UpdatePrices.HangfireJobDescription, o => o.Work(), "2 13 * * *");
-            RecurringJob.AddOrUpdate<SendPriceInformation>(SendPriceInformation.HangfireJobDescription, o => o.WorkOncePrHour(), "0 * * * *"); 
-
+            RecurringJob.AddOrUpdate<WorkOncePrHour>(WorkOncePrHour.HangfireJobDescription, o => o.Work(), "0 * * * *");
+            RecurringJob.AddOrUpdate<PriceOncePrDay>(PriceOncePrDay.HangfireJobDescription, o => o.Work(),Cron.Daily()); 
 
             var priceService = serviceProvider.GetRequiredService<PriceService>();
             if (priceService.AveragePriceCount == 0)
@@ -143,9 +143,10 @@ namespace xElectricityPriceApi
             else
             {
                 RecurringJob.TriggerJob(UpdatePrices.HangfireJobDescription);
+                RecurringJob.TriggerJob(PriceOncePrDay.HangfireJobDescription);
             }
 #endif
-            RecurringJob.TriggerJob(SendPriceInformation.HangfireJobDescription); // We always send price information in startup
+            RecurringJob.TriggerJob(WorkOncePrHour.HangfireJobDescription); // We always send price information in startup
         }
 
         private void UpdateDatabase(IApplicationBuilder app)

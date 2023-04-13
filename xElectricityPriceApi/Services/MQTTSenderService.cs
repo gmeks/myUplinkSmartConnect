@@ -9,7 +9,8 @@ namespace xElectricityPriceApi.Services
         Unkown,
         CurrentListPrice,
         CurrentPriceEstimatedEffectivePrice,
-        CurrentPriceDescription
+        CurrentPriceDescription,
+        CheapestHour,
     }
     public class MQTTSenderService
     {

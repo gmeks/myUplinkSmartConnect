@@ -5,13 +5,13 @@ using xElectricityPriceApiShared;
 
 namespace xElectricityPriceApi.BackgroundJobs
 {
-    public class SendPriceInformation
+    public class WorkOncePrHour
     {
         MQTTSenderService _mqTTSender;
         PriceService _priceService;
-        ILogger<SendPriceInformation> _logger;
+        ILogger<WorkOncePrHour> _logger;
 
-        public SendPriceInformation(MQTTSenderService mqttSender, PriceService priceService, ILogger<SendPriceInformation> logger) 
+        public WorkOncePrHour(MQTTSenderService mqttSender, PriceService priceService, ILogger<WorkOncePrHour> logger) 
         {
             _mqTTSender = mqttSender;
             _priceService = priceService;
@@ -20,7 +20,7 @@ namespace xElectricityPriceApi.BackgroundJobs
 
         public const string HangfireJobDescription = "Hangfire Send priceinfo";
 
-        public async Task WorkOncePrHour()
+        public async Task Work()
         {
             var currentPrice = _priceService.GetCurrentPrice();
             var avg = _priceService.GetAverageForMonth();
@@ -30,7 +30,7 @@ namespace xElectricityPriceApi.BackgroundJobs
                 _logger.LogDebug("Failed to get current price, will retry in a bit");
 
                 RecurringJob.TriggerJob(UpdatePrices.HangfireJobDescription);
-                RecurringJob.TriggerJob(SendPriceInformation.HangfireJobDescription);
+                RecurringJob.TriggerJob(BackgroundJobs.WorkOncePrHour.HangfireJobDescription);
                 return;
             }
 

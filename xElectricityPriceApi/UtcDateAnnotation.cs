@@ -6,6 +6,7 @@ using System.Reflection;
 
 namespace xElectricityPriceApi
 {
+    //https://stackoverflow.com/questions/69961449/net6-and-datetime-problem-cannot-write-datetime-with-kind-utc-to-postgresql-ty
     public static class UtcDateAnnotation
     {
         private const string IsUtcAnnotation = "IsUtc";
