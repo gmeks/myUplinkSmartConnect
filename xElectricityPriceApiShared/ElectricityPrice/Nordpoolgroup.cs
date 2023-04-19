@@ -17,7 +17,7 @@ namespace xElectricityPriceApiShared.ElectricityPrice
 
         }
 
-        public bool IsPriceInNOK { get { return true; } }
+        public bool IsPriceInNOK { get { return false; } }
 
         public bool IsPriceWithVAT { get { return true; } }
 

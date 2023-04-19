@@ -103,7 +103,7 @@ namespace xElectricityPriceApi.Services
         public IEnumerable<PriceInformation> GetAllThisMonth()
         {
             var start = new DateTime(DateTime.Now.Year, DateTime.Now.Month,1);
-            var end = DateTime.Now.Date.AddDays(2).AddSeconds(-1);
+            var end = DateTime.Now.Date.AddMonths(1).AddSeconds(-1); ;
 
             var priceList = Between(start,end);
             return priceList;

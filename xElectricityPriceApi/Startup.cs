@@ -143,7 +143,6 @@ namespace xElectricityPriceApi
             else
             {
                 RecurringJob.TriggerJob(UpdatePrices.HangfireJobDescription);
-                RecurringJob.TriggerJob(PriceOncePrDay.HangfireJobDescription);
             }
 #endif
             RecurringJob.TriggerJob(WorkOncePrHour.HangfireJobDescription); // We always send price information in startup
