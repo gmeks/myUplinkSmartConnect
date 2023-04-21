@@ -172,12 +172,17 @@ namespace xElectricityPriceApi.Services
             if (price.PriceAfterSupport <= 0.30) // Price bellow 30 øre is always considered cheap.
                 return PriceDescription.Cheap;
 
-            if(priceList?.Any() != true)
+            List<PriceInformation>? sortedPriceList = null;
+            if (priceList?.Any() != true)
             {
-                priceList = GetAll(DateOnly.FromDateTime(price.Start)).OrderBy(x => x.Price).ToList();
+                sortedPriceList = GetAll(DateOnly.FromDateTime(price.Start)).OrderBy(x => x.Price).ToList();
+            }
+            else
+            {
+                sortedPriceList = priceList.OrderBy(x => x.Price).ToList();
             }
 
-            int index = priceList.IndexOf(price);
+            int index = sortedPriceList.IndexOf(price);
 
             if (index <= 6)
                 return PriceDescription.Cheap;
