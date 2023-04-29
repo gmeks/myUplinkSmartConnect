@@ -27,7 +27,7 @@ namespace xElectricityPriceApiShared.ElectricityPrice
         {
             _priceFetcher.PriceList.Clear();
             //TomorrowsPrice
-            var tResponse = await _client.GetAsync("https://www.nordpoolgroup.com/api/marketdata/page/10?currency=,,,NOK").ConfigureAwait(true);
+            var tResponse = await _client.GetAsync("https://www.nordpoolgroup.com/api/marketdata/page/10?currency=,,,EURO").ConfigureAwait(true);
             if (tResponse.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 var strContent = await tResponse.Content.ReadAsStringAsync();
