@@ -155,7 +155,7 @@ namespace xElectricityPriceApi
             {
                 using (var context = serviceScope.ServiceProvider.GetService<DatabaseContext>())
                 {
-                    context.Database.Migrate();            
+                    context?.Database.Migrate();            
                 }
             }
         }

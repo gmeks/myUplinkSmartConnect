@@ -27,6 +27,10 @@ namespace xElectricityPriceApi.Services
                 Instance.Database = env.GetValue(nameof(Instance.Database));
                 Instance.DatabaseUser = env.GetValue(nameof(Instance.DatabaseUser));
                 Instance.DatabasePassword = env.GetValue(nameof(Instance.DatabasePassword));
+
+                Instance.OnlyFetchPriceEUApi = env.GetValueBool(nameof(Instance.OnlyFetchPriceEUApi));
+
+                Instance.PowerZoneName = env.GetValueEnum<PowerZoneName>(PowerZoneName.NO2, nameof(Instance.PowerZoneName));
             }
             else
             {
@@ -68,5 +72,9 @@ namespace xElectricityPriceApi.Services
         public string? MQTTUserName { get; set; }
 
         public string? MQTTPassword { get; set; }
+
+        public bool OnlyFetchPriceEUApi { get; set; }
+
+        public PowerZoneName PowerZoneName { get; set; }
     }
 }

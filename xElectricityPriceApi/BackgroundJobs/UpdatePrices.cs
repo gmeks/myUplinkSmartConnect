@@ -11,9 +11,10 @@ namespace xElectricityPriceApi.BackgroundJobs
         private readonly PriceService _priceService;
         private readonly ILogger<UpdatePrices> _logger;
 
-        public UpdatePrices(PriceService priceService ,ILogger<UpdatePrices> logger)
+        public UpdatePrices(PriceService priceService, SettingsService settings , ILogger<UpdatePrices> logger)
         {
-            _priceFetcher = new PriceFetcher(logger, PowerZoneName.NO2);
+            _priceFetcher = new PriceFetcher(logger, settings.Instance.PowerZoneName);
+            _priceFetcher.OnlyEuApi = settings.Instance.OnlyFetchPriceEUApi;
             _priceService = priceService;
             _logger = logger;
         }

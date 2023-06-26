@@ -31,6 +31,8 @@ namespace xElectricityPriceApiShared
 
         public PowerZoneName PowerZone { get; set; }
 
+        public bool OnlyEuApi { get; set; }
+
         public List<PricePoint> PriceList { get; set; } = new List<PricePoint>();
 
         public async Task<bool> FetchHistoricPrices()
@@ -47,11 +49,21 @@ namespace xElectricityPriceApiShared
 
         public async Task<bool> UpdateRecentPrices()
         {
+            iBasePriceInformation[] priceFetchApiList;
+
+            if (OnlyEuApi)
+            {
+                priceFetchApiList = new iBasePriceInformation[] { new EntsoeAPI(this, _logger)};
+            }
+            else
+            {
 #if DEBUG
-            var priceFetchApiList = new iBasePriceInformation[] { new VgApi(this, _logger) };
+                priceFetchApiList = new iBasePriceInformation[] { new VgApi(this, _logger) };
 #else
-            var priceFetchApiList = new iBasePriceInformation[] { new EntsoeAPI(this,_logger), new Nordpoolgroup(this, _logger), new VgApi(this, _logger) };
+                priceFetchApiList = new iBasePriceInformation[] { new EntsoeAPI(this,_logger), new Nordpoolgroup(this, _logger), new VgApi(this, _logger) };
 #endif
+            }
+
 
             foreach (var priceListApi in priceFetchApiList)
             {
