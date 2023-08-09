@@ -198,8 +198,13 @@ namespace xElectricityPriceApi.Services
             const double ElectricitySupportStart = 0.875d;
             const double ElectricitySupportPercentage = 0.90d;
 
-            var electricitySupportPayBackPrKw = (avarage.Price - ElectricitySupportStart) * ElectricitySupportPercentage;
-            return electricitySupportPayBackPrKw;
+            if(avarage.Price >  ElectricitySupportStart)
+            {
+                var electricitySupportPayBackPrKw = (avarage.Price - ElectricitySupportStart) * ElectricitySupportPercentage;
+                return electricitySupportPayBackPrKw;
+            }
+
+            return avarage.Price;
         }
     }
 }
