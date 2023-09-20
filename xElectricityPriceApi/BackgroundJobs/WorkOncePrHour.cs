@@ -35,7 +35,7 @@ namespace xElectricityPriceApi.BackgroundJobs
             }
 
             var price = JsonUtils.CloneTo<ExtendedPriceInformation>(currentPrice);
-            price.PriceAfterSupport = price.Price - _priceService.GetEstimatedSupportPrKw(avg);
+            price.PriceAfterSupport = price.Price - _priceService.GetEstimatedSupportPrKw(price.Price);
             price.PriceDescription = _priceService.GetPricePointDescriptionFromPriceList(price,null);
 
             await _mqTTSender.SendUpdate(MessageType.CurrentListPrice, price.Price, true);

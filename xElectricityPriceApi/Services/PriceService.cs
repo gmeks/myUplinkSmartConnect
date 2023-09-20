@@ -150,11 +150,10 @@ namespace xElectricityPriceApi.Services
             var TommorrowPrices = GetAll(DateOnly.FromDateTime(DateTime.Now.AddDays(1))).OrderBy(x => x.Price).ToList();
 
             var priceList = JsonUtils.CloneTo<List<ExtendedPriceInformation>>(tmpPriceList);
-            var electricitySupportPayBackPrKw = GetEstimatedSupportPrKw(avarage);
 
             foreach (var price in priceList)
             {
-                price.PriceAfterSupport = price.Price - electricitySupportPayBackPrKw;
+                price.PriceAfterSupport = GetEstimatedSupportPrKw(price.Price);
                 
 
                 if(todayPrices?.FirstOrDefault()?.Start.Date == price.Start.Date)
@@ -193,18 +192,18 @@ namespace xElectricityPriceApi.Services
             return PriceDescription.Expensive;
         }
 
-        public double GetEstimatedSupportPrKw(AveragePrice avarage)
+        public double GetEstimatedSupportPrKw(double price)
         {
             const double ElectricitySupportStart = 0.875d;
             const double ElectricitySupportPercentage = 0.90d;
 
-            if(avarage.Price >  ElectricitySupportStart)
+            if(price >  ElectricitySupportStart)
             {
-                var electricitySupportPayBackPrKw = (avarage.Price - ElectricitySupportStart) * ElectricitySupportPercentage;
-                return electricitySupportPayBackPrKw;
+                var priceCoveredByState = (price - ElectricitySupportStart) * ElectricitySupportPercentage;
+                return price - priceCoveredByState;
             }
 
-            return avarage.Price;
+            return price;
         }
     }
 }
