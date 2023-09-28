@@ -18,6 +18,7 @@ namespace xElectricityPriceApi.Services
             EnvVariables env = new EnvVariables(_logger);
             if (env.HasSetting("IsInsideDocker"))
             {
+                _logger.LogInformation("Settings are being read from docker/Envrioment variables");
                 Instance.MQTTServer = env.GetValue(nameof(Instance.MQTTServer));
                 Instance.MQTTServerPort = env.GetValueInt(nameof(Instance.MQTTServerPort), 1883);
                 Instance.MQTTUserName = env.GetValue(nameof(Instance.MQTTUserName));
@@ -28,13 +29,14 @@ namespace xElectricityPriceApi.Services
                 Instance.DatabaseUser = env.GetValue(nameof(Instance.DatabaseUser));
                 Instance.DatabasePassword = env.GetValue(nameof(Instance.DatabasePassword));
 
-                Instance.OnlyFetchPriceEUApi = env.GetValueBool(nameof(Instance.OnlyFetchPriceEUApi));
+                Instance.OnlyFetchPriceEUApi = env.GetValueBool(nameof(Instance.OnlyFetchPriceEUApi),true);
 
                 Instance.PowerZoneName = env.GetValueEnum<PowerZoneName>(PowerZoneName.NO2, nameof(Instance.PowerZoneName));
             }
             else
             {
-                if(System.IO.File.Exists("appsettings.Development.json"))
+                _logger.LogInformation("Settings are being read from config file");
+                if (System.IO.File.Exists("appsettings.Development.json"))
                 {
                     var systemText = System.IO.File.ReadAllText("appsettings.Development.json");
                     var tmpSettings = System.Text.Json.JsonSerializer.Deserialize<SettingsValue>(systemText);
@@ -45,6 +47,12 @@ namespace xElectricityPriceApi.Services
                     }
                 }                
             }
+
+
+            _logger.LogInformation("Connecting to MQTT Server {server}:{port}", Instance.MQTTServer, Instance.MQTTServerPort);
+            _logger.LogInformation("Database server: {databaseserver}", Instance.DatabaseServer);
+            _logger.LogInformation("Price zone: {databaseserver}", Instance.PowerZoneName);
+            _logger.LogInformation("Price api EU only: {OnlyFetchPriceEUApi}", Instance.OnlyFetchPriceEUApi);
         }   
 
         public string GetConnectionStr()

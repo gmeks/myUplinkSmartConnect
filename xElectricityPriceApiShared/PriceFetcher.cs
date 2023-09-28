@@ -31,7 +31,7 @@ namespace xElectricityPriceApiShared
 
         public PowerZoneName PowerZone { get; set; }
 
-        public bool OnlyEuApi { get; set; }
+        public bool OnlyEUPriceApi { get; set; }
 
         public List<PricePoint> PriceList { get; set; } = new List<PricePoint>();
 
@@ -51,7 +51,7 @@ namespace xElectricityPriceApiShared
         {
             iBasePriceInformation[] priceFetchApiList;
 
-            if (OnlyEuApi)
+            if (OnlyEUPriceApi)
             {
                 priceFetchApiList = new iBasePriceInformation[] { new EntsoeAPI(this, _logger)};
             }

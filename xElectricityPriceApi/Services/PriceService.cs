@@ -194,7 +194,7 @@ namespace xElectricityPriceApi.Services
 
         public double GetEstimatedSupportPrKw(double price)
         {
-            const double ElectricitySupportStart = 0.875d;
+            const double ElectricitySupportStart = 0.875d; // This is startpoint including mva
             const double ElectricitySupportPercentage = 0.90d;
 
             if(price >  ElectricitySupportStart)
