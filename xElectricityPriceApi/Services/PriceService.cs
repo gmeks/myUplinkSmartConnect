@@ -168,7 +168,7 @@ namespace xElectricityPriceApi.Services
 
         public PriceDescription GetPricePointDescriptionFromPriceList(ExtendedPriceInformation price, List<PriceInformation>? priceList)
         {
-            if (price.PriceAfterSupport <= 0.30) // Price bellow 30 øre is always considered cheap.
+            if (price.Price <= 0.30) // Price bellow 30 øre is always considered cheap.
                 return PriceDescription.Cheap;
 
             List<PriceInformation>? sortedPriceList = null;
