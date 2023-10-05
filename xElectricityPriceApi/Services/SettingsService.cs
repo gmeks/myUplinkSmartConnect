@@ -45,9 +45,8 @@ namespace xElectricityPriceApi.Services
                     {
                         Instance = tmpSettings;
                     }
-                }                
+                }
             }
-
 
             _logger.LogInformation("Connecting to MQTT Server {server}:{port}", Instance.MQTTServer, Instance.MQTTServerPort);
             _logger.LogInformation("Database server: {databaseserver}", Instance.DatabaseServer);

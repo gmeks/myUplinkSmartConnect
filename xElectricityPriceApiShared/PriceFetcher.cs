@@ -72,7 +72,7 @@ namespace xElectricityPriceApiShared
                 {
                     await NormalizePrices(priceListApi);
 
-                    _logger.LogDebug("Using {priceApi} price list", priceListApi.GetType());
+                    _logger.LogInformation("Using {priceApi} price list", priceListApi.GetType());
                     return true;
                 }
             }

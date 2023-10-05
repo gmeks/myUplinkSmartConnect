@@ -22,6 +22,8 @@ namespace xElectricityPriceApi
                 builder.SetMinimumLevel(LogLevel.Information);
                 builder.AddConsole();
                 builder.AddEventSourceLogger();
+
+                builder.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
             });
             var logger = loggerFactory.CreateLogger<Startup>();
             _settingsService = new SettingsService(logger);
