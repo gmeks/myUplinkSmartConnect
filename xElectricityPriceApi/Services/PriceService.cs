@@ -164,7 +164,10 @@ namespace xElectricityPriceApi.Services
             }
 
             return priceList;
-        }  
+        }
+
+        const int CheapHoursCount = 6;
+        const int NormalHoursCount = 18;
 
         public PriceDescription GetPricePointDescriptionFromPriceList(ExtendedPriceInformation price, List<PriceInformation>? priceList)
         {
@@ -183,10 +186,14 @@ namespace xElectricityPriceApi.Services
 
             int index = sortedPriceList.IndexOf(price);
 
-            if (index <= 6)
+            if (index <= CheapHoursCount)
                 return PriceDescription.Cheap;
 
-            if (index <= 18)
+            // All hours that are as cheap or the same as lowest 6 hours should all count as cheap.
+            if (sortedPriceList[index].Price <= sortedPriceList[CheapHoursCount].Price)
+                return PriceDescription.Cheap;
+
+            if (index <= NormalHoursCount)
                 return PriceDescription.Normal;
 
             return PriceDescription.Expensive;
