@@ -12,16 +12,10 @@ using xElectricityPriceApiShared.Model;
 
 namespace xElectricityPriceApi.Services
 {
-    public class PriceService
+    public class PriceService(DatabaseContext context, ILogger<PriceService> logger)
     {
-        readonly DatabaseContext _context;
-        readonly ILogger<PriceService> _logger;
-
-        public PriceService(DatabaseContext context, ILogger<PriceService> logger) 
-        {
-            _context = context;
-            _logger = logger;
-        }
+        readonly DatabaseContext _context = context;
+        readonly ILogger<PriceService> _logger = logger;
 
         public void Add(PricePoint pricePoint)
         {
@@ -132,7 +126,7 @@ namespace xElectricityPriceApi.Services
             var tmpPriceList = Between(start,end).ToList();
 
             var avarage = GetAverageForMonth();
-            if (tmpPriceList?.Any() != true)
+            if (tmpPriceList?.Count != 0)
             {
                 _logger.LogWarning("No price information was gotten, we force a check.");
                 RecurringJob.TriggerJob(UpdatePrices.HangfireJobDescription);
@@ -175,7 +169,7 @@ namespace xElectricityPriceApi.Services
                 return PriceDescription.Cheap;
 
             List<PriceInformation>? sortedPriceList = null;
-            if (priceList?.Any() != true)
+            if (priceList?.Count != 0)
             {
                 sortedPriceList = GetAll(DateOnly.FromDateTime(price.Start)).OrderBy(x => x.Price).ToList();
             }

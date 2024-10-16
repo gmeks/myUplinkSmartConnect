@@ -5,19 +5,11 @@ using xElectricityPriceApiShared;
 
 namespace xElectricityPriceApi.BackgroundJobs
 {
-    public class WorkOncePrHour
+    public class WorkOncePrHour(MQTTSenderService mqttSender, PriceService priceService, ILogger<WorkOncePrHour> logger)
     {
-        MQTTSenderService _mqTTSender;
-        PriceService _priceService;
-        ILogger<WorkOncePrHour> _logger;
-
-        public WorkOncePrHour(MQTTSenderService mqttSender, PriceService priceService, ILogger<WorkOncePrHour> logger) 
-        {
-            _mqTTSender = mqttSender;
-            _priceService = priceService;
-            _logger = logger;
-        }
-
+        readonly MQTTSenderService _mqTTSender = mqttSender;
+        readonly PriceService _priceService = priceService;
+        readonly ILogger<WorkOncePrHour> _logger = logger;
         public const string HangfireJobDescription = "Hangfire Send priceinfo";
 
         public async Task Work()

@@ -12,21 +12,15 @@ namespace xElectricityPriceApi.Services
         CurrentPriceDescription,
         CheapestHour,
     }
-    public class MQTTSenderService
+    public class MQTTSenderService(SettingsService settingsService)
     {
-        readonly MqttFactory _mqttFactory;
-        readonly SettingsService _settingsService;
+        readonly MqttFactory _mqttFactory = new MqttFactory();
+        readonly SettingsService _settingsService = settingsService;
         static readonly object _lock = new object();
         static IMqttClient? _mqttClient;
 
         static int _connectionFailedCount = 0;
         const int ConnectionFailedCountConsiderError = 3;
-
-        public MQTTSenderService(SettingsService settingsService)
-        {
-            _mqttFactory = new MqttFactory();
-            _settingsService = settingsService;
-        }
 
         internal async Task SendUpdate(MessageType msgType, object value, bool retainMessage = true)
         {
