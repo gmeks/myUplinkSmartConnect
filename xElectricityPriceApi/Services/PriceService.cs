@@ -94,6 +94,22 @@ namespace xElectricityPriceApi.Services
             return price;
         }
 
+        public PriceInformation? GetNextHourPrice()
+        {
+            //SystemClock.Instance.GetCurrentInstant()
+            var currentDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, 0, 0).AddHours(1);
+            var price = _context.PriceInformation.Where(x => x.Start >= currentDate && currentDate < x.End).FirstOrDefault();
+
+            if (price == null)
+            {
+                _logger.LogWarning("No price information was gotten, we force a check.");
+                RecurringJob.TriggerJob(UpdatePrices.HangfireJobDescription);
+                return null;
+            }
+
+            return price;
+        }
+
         public IEnumerable<PriceInformation> GetAllThisMonth()
         {
             var start = new DateTime(DateTime.Now.Year, DateTime.Now.Month,1);

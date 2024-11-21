@@ -33,6 +33,15 @@ namespace xElectricityPriceApi.BackgroundJobs
             await _mqTTSender.SendUpdate(MessageType.CurrentListPrice, price.Price, true);
             await _mqTTSender.SendUpdate(MessageType.CurrentPriceEstimatedEffectivePrice, price.PriceAfterSupport, true);
             await _mqTTSender.SendUpdate(MessageType.CurrentPriceDescription, price.PriceDescription.ToString(), true);
+
+            var nextHour = _priceService.GetNextHourPrice();
+            if(nextHour != null)
+            {
+                var nextHourExt = JsonUtils.CloneTo<ExtendedPriceInformation>(nextHour);
+
+                nextHourExt.PriceDescription = _priceService.GetPricePointDescriptionFromPriceList(nextHourExt, null);
+                await _mqTTSender.SendUpdate(MessageType.NextHourPriceDescription, nextHourExt.PriceDescription.ToString(), true);
+            }            
         }
     }
 }

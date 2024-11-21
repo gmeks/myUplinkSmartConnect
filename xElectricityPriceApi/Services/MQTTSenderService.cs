@@ -11,6 +11,7 @@ namespace xElectricityPriceApi.Services
         CurrentPriceEstimatedEffectivePrice,
         CurrentPriceDescription,
         CheapestHour,
+        NextHourPriceDescription
     }
     public class MQTTSenderService(SettingsService settingsService)
     {
