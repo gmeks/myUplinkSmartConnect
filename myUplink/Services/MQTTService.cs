@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using MQTTnet;
-using MQTTnet.Client;
 using MyUplinkSmartConnect.Models;
 using MyUplinkSmartConnect.Services;
 using Serilog;
@@ -16,7 +15,7 @@ namespace MyUplinkSmartConnect.Services
 {
     public class MQTTService
     {
-        readonly MqttFactory _mqttFactory;
+        readonly MqttClientFactory _mqttFactory;
         static readonly object _lock = new object();
         static IMqttClient? _mqttClient;
 
@@ -25,7 +24,7 @@ namespace MyUplinkSmartConnect.Services
 
         public MQTTService()
         {
-            _mqttFactory = new MqttFactory();
+            _mqttFactory = new MqttClientFactory();
         }
 
         internal async Task SendUpdate(string deviceName, CurrentPointParameterType parameter, object value, bool retainMessage = false)

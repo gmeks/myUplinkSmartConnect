@@ -1,5 +1,4 @@
-﻿using MQTTnet.Client;
-using MQTTnet;
+﻿using MQTTnet;
 using Serilog;
 
 namespace xElectricityPriceApi.Services
@@ -15,7 +14,8 @@ namespace xElectricityPriceApi.Services
     }
     public class MQTTSenderService(SettingsService settingsService)
     {
-        readonly MqttFactory _mqttFactory = new MqttFactory();
+        MqttClientFactory _mqttFactory = new MqttClientFactory();
+
         readonly SettingsService _settingsService = settingsService;
         static readonly object _lock = new object();
         static IMqttClient? _mqttClient;

@@ -1,5 +1,4 @@
 ﻿using MQTTnet;
-using MQTTnet.Client;
 using MyUplinkSmartConnect.Models;
 using MyUplinkSmartConnect.Services;
 using Serilog;
