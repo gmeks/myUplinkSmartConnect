@@ -200,7 +200,7 @@ namespace xElectricityPriceApi.Services
                 return PriceDescription.Cheap;
 
             // All hours that are as cheap or the same as lowest 6 hours should all count as cheap.
-            if (sortedPriceList[index].Price <= sortedPriceList[CheapHoursCount].Price)
+            if (sortedPriceList[index].Price <= sortedPriceList[Math.Max(CheapHoursCount,2)].Price)
                 return PriceDescription.Cheap;
 
             if (index <= NormalHoursCount)
@@ -211,7 +211,7 @@ namespace xElectricityPriceApi.Services
 
         public double GetEstimatedSupportPrKw(double price)
         {
-            const double ElectricitySupportStart = 0.875d; // This is startpoint including mva
+            const double ElectricitySupportStart = 0.9375d; // This is startpoint including mva
             const double ElectricitySupportPercentage = 0.90d;
 
             if(price >  ElectricitySupportStart)
