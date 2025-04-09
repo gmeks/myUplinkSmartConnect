@@ -27,8 +27,6 @@ namespace xElectricityPriceApiShared
         public static T CloneTo<T>(object otherObj) where T : class
         {
             ReadOnlySpan<byte> objBytes = JsonSerializer.SerializeToUtf8Bytes(otherObj);
-            if (objBytes == null)
-                throw new NullReferenceException();
 
             var obj = JsonSerializer.Deserialize<T>(objBytes);
             if (obj == null)

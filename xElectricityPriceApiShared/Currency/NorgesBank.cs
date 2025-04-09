@@ -40,6 +40,7 @@ namespace xElectricityPriceApiShared.Currency
         }
     }
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     public class _0000
     {
         [JsonPropertyName("attributes")]
@@ -52,9 +53,8 @@ namespace xElectricityPriceApiShared.Currency
     public class Data
     {
         [JsonPropertyName("dataSets")]
+
         public List<DataSet> dataSets { get; set; }
-
-
     }
 
     public class DataSet
@@ -141,4 +141,5 @@ namespace xElectricityPriceApiShared.Currency
         [JsonPropertyName("role")]
         public object role { get; set; }
     }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 }

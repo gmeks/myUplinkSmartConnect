@@ -90,7 +90,9 @@ namespace xElectricityPriceApiShared
                 }
             }
 
-            _logger.LogWarning("Failed to price list from all known apis, will check schedule later.");
+            if(PriceList.Count != 24)
+                _logger.LogWarning("Failed to price list from all known apis, will check schedule later.");
+
             return false;
         }       
 

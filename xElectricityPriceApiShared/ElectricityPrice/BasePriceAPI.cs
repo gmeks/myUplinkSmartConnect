@@ -107,8 +107,8 @@ namespace xElectricityPriceApiShared.ElectricityPrice
 
         internal static Guid ToGuid(DateTime startTime, DateTime endtime)
         {
-            var lStart = startTime.Ticks;
-            var lEnd = endtime.Ticks;
+            var lStart = startTime.ToFileTime();
+            var lEnd = endtime.ToFileTime();
 
             return ToGuid(lStart, lEnd);
         }
@@ -116,8 +116,11 @@ namespace xElectricityPriceApiShared.ElectricityPrice
         internal static Guid ToGuid(long startTime, long endtime)
         {
             byte[] guidData = new byte[16];
-            Array.Copy(BitConverter.GetBytes(startTime), guidData, 8);
-            Array.Copy(BitConverter.GetBytes(endtime), 0, guidData, 8, 8);
+            var startTimeBytes = BitConverter.GetBytes(startTime);
+            var endtimeBytes = BitConverter.GetBytes(endtime);
+
+            Array.Copy(startTimeBytes,guidData, startTimeBytes.Length);
+            Array.Copy(endtimeBytes,0, guidData, startTimeBytes.Length, endtimeBytes.Length);
 
             return new Guid(guidData);
         }

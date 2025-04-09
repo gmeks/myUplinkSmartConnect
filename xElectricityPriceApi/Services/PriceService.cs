@@ -23,28 +23,30 @@ namespace xElectricityPriceApi.Services
             {
                 Price = pricePoint.Price,
                 End = pricePoint.End,
-                Id = pricePoint.Id,
+                Id = Guid.NewGuid(),
                 SouceApi = pricePoint.SouceApi,
                 Start = pricePoint.Start,
                 StartHour = pricePoint.Start.Hour
             };
 
-            var existingItem = _context.PriceInformation.FirstOrDefault(x => x.Id == item.Id);
+            var existingItem = _context.PriceInformation.FirstOrDefault(x => x.Start == item.Start && x.End == item.End);
             if (existingItem != null)
             {
                 existingItem.Price = item.Price;
                 existingItem.SouceApi = item.SouceApi;
-                _context.SaveChanges();
+                _context.Update(existingItem);
             }
             else
             {
-                Add(item);
-            }            
+                _context.PriceInformation.Add(item);
+            }
+
+            _context.SaveChanges();
         }
 
         public void Add(AveragePrice averagePrice)
         {
-            var existingItem = _context.AveragePrice.FirstOrDefault(x => x.Id == averagePrice.Id);
+            var existingItem = _context.AveragePrice.FirstOrDefault(x => x.Point == averagePrice.Point);
             if (existingItem != null)
             {
                 existingItem.Price = averagePrice.Price;
@@ -63,15 +65,9 @@ namespace xElectricityPriceApi.Services
             {
                 return _context.AveragePrice.Count();
             }
-        }
+        }           
 
-        public void Add(PriceInformation pricePoint)
-        {
-            _context.PriceInformation.Add(pricePoint);
-            _context.SaveChanges();
-        }
-
-        public AveragePrice GetAverageForMonth()
+        public AveragePrice? GetAverageForMonth()
         {
             var currentMonth = DateTime.Now.Date;
             var avr = _context.AveragePrice.FirstOrDefault(x => x.Point == currentMonth);
@@ -140,9 +136,9 @@ namespace xElectricityPriceApi.Services
             var end = DateTime.Now.Date.AddDays(2).AddSeconds(-1);
 
             var tmpPriceList = Between(start,end).ToList();
-
             var avarage = GetAverageForMonth();
-            if (tmpPriceList?.Count != 0)
+
+            if (tmpPriceList?.Count == 0 || tmpPriceList == null)
             {
                 _logger.LogWarning("No price information was gotten, we force a check.");
                 RecurringJob.TriggerJob(UpdatePrices.HangfireJobDescription);
@@ -156,15 +152,15 @@ namespace xElectricityPriceApi.Services
                 return Enumerable.Empty<ExtendedPriceInformation>().ToList();
             }
 
-            List<PriceInformation>? todayPrices = GetAll(DateOnly.FromDateTime(DateTime.Now)).OrderBy(x => x.Price).ToList();
-            var TommorrowPrices = GetAll(DateOnly.FromDateTime(DateTime.Now.AddDays(1))).OrderBy(x => x.Price).ToList();
+            var tomorrowDate = DateTime.Now.AddDays(1);
 
+            List<PriceInformation>? todayPrices = tmpPriceList.Where(x => x.Start.Date == DateTime.Now.Date).OrderBy(x => x.Price).ToList();
+            var TommorrowPrices = tmpPriceList.Where(x => x.Start.Date == tomorrowDate.Date).OrderBy(x => x.Price).ToList();
             var priceList = JsonUtils.CloneTo<List<ExtendedPriceInformation>>(tmpPriceList);
 
             foreach (var price in priceList)
             {
-                price.PriceAfterSupport = GetEstimatedSupportPrKw(price.Price);
-                
+                price.PriceAfterSupport = GetEstimatedSupportPrKw(price.Price);                
 
                 if(todayPrices?.FirstOrDefault()?.Start.Date == price.Start.Date)
                     price.PriceDescription = GetPricePointDescriptionFromPriceList(price, todayPrices);
@@ -195,7 +191,6 @@ namespace xElectricityPriceApi.Services
             }
 
             int index = sortedPriceList.IndexOf(price);
-
             if (index <= CheapHoursCount)
                 return PriceDescription.Cheap;
 

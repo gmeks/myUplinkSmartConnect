@@ -160,7 +160,7 @@ namespace MyUplinkSmartConnect
             _currentState.PriceList.Sort(new SortByStartDate());
             foreach (var price in _currentState.PriceList)
             {
-                var updatedPrice = sortedList.FirstOrDefault(x => x.Id == price.Id);
+                var updatedPrice = sortedList.FirstOrDefault(x => x.Start == price.Start);
                 if (updatedPrice != null)
                 {
                     price.HeatingMode = updatedPrice.HeatingMode;

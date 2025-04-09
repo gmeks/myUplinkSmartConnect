@@ -26,7 +26,7 @@ namespace xElectricityPriceApiShared.Model
             if (other == null)
                 return false;
 
-            return Id.Equals(other.Id);
+            return Start.Equals(other.Start) && End.Equals(other.End);
         }
 
         public string SouceApi { get; set; }

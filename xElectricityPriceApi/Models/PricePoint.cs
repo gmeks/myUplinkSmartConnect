@@ -13,7 +13,6 @@ namespace xElectricityPriceApi.Models
 
     public class PriceInformation : PricePoint, IEquatable<PriceInformation>
     {
-        public new Guid Id { get; set; }
         public int StartHour { get; set; }
 
         public bool Equals(PriceInformation? other)
@@ -21,7 +20,7 @@ namespace xElectricityPriceApi.Models
             if (ReferenceEquals(null, other))
                 return false;
 
-            return Id.Equals(other.Id);
+            return Start.Equals(other.Start) && End.Equals(other.End);
         }
 
         public bool Equals(ExtendedPriceInformation? other)
@@ -29,7 +28,7 @@ namespace xElectricityPriceApi.Models
             if (ReferenceEquals(null, other))
                 return false;
 
-            return Id.Equals(other.Id);
+            return Start.Equals(other.Start) && End.Equals(other.End);
         }
     }
 

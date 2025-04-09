@@ -43,9 +43,11 @@ namespace xElectricityPriceApi
             services.AddControllersWithViews();
             services.AddRazorPages();
 
-            services.AddEntityFrameworkNpgsql().AddDbContext<DatabaseContext>(
-             options => options.UseNpgsql(_settingsService.GetConnectionStr())
-            );
+
+            services.AddDbContext<DatabaseContext>(opt =>opt.UseNpgsql(_settingsService.GetConnectionStr()));
+            services.AddSingleton<SettingsService>();
+            services.AddScoped<MQTTSenderService>();
+            services.AddScoped<PriceService>();
 
             //services.AddDbContext<DatabaseContext>(_settingsService.GetConnection().CreationOptions);
             services.AddHangfire(config =>
@@ -67,9 +69,7 @@ namespace xElectricityPriceApi
                 }).UseDatabaseCreator();
             });
 
-            services.AddSingleton<SettingsService>();
-            services.AddScoped<MQTTSenderService>();
-            services.AddScoped<PriceService>();
+
 
             services.AddHangfire(config => config.UsePostgreSqlStorage(_settingsService.GetConnectionStr()));
 
@@ -99,7 +99,6 @@ namespace xElectricityPriceApi
             
             app.UseSwagger(c =>
             {
-                c.SerializeAsV2 = true;
             });
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "VesselSource API v1"));
             app.UseResponseCompression();
@@ -112,9 +111,9 @@ namespace xElectricityPriceApi
             //app.UseCors("default");
             app.UseAuthorization();
             app.UseAuthentication();
+            app.UseHangfireDashboard();
 
-
-            GlobalConfiguration.Configuration.UseActivator(new HangfireActivator(serviceProvider));
+            //GlobalConfiguration.Configuration.UseActivator(new HangfireActivator(serviceProvider));
             //app.UseHangfireDashboard();
             app.UseHangfireDashboard("/HangFireDashboard", new DashboardOptions
             {
@@ -124,7 +123,7 @@ namespace xElectricityPriceApi
             {
                 endpoints.MapControllers();
             });
-            app.UseHangfireServer();
+           app.UseHangfireServer();
             //SetupLogger();
             UpdateDatabase(app);
             ConfigureBackgroundJobs(serviceProvider);

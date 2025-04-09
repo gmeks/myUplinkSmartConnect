@@ -53,7 +53,7 @@ namespace xElectricityPriceApi.BackgroundJobs
             if(avarage == null)
             {
                 avarage = new Models.AveragePrice();
-                avarage.Id = ToGuid(DateTime.Now.Date);
+                avarage.Id = Guid.NewGuid();
                 avarage.Point = DateTime.Now.Date;
             }
 
@@ -61,18 +61,6 @@ namespace xElectricityPriceApi.BackgroundJobs
             avarage.Price = avaragePrice;
 
             _priceService.Add(avarage);
-        }
-
-
-        internal static Guid ToGuid(DateTime seed)
-        {
-            var seedTime = seed.ToFileTime();
-
-            byte[] guidData = new byte[16];
-            Array.Copy(BitConverter.GetBytes(seedTime), guidData, 8);
-            Array.Copy(BitConverter.GetBytes(seedTime), 0, guidData, 8, 8);
-
-            return new Guid(guidData);
         }
     }
 }
