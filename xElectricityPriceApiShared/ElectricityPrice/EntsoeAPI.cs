@@ -42,9 +42,9 @@ namespace xElectricityPriceApiShared.ElectricityPrice
 
             try
             {
-                _priceFetcher.PriceList.Clear();
-
-                string url = $"https://web-api.tp.entsoe.eu/api?documentType=A44&in_Domain=10Y{GetPowerZoneName(_priceFetcher.PowerZone)}&out_Domain=10Y{GetPowerZoneName(_priceFetcher.PowerZone)}&periodStart={startDateFormat}&periodEnd={endDateFormat}&securityToken=5cd1c4f6-2172-4453-a8bb-c9467fa0fabc";
+                //_priceFetcher.PriceList.Clear();
+                var pricePointList = new List<PricePoint>();
+                string url = $"https://web-api.tp.entsoe.eu/api?documentType=A44&in_Domain=10Y{GetPowerZoneName(_priceFetcher.PowerZone)}&out_Domain=10Y{GetPowerZoneName(_priceFetcher.PowerZone)}&periodStart={startDateFormat}&periodEnd={endDateFormat}&securityToken=6756d76b-f7d8-4189-9869-5bb95c619ae7";
                 var response = await _client.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
@@ -57,6 +57,7 @@ namespace xElectricityPriceApiShared.ElectricityPrice
 
                 XmlDocument doc = new XmlDocument();
                 doc.LoadXml(xmlText);
+                int currentPriceIndex = 1;
 
                 XmlNode? xmlNode = doc?.LastChild;
                 if (xmlNode == null)
@@ -86,27 +87,22 @@ namespace xElectricityPriceApiShared.ElectricityPrice
                                     if (timeIntervalNode.Name == "end")
                                     {
                                         string strDate = timeIntervalNode.InnerText.Substring(0, timeIntervalNode.InnerText.IndexOf('T'));
-                                        startTime = ParseDateTime(strDate);
+                                        startTime = ParseDateTime(strDate);                                        
                                     }
                                 }
                             }
                             else if (actualData.Name == "Point")
                             {
                                 var price = new PricePoint();
-                                price.SouceApi = nameof(EntsoeAPI);
+                                price.SouceApi = nameof(EntsoeAPI);                                
 
                                 foreach (XmlNode timeIntervalNode in actualData.ChildNodes)
                                 {
                                     if (timeIntervalNode.Name == "position")
                                     {
-                                        int iPosition = int.Parse(timeIntervalNode.InnerText);
-
-                                        if (iPosition > 1)
-                                            price.Start = startTime.AddHours(iPosition - 1);
-                                        else
-                                            price.Start = startTime;
-
-                                        price.End = startTime.AddHours(iPosition);
+                                        price.Start = startTime.AddHours(currentPriceIndex - 1);
+                                        price.End = startTime.AddHours(currentPriceIndex);
+                                        currentPriceIndex++;
                                     }
                                     else if (timeIntervalNode.Name == "price.amount")
                                     {
@@ -118,7 +114,7 @@ namespace xElectricityPriceApiShared.ElectricityPrice
                                 if (price.Price != double.MinValue && timeRange.TotalHours <= 1)
                                 {
                                     price.Id = ToGuid(price.Start, price.End);
-                                    _priceFetcher.PriceList.Add(price);
+                                    pricePointList.Add(price);
                                 }
                                 else
                                 {
@@ -129,6 +125,7 @@ namespace xElectricityPriceApiShared.ElectricityPrice
                     }
                 }
 
+                _priceFetcher.PriceList = pricePointList;
                 return true;
 
             }
