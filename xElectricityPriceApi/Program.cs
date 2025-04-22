@@ -15,11 +15,9 @@ public class Program
         Host.CreateDefaultBuilder(args)
             .ConfigureWebHostDefaults(webBuilder =>
             {
-                /*
                 webBuilder.UseSentry(options =>
                 {
-                    options.Dsn = "https://bed1c64fb3a844518228a6a16ea10e84@sentry.thexsoft.com/3";
-                    options.EnableTracing = true;
+                    options.Dsn = "https://58c7922933f040f65e0f395ca2eeb8c5@sentry.thexsoft.com/4";                    
                     options.AttachStacktrace = true;
                     options.InitializeSdk = true;
                     options.MaxRequestBodySize = Sentry.Extensibility.RequestSize.Always;
@@ -33,7 +31,6 @@ public class Program
 #endif
                     options.TracesSampleRate = 1;
                 });
-                */
                 webBuilder.UseKestrel((context, options) =>
                 {
                     options.ListenAnyIP(5097);

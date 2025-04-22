@@ -38,7 +38,7 @@ namespace xElectricityPriceApiShared
         public async Task<bool> FetchHistoricPrices()
         {
             var priceFetchApi = new EntsoeAPI(this, _logger);
-            var status = await priceFetchApi.GetPriceInformation(DateTime.Now.AddMonths(-2).Date, DateTime.Now);
+            var status = await priceFetchApi.GetPriceInformation(DateTime.Now.AddMonths(-2).Date, DateTime.Now.AddDays(-1));
             if(status)
             {
                 await NormalizePrices(priceFetchApi);

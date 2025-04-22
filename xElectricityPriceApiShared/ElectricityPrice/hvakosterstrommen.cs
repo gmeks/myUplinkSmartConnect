@@ -56,7 +56,6 @@ namespace xElectricityPriceApiShared.ElectricityPrice
                     _logger.LogWarning("Failed to check VgApi, with status {status}", response.StatusCode);
                     return false;
                 }
-                _priceFetcher.PriceList.Clear();
                 var strContent = await response.Content.ReadAsStringAsync();
                 var rootToday = JsonSerializer.Deserialize<HvaKosteStrommenJson[]>(strContent, JsonUtils.GetJsonSettings());
                 if (rootToday == null || rootToday.Length == 0) throw new NullReferenceException();
@@ -83,7 +82,7 @@ namespace xElectricityPriceApiShared.ElectricityPrice
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to check VgApi");
+                _logger.LogError(ex, "Failed to check HvaKosterStrommen");
                 return false;
             }
         }
