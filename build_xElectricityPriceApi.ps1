@@ -9,6 +9,7 @@ if ([string]::IsNullOrWhitespace($targetVersion))
 Write-Host Builds should be tagged with $targetVersion
 
 dotnet clean xElectricityPriceApi/xElectricityPriceApi.csproj
+dotnet build --configuration release MyUplink-smartconnect.sln
 
 Write-Host Building docker.
 docker build --progress=plain -t reg.thexsoft.com:443/xelectricitypriceapi/api:$targetVersion -f DockerfileElPriceApi .
@@ -16,5 +17,4 @@ docker push reg.thexsoft.com:443/xelectricitypriceapi/api:$targetVersion
 #docker buildx build --push --tag erlingsaeterdal/myuplinksmartconnect:$targetVersion --platform linux/amd64,linux/arm/v7,linux/arm64 .
 
 Write-Host Building debug files.
-dotnet build --configuration release MyUplink-smartconnect.sln
 sentry-cli debug-files upload --include-sources -p xelectricitypriceapi xElectricityPriceApi\bin\Release\net9.0
