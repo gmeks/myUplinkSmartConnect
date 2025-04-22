@@ -19,3 +19,5 @@ Write-Host Building docker.
 docker build -t reg.thexsoft.com:443/xelectricitypriceapi/api:$targetVersion -f DockerfileElPriceApi .
 docker push reg.thexsoft.com:443/xelectricitypriceapi/api:$targetVersion
 #docker buildx build --push --tag erlingsaeterdal/myuplinksmartconnect:$targetVersion --platform linux/amd64,linux/arm/v7,linux/arm64 .
+
+sentry-cli debug-files upload --include-sources -p xelectricitypriceapi xElectricityPriceApi\bin\Release\net9.0
