@@ -11,7 +11,7 @@ Write-Host Builds should be tagged with $targetVersion
 dotnet clean xElectricityPriceApi/xElectricityPriceApi.csproj
 
 Write-Host Building docker.
-docker build -t reg.thexsoft.com:443/xelectricitypriceapi/api:$targetVersion -f DockerfileElPriceApi .
+docker build --progress=plain -t reg.thexsoft.com:443/xelectricitypriceapi/api:$targetVersion -f DockerfileElPriceApi .
 docker push reg.thexsoft.com:443/xelectricitypriceapi/api:$targetVersion
 #docker buildx build --push --tag erlingsaeterdal/myuplinksmartconnect:$targetVersion --platform linux/amd64,linux/arm/v7,linux/arm64 .
 
