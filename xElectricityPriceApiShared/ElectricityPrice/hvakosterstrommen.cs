@@ -53,7 +53,7 @@ namespace xElectricityPriceApiShared.ElectricityPrice
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning("Failed to check VgApi, with status {status}", response.StatusCode);
+                    _logger.LogWarning("Failed to check HvaKosterStrommen, with status {status}", response.StatusCode);
                     return false;
                 }
                 var strContent = await response.Content.ReadAsStringAsync();
