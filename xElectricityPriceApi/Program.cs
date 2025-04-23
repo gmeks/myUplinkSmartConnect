@@ -23,11 +23,11 @@ public class Program
                     options.MaxRequestBodySize = Sentry.Extensibility.RequestSize.Always;
                     options.MinimumBreadcrumbLevel = LogLevel.Debug;
                     options.MinimumEventLevel = LogLevel.Error;
-                    options.Debug = true;
 #if DEBUG
+                    options.Debug = true;
                     options.DiagnosticLevel = Sentry.SentryLevel.Debug;
 #else
-                        options.DiagnosticLevel = Sentry.SentryLevel.Error;
+                    options.DiagnosticLevel = Sentry.SentryLevel.Error;
 #endif
                     options.TracesSampleRate = 1;
                 });

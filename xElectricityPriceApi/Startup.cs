@@ -22,9 +22,23 @@ namespace xElectricityPriceApi
                 builder.SetMinimumLevel(LogLevel.Information);
                 builder.AddConsole();
                 builder.AddEventSourceLogger();
-                builder.AddSentry();
+                builder.AddSentry(options =>
+                {
+                    options.Dsn = "https://58c7922933f040f65e0f395ca2eeb8c5@sentry.thexsoft.com/4";
+                    options.AttachStacktrace = true;
+                    options.InitializeSdk = true;
+                    options.MinimumBreadcrumbLevel = LogLevel.Debug;
+                    options.MinimumEventLevel = LogLevel.Error;
+#if DEBUG
+                    options.Debug = true;
+                    options.DiagnosticLevel = Sentry.SentryLevel.Debug;
+#else
+                    options.DiagnosticLevel = Sentry.SentryLevel.Error;
+#endif
+                    options.TracesSampleRate = 1;
+                });
 
-                builder.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
+                    builder.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
             });
             var logger = loggerFactory.CreateLogger<Startup>();
             _settingsService = new SettingsService(logger);
@@ -97,7 +111,8 @@ namespace xElectricityPriceApi
                 app.UseDeveloperExceptionPage();
                 //                app.UseExceptionHandler();
             }
-            
+
+            app.UseSentryTracing();
             app.UseSwagger(c =>
             {
             });
