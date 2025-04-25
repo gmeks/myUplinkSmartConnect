@@ -52,11 +52,7 @@ namespace xElectricityPriceApiShared
         {
             iBasePriceInformation[] priceFetchApiList;
 
-#if DEBUG
-            priceFetchApiList = new iBasePriceInformation[] { new HvaKosterStrommen(this, _logger) };
-#else
-           priceFetchApiList = new iBasePriceInformation[] {new HvaKosterStrommen(this, _logger) , new EntsoeAPI(this,_logger), new Nordpoolgroup(this, _logger), new VgApi(this, _logger) };
-#endif
+            priceFetchApiList = new iBasePriceInformation[] { new HvaKosterStrommen(this, _logger),  new Nordpoolgroup(this, _logger), new VgApi(this, _logger) };
 
             foreach (var priceListApi in priceFetchApiList)
             {
