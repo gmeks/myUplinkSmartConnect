@@ -35,7 +35,7 @@ namespace MyUplinkSmartConnect
         {
             Log.Logger.Information("Starting up service, detected version is {version}", GetVersion());
 
-            EnvVariables env = new EnvVariables(_logger);
+            EnvVariables env = new EnvVariables();
             if (!string.IsNullOrEmpty(env.GetValue("IsInsideDocker")))
             {
                 Log.Logger.Information("Reading settings from environmental variables");

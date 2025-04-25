@@ -10,11 +10,9 @@ namespace xElectricityPriceApiShared
     public class EnvVariables
     {
         readonly Dictionary<string, string> _machine;
-        readonly ILogger<object> _logger;
 
-        public EnvVariables(ILogger<object> logger)
+        public EnvVariables()
         {
-            _logger = logger;
             _machine = new Dictionary<string, string>();
             GetVariables(EnvironmentVariableTarget.Process);
             GetVariables(EnvironmentVariableTarget.User);
@@ -34,7 +32,6 @@ namespace xElectricityPriceApiShared
 
         public EnvVariables(ILogger<object> logger,Dictionary<string,object> tmpList)
         {
-            _logger = logger;
             _machine = new Dictionary<string, string>();
 
             foreach(var item in tmpList)
@@ -49,11 +46,11 @@ namespace xElectricityPriceApiShared
             keyName = keyName.ToLowerInvariant();
             if (_machine.ContainsKey(keyName))
             {
-                _logger.LogDebug("Environmental variable {KeyName} - {KeyValue}",keyName,_machine[keyName]);
+                Console.WriteLine("Environmental variable {KeyName} - {KeyValue}",keyName,_machine[keyName]);
                 return _machine[keyName];
             }
 
-            _logger.LogDebug("Failed to find environmental variable {KeyName}",keyName);
+            Console.WriteLine("Failed to find environmental variable {KeyName}",keyName);
             return defaultValue;
         }
 
@@ -62,7 +59,7 @@ namespace xElectricityPriceApiShared
             var strValue = GetValue(keyName);
             if (string.IsNullOrWhiteSpace(strValue))
             {
-                _logger.LogDebug("Environmental variable {KeyName} using default value of {defaultValue}", keyName, defaultValue);
+                Console.WriteLine("Environmental variable {KeyName} using default value of {defaultValue}", keyName, defaultValue);
                 return defaultValue;
             }
 
@@ -71,7 +68,7 @@ namespace xElectricityPriceApiShared
                 return result;
             }
 
-            _logger.LogError("{KeyName} has invalid value and cannot be read as a {Type}: {KeyValue}", keyName, typeof(TEnum), strValue);
+            Console.WriteLine("{KeyName} has invalid value and cannot be read as a {Type}: {KeyValue}", keyName, typeof(TEnum), strValue);
             return defaultValue;
         }
 
@@ -85,7 +82,7 @@ namespace xElectricityPriceApiShared
                     return GetValue(tmpKey);
             }
 
-            _logger.LogDebug("Environmental variable {KeyName}, failed to find value returning empty", keyName);
+            Console.WriteLine("Environmental variable {KeyName}, failed to find value returning empty", keyName);
             return string.Empty;
         }
 
@@ -94,7 +91,7 @@ namespace xElectricityPriceApiShared
             var strValue = GetValue(keyName);
             if (string.IsNullOrWhiteSpace(strValue))
             {
-                _logger.LogDebug("Environmental variable {KeyName} using default value of {defaultValue}", keyName, defaultValue);
+                Console.WriteLine("Environmental variable {KeyName} using default value of {defaultValue}", keyName, defaultValue);
                 return defaultValue;
             }
 
@@ -102,8 +99,8 @@ namespace xElectricityPriceApiShared
             {
                 return result;
             }
-
-            _logger.LogError("{KeyName} has invalid value and cannot be read as a bool: {Value}", keyName, strValue);
+                
+            Console.WriteLine("{KeyName} has invalid value and cannot be read as a bool: {Value}", keyName, strValue);
             return defaultValue;
         }
 
@@ -112,7 +109,7 @@ namespace xElectricityPriceApiShared
             var strValue = GetValue(keyName);
             if (string.IsNullOrWhiteSpace(strValue))
             {
-                _logger.LogDebug("Environmental variable {KeyName} using default value of {defaultValue}", keyName, defaultValue);
+                Console.WriteLine("Environmental variable {KeyName} using default value of {defaultValue}", keyName, defaultValue);
                 return defaultValue;
             }
 
@@ -121,7 +118,7 @@ namespace xElectricityPriceApiShared
                 return result;
             }
 
-            _logger.LogError("{KeyName} has invalid value and cannot be read as a int: {Value}", keyName, strValue);
+            Console.WriteLine("{KeyName} has invalid value and cannot be read as a int: {Value}", keyName, strValue);
             return defaultValue;
         }
 
@@ -135,7 +132,7 @@ namespace xElectricityPriceApiShared
                     return GetValueInt(tmpKey, defaultValue);
             }
 
-            _logger.LogDebug("Environmental variable {KeyName} using default value of {defaultValue}", keyName);
+            Console.WriteLine("Environmental variable {KeyName} using default value of {defaultValue}", keyName);
             return defaultValue;
         }
 
@@ -155,20 +152,20 @@ namespace xElectricityPriceApiShared
         {            
             if(string.IsNullOrEmpty(keyName))
             {
-                _logger.LogDebug("Cannot add setting with no keyvalue");
+                Console.WriteLine("Cannot add setting with no keyvalue");
                 return;
             }
 
             var tmpKeyName = keyName.ToLowerInvariant();
             if (_machine.ContainsKey(tmpKeyName))
             {
-                _logger.LogDebug("Will not add duplicate key values");
+                Console.WriteLine("Will not add duplicate key values");
                 return;
             }
 
             if (string.IsNullOrEmpty(value))
             {
-                _logger.LogDebug("{Key} was setting did not have a value, and will be ignored",keyName);
+                Console.WriteLine("{Key} was setting did not have a value, and will be ignored",keyName);
                 return;
             }
 

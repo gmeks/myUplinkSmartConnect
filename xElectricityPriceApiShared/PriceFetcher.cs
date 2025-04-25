@@ -31,13 +31,13 @@ namespace xElectricityPriceApiShared
 
         public PowerZoneName PowerZone { get; set; }
 
-        public bool OnlyEUPriceApi { get; set; }
-
         public List<PricePoint> PriceList { get; set; } = new List<PricePoint>();
 
         public async Task<bool> FetchHistoricPrices()
         {
-            var priceFetchApi = new EntsoeAPI(this, _logger);
+            return true;
+            /*
+            var priceFetchApi = new HvaKosterStrommen(this, _logger);
             var status = await priceFetchApi.GetPriceInformation(DateTime.Now.AddMonths(-2).Date, DateTime.Now.AddDays(-1));
             if(status)
             {
@@ -45,24 +45,18 @@ namespace xElectricityPriceApiShared
             }
 
             return status;
+            */
         }
 
         public async Task<bool> UpdateRecentPrices()
         {
             iBasePriceInformation[] priceFetchApiList;
 
-            if (OnlyEUPriceApi)
-            {
-                priceFetchApiList = new iBasePriceInformation[] { new HvaKosterStrommen(this, _logger)};
-            }
-            else
-            {
 #if DEBUG
-                priceFetchApiList = new iBasePriceInformation[] { new HvaKosterStrommen(this, _logger) };
+            priceFetchApiList = new iBasePriceInformation[] { new HvaKosterStrommen(this, _logger) };
 #else
-                priceFetchApiList = new iBasePriceInformation[] {new HvaKosterStrommen(this, _logger) , new EntsoeAPI(this,_logger), new Nordpoolgroup(this, _logger), new VgApi(this, _logger) };
+           priceFetchApiList = new iBasePriceInformation[] {new HvaKosterStrommen(this, _logger) , new EntsoeAPI(this,_logger), new Nordpoolgroup(this, _logger), new VgApi(this, _logger) };
 #endif
-            }
 
             foreach (var priceListApi in priceFetchApiList)
             {

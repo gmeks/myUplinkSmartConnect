@@ -8,40 +8,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Hangfire.EntityFrameworkCore;
+using System;
 
 namespace xElectricityPriceApi
 {
     public class Startup
     {
-        SettingsService _settingsService;
-
         public Startup(IConfiguration configuration)
-        {
-            using var loggerFactory = LoggerFactory.Create(builder =>
-            {
-                builder.SetMinimumLevel(LogLevel.Information);
-                builder.AddConsole();
-                builder.AddEventSourceLogger();
-                builder.AddSentry(options =>
-                {
-                    options.Dsn = "https://58c7922933f040f65e0f395ca2eeb8c5@sentry.thexsoft.com/4";
-                    options.AttachStacktrace = true;
-                    options.InitializeSdk = true;
-                    options.MinimumBreadcrumbLevel = LogLevel.Debug;
-                    options.MinimumEventLevel = LogLevel.Error;
-#if DEBUG
-                    options.Debug = true;
-                    options.DiagnosticLevel = Sentry.SentryLevel.Debug;
-#else
-                    options.DiagnosticLevel = Sentry.SentryLevel.Error;
-#endif
-                    options.TracesSampleRate = 1;
-                });
-
-                    builder.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
-            });
-            var logger = loggerFactory.CreateLogger<Startup>();
-            _settingsService = new SettingsService(logger);
+        {    
             Configuration = configuration;           
         }
 
@@ -54,13 +28,13 @@ namespace xElectricityPriceApi
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
             //var dataSource = dataSourceBuilder.;
+            var settingsService = new SettingsService();
 
             services.AddControllersWithViews();
             services.AddRazorPages();
+            services.AddSingleton<SettingsService>(settingsService);
 
-
-            services.AddDbContext<DatabaseContext>(opt =>opt.UseNpgsql(_settingsService.GetConnectionStr()));
-            services.AddSingleton<SettingsService>();
+            services.AddDbContext<DatabaseContext>(opt =>opt.UseNpgsql(settingsService.GetConnectionStr()));            
             services.AddScoped<MQTTSenderService>();
             services.AddScoped<PriceService>();
 
@@ -72,7 +46,7 @@ namespace xElectricityPriceApi
                 config.UseRecommendedSerializerSettings();
                 config.UseSerilogLogProvider();
                 config.SetDataCompatibilityLevel(CompatibilityLevel.Version_170);
-                config.UseEFCoreStorage(builder => builder.UseNpgsql(_settingsService.GetConnectionStr()), new EFCoreStorageOptions
+                config.UseEFCoreStorage(builder => builder.UseNpgsql(settingsService.GetConnectionStr()), new EFCoreStorageOptions
                 {
                     CountersAggregationInterval = new TimeSpan(0, 5, 0),
                     DistributedLockTimeout = new TimeSpan(0, 10, 0),
@@ -86,11 +60,12 @@ namespace xElectricityPriceApi
 
 
 
-            services.AddHangfire(config => config.UsePostgreSqlStorage(_settingsService.GetConnectionStr()));
+            services.AddHangfire(config => config.UsePostgreSqlStorage(settingsService.GetConnectionStr()));
+            services.AddHangfireServer();
 
             services.AddEndpointsApiExplorer();
-            services.AddSwaggerGen();            
-            
+            services.AddSwaggerGen();
+
             services.AddResponseCompression(opts =>
             {
                 opts.EnableForHttps = true;
@@ -139,7 +114,6 @@ namespace xElectricityPriceApi
             {
                 endpoints.MapControllers();
             });
-           app.UseHangfireServer();
             //SetupLogger();
             UpdateDatabase(app);
             ConfigureBackgroundJobs(serviceProvider);
@@ -166,10 +140,12 @@ namespace xElectricityPriceApi
         }
 
         private void UpdateDatabase(IApplicationBuilder app)
-        {
-            Serilog.Log.Logger.Information("Checking for database migration on database stored  in {path}", _settingsService.Instance.Database);
+        {            
             using (var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
             {
+                var settingsService = serviceScope.ServiceProvider.GetService<SettingsService>();
+                Serilog.Log.Logger.Information("Checking for database migration on database stored  in {path}", settingsService.Instance.Database);
+
                 using (var context = serviceScope.ServiceProvider.GetService<DatabaseContext>())
                 {
                     context?.Database.Migrate();            

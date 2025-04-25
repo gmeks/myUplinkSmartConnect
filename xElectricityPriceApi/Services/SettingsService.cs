@@ -9,16 +9,13 @@ namespace xElectricityPriceApi.Services
 {
     public class SettingsService
     {
-        readonly ILogger<object> _logger;
-
-        public SettingsService(ILogger<object> logger)
+        public SettingsService()
         {
-            _logger = logger;
             Instance = new SettingsValue();
-            EnvVariables env = new EnvVariables(_logger);
+            EnvVariables env = new EnvVariables();
             if (env.HasSetting("IsInsideDocker"))
             {
-                _logger.LogInformation("Settings are being read from docker/Envrioment variables");
+                Console.WriteLine("Settings are being read from docker/Envrioment variables");
                 Instance.MQTTServer = env.GetValue(nameof(Instance.MQTTServer));
                 Instance.MQTTServerPort = env.GetValueInt(nameof(Instance.MQTTServerPort), 1883);
                 Instance.MQTTUserName = env.GetValue(nameof(Instance.MQTTUserName));
@@ -29,13 +26,11 @@ namespace xElectricityPriceApi.Services
                 Instance.DatabaseUser = env.GetValue(nameof(Instance.DatabaseUser));
                 Instance.DatabasePassword = env.GetValue(nameof(Instance.DatabasePassword));
 
-                Instance.OnlyFetchPriceEUApi = env.GetValueBool(nameof(Instance.OnlyFetchPriceEUApi),true);
-
                 Instance.PowerZoneName = env.GetValueEnum<PowerZoneName>(PowerZoneName.NO2, nameof(Instance.PowerZoneName));
             }
             else
             {
-                _logger.LogInformation("Settings are being read from config file");
+                Console.WriteLine("Settings are being read from config file");
                 if (System.IO.File.Exists("appsettings.Development.json"))
                 {
                     var systemText = System.IO.File.ReadAllText("appsettings.Development.json");
@@ -48,10 +43,9 @@ namespace xElectricityPriceApi.Services
                 }
             }
 
-            _logger.LogInformation("Connecting to MQTT Server {server}:{port}", Instance.MQTTServer, Instance.MQTTServerPort);
-            _logger.LogInformation("Database server: {databaseserver}", Instance.DatabaseServer);
-            _logger.LogInformation("Price zone: {databaseserver}", Instance.PowerZoneName);
-            _logger.LogInformation("Price api EU only: {OnlyFetchPriceEUApi}", Instance.OnlyFetchPriceEUApi);
+            Console.WriteLine($"Connecting to MQTT Server {Instance.MQTTServer}:{Instance.MQTTServerPort}" );
+            Console.WriteLine($"Database server: {Instance.DatabaseServer}");
+            Console.WriteLine($"Price zone: {Instance.PowerZoneName}");
         }   
 
         public string GetConnectionStr()
@@ -79,8 +73,6 @@ namespace xElectricityPriceApi.Services
         public string? MQTTUserName { get; set; }
 
         public string? MQTTPassword { get; set; }
-
-        public bool OnlyFetchPriceEUApi { get; set; }
 
         public PowerZoneName PowerZoneName { get; set; }
     }

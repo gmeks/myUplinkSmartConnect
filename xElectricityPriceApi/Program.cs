@@ -14,13 +14,22 @@ public class Program
     public static IHostBuilder CreateHostBuilder(string[] args) =>
         Host.CreateDefaultBuilder(args)
             .ConfigureWebHostDefaults(webBuilder =>
-            {
-                webBuilder.UseSentry(options =>
+            {              
+                webBuilder.UseKestrel((context, options) =>
                 {
-                    options.Dsn = "https://58c7922933f040f65e0f395ca2eeb8c5@sentry.thexsoft.com/4";                    
+                    options.ListenAnyIP(5097);
+                });
+                webBuilder.UseStartup<Startup>();
+            }
+            ).ConfigureLogging((context, logging) => {
+                logging.SetMinimumLevel(LogLevel.Information);
+                logging.AddConsole();
+                logging.AddEventSourceLogger();
+                logging.AddSentry(options =>
+                {
+                    options.Dsn = "https://58c7922933f040f65e0f395ca2eeb8c5@sentry.thexsoft.com/4";
                     options.AttachStacktrace = true;
                     options.InitializeSdk = true;
-                    options.MaxRequestBodySize = Sentry.Extensibility.RequestSize.Always;
                     options.MinimumBreadcrumbLevel = LogLevel.Debug;
                     options.MinimumEventLevel = LogLevel.Error;
 #if DEBUG
@@ -31,14 +40,6 @@ public class Program
 #endif
                     options.TracesSampleRate = 1;
                 });
-                webBuilder.UseKestrel((context, options) =>
-                {
-                    options.ListenAnyIP(5097);
-                });
-                webBuilder.UseStartup<Startup>();
-            }
-            ).ConfigureLogging((context, logging) => {
-                //logging.ClearProviders();
-                //logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
+                logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Warning);
             });
 }
