@@ -31,7 +31,14 @@ namespace xElectricityPriceApiShared.ElectricityPrice
             {
                 _priceFetcher.PriceList.Clear();
                 var today = await Getprice(GetUrl(DateTime.Now));
-                var tomorrow = await Getprice(GetUrl(DateTime.Now.AddDays(1)));
+                bool tomorrow;
+                if (DateTime.Now.Hour >= 13)
+                {
+                    tomorrow = await Getprice(GetUrl(DateTime.Now.AddDays(1)));
+                }
+                else
+                    tomorrow = true;
+
 
                 if (today && tomorrow)
                     return true;

@@ -57,7 +57,7 @@ namespace xElectricityPriceApiShared
             foreach (var priceListApi in priceFetchApiList)
             {
                 var status = await priceListApi.GetPriceInformation();
-                if (status && PriceList.Count >= 48)
+                if (status && PriceList.Count >= 20)
                 {
                     await NormalizePrices(priceListApi);
 

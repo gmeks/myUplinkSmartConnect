@@ -27,42 +27,46 @@ namespace xElectricityPriceApiShared.ElectricityPrice
         {
             _priceFetcher.PriceList.Clear();
             //TomorrowsPrice
-            var tResponse = await _client.GetAsync("https://www.nordpoolgroup.com/api/marketdata/page/10?currency=,,,EURO").ConfigureAwait(true);
-            if (tResponse.StatusCode == System.Net.HttpStatusCode.OK)
+            HttpResponseMessage tResponse;
+            if (DateTime.Now.Hour >= 13)
             {
-                var strContent = await tResponse.Content.ReadAsStringAsync();
-                var root = JsonSerializer.Deserialize<Root>(strContent,JsonUtils.GetJsonSettings());
-                if (root == null || root.data == null) throw new NullReferenceException();
-
-                foreach (var item in root.data.Rows)
+                tResponse = await _client.GetAsync("https://www.nordpoolgroup.com/api/marketdata/page/10?currency=,,,EURO").ConfigureAwait(true);
+                if (tResponse.StatusCode == System.Net.HttpStatusCode.OK)
                 {
-                    foreach (var column in item.Columns)
+                    var strContent = await tResponse.Content.ReadAsStringAsync();
+                    var root = JsonSerializer.Deserialize<Root>(strContent, JsonUtils.GetJsonSettings());
+                    if (root == null || root.data == null) throw new NullReferenceException();
+
+                    foreach (var item in root.data.Rows)
                     {
-                        var regionName = ConvertRegionName(column.Name, false);
-
-                        if (regionName == _priceFetcher.PowerZone)
+                        foreach (var column in item.Columns)
                         {
-                            var price = new PricePoint();
-                            price.Id = ToGuid(item.StartTime.ToFileTime(), item.EndTime.ToFileTime());
-                            price.Start = item.StartTime;
-                            price.End = item.EndTime;
-                            price.Price = Parse(column.Value);
-                            price.SouceApi = nameof(Nordpoolgroup);
+                            var regionName = ConvertRegionName(column.Name, false);
 
-                            if (!_priceFetcher.PriceList.Contains(price) && price.Price != double.MinValue)
+                            if (regionName == _priceFetcher.PowerZone)
                             {
-                                _priceFetcher.PriceList.Add(price);
+                                var price = new PricePoint();
+                                price.Id = ToGuid(item.StartTime.ToFileTime(), item.EndTime.ToFileTime());
+                                price.Start = item.StartTime;
+                                price.End = item.EndTime;
+                                price.Price = Parse(column.Value);
+                                price.SouceApi = nameof(Nordpoolgroup);
+
+                                if (!_priceFetcher.PriceList.Contains(price) && price.Price != double.MinValue)
+                                {
+                                    _priceFetcher.PriceList.Add(price);
+                                }
                             }
                         }
                     }
-                }                
-            }
-            else
-            {
-                _logger.LogInformation($"Failed to fetch tomorrows price price information from Nordpool {tResponse.StatusCode}");
-                _logger.LogDebug($"Nordpool content returned {tResponse.Content}");
-                return false;
-            }
+                }
+                else
+                {
+                    _logger.LogInformation($"Failed to fetch tomorrows price price information from Nordpool {tResponse.StatusCode}");
+                    _logger.LogDebug($"Nordpool content returned {tResponse.Content}");
+                    return false;
+                }
+            }               
 
             //Todays price.
             string strDate = DateTime.Now.ToString("dd-MM-yyyy");

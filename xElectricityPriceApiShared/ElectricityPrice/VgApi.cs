@@ -30,8 +30,14 @@ namespace xElectricityPriceApiShared.ElectricityPrice
             try
             {
                 _priceFetcher.PriceList.Clear();
+                bool tomorrow;
                 var today = await GetVgPriceInformation("https://redutv-api.vg.no/power-data/v1/nordpool/today");
-                var tomorrow = await GetVgPriceInformation("https://redutv-api.vg.no/power-data/v1/nordpool/day-ahead/latest");
+                if (DateTime.Now.Hour >= 13)
+                {                    
+                    tomorrow = await GetVgPriceInformation("https://redutv-api.vg.no/power-data/v1/nordpool/day-ahead/latest");
+                }
+                else
+                    tomorrow = true;
 
                 if (today && tomorrow)
                     return true;
