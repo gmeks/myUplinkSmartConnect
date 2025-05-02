@@ -20,7 +20,7 @@ namespace xElectricityPriceApiShared.ElectricityPrice
 
         public bool IsPriceWithVAT { get { return false; } }
 
-        public bool IsPriceInKW { get { return false; } }
+        public bool IsPriceInKW { get { return true; } }
 
         public async Task<bool> GetPriceInformation()
         {
